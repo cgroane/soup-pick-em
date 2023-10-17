@@ -6,13 +6,13 @@ export const getWeek = () => {
    */
   const increaseDays = (date: Date, amount: number) => new Date(date.setDate(date.getDate() + amount));
 
-  const buildDateString = (date: Date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
+  // const buildDateString = (date: Date) => {
+  //   const day = date.getDate().toString().padStart(2, "0");
+  //   const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  //   const year = date.getFullYear();
     
-    return `${day}.${month}.${year}`;
-  }
+  //   return `${day}.${month}.${year}`;
+  // }
   const buildWeeks = (start: Date, end: Date) => {
     const weeks = [];
     let current = new Date(start);
@@ -60,4 +60,4 @@ export const months = [
   'October',
   'November',
   'December'
-]
+];

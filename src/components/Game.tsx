@@ -1,7 +1,17 @@
-import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import styled from 'styled-components'
 import { Matchup } from '../model'
-import { Box, Card, CardBody, CardFooter, CardHeader, CheckBox, Heading, Image, Paragraph } from 'grommet';
+import {
+  Box,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  CheckBox,
+  Heading,
+  Image,
+  Paragraph
+} from 'grommet';
 import { daysOfTheWeek, months } from '../utils/getWeek';
  
 
@@ -62,7 +72,7 @@ const Game: React.FC<GameProps> = ({
             <Paragraph>{game.homeTeam} {game.pointSpread > 0 ? `+${game.pointSpread}` : game.pointSpread}</Paragraph>
             <Paragraph>Home</Paragraph>
         </CardHeader>
-        <CardBody flex direction='row' >
+        <CardBody flex direction='row' align='stretch' >
           <Box width={'40%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>

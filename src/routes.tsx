@@ -89,6 +89,16 @@ const Router = () => {
           </PrivateRoutes>
       }
       />
+      <Route 
+        path="/matchups" 
+        element={
+          <PrivateRoutes authenticated={!!userRoles.length} >
+            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
+              <Matchups />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+      }
+      />
     </Routes>
   );
 }
