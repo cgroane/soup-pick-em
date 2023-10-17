@@ -44,7 +44,7 @@ export type Slate = {
 }
 
 export type Matchup = {
-  gameId:                number;
+  gameID:                number;
   season:                number;
   seasonType:            number;
   week:                  number;

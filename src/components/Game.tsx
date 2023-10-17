@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { Matchup } from '../model'
 import { Box, Card, CardBody, CardFooter, CardHeader, CheckBox, Heading, Image, Paragraph } from 'grommet';
@@ -21,12 +21,16 @@ const CheckboxContainer = styled(CardFooter)`
 interface GameProps {
   game: Matchup;
   disable?: boolean;
+  addToSlate: (game: Matchup) => void;
+  addedToSlate: boolean;
 }
 const Game: React.FC<GameProps> = ({
   game,
+  addToSlate,
+  addedToSlate,
   disable = false
 }: GameProps) => {
-  const [addedToSlate, setAddedToSlate] = useState(false);
+
   const dateTime = useMemo(() => {
     const converted = new Date(game.dateTime)
     return {
@@ -48,6 +52,8 @@ const Game: React.FC<GameProps> = ({
       homeRank: game.homeTeamData.playoffRank ? game.homeTeamData.playoffRank : game.homeTeamData.apRank,
     }
   }, [game.awayTeamData, game.homeTeamData]);
+
+
   return (
     <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
       <Box flex align='start' justify='center'>
@@ -79,8 +85,8 @@ const Game: React.FC<GameProps> = ({
           <CheckBox
             label='Add to slate'
             checked={addedToSlate}
-            onChange={(event) => setAddedToSlate(event.target.checked)}
-            disabled={disable}
+            onChange={() => addToSlate(game)}
+            disabled={disable && !addedToSlate}
           />
         </CheckboxContainer>
       </Box>
