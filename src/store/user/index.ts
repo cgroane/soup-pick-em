@@ -1,11 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { User } from "../../model";
+import { UserCollectionData } from "../../model";
 import { GenericDataState } from "../../types";
 import { RootState } from "..";
 import { DataState } from "../../utils/constants";
 
 
-const initialState: GenericDataState<User> = {
+const initialState: GenericDataState<UserCollectionData> = {
   dataState: DataState.INITIAL,
 };
 

@@ -3,7 +3,6 @@ import { GenericDataState } from "../../types";
 import { RootState } from "..";
 import { DataState } from "../../utils/constants";
 import { Slate } from "../../model";
-import { getWeek } from "../../utils/getWeek";
 
 
 const initialState: GenericDataState<Slate> = {

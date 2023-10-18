@@ -7,12 +7,10 @@ import Game from '../../components/Game';
 interface CreateSlateProps {
   week?: number;
 }
-const CreateSlate: React.FC<CreateSlateProps> = ({
-  // week
-}: CreateSlateProps) => {
+const CreateSlate: React.FC<CreateSlateProps> = () => {
 
   const [games, setGames] = useState<Matchup[]>([]);
-  const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
+  // const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
 
   const disableSelection = useMemo(() => selectedGames.length >= 10, [selectedGames]);
@@ -29,15 +27,14 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setSelectedGames(newSelections);
   }, [setSelectedGames, selectedGames]);
 
+  const fetchMatchups = useCallback(async () => {
+    const results = await getGames(8);
+    // setFilteredGames(games);
+    setGames(results);
+  }, [setGames]);
   useEffect(() => {
     fetchMatchups();
-  }, []);
-
-  const fetchMatchups = async () => {
-    const results = await getGames(8);
-    setFilteredGames(games);
-    setGames(results);
-  };
+  }, [fetchMatchups]);
 
   return (
     <Page>

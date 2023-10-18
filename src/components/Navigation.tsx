@@ -3,19 +3,22 @@ import { Home } from 'grommet-icons'
 import React from 'react'
 import styled from 'styled-components'
 import { theme } from '../theme'
+import { logout } from '../firebase/user/login'
+import { useNavigate } from 'react-router-dom'
  
 const StyledHeader = styled(Header)`
   background-color: ${({theme}) => theme.colors.lightBlue};
 `
 
-interface NavigationProps {
-
-}
-const Navigation: React.FC<NavigationProps> = ({}: NavigationProps) => {
+const Navigation: React.FC = () => {
+  const navigate = useNavigate();
+  const signOut = () => {
+    logout().then(() => navigate('/login'));
+  }
   return (
     <StyledHeader>
       <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator />
-      <Menu color={theme.colors.darkBlue} label="account" items={[{ label: 'logout' }]} />
+      <Menu color={theme.colors.darkBlue} label="account" items={[{ label: 'logout', onClick: () => signOut() }]} />
     </StyledHeader>
   )
 }

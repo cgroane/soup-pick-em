@@ -1,9 +1,6 @@
-import React from 'react'
-import styled from 'styled-components'
-import { getSpreads } from '../../api/getGames'
+import React from 'react';
  
-interface MatchupsProps {}
-const Matchups: React.FC<MatchupsProps> = ({}: MatchupsProps) => {
+const Matchups: React.FC = () => {
 
   return (
     <></>

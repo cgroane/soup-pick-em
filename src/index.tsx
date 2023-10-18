@@ -6,6 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { theme } from './theme';
 import { BrowserRouter } from 'react-router-dom';
 import { Grommet } from 'grommet';
+import Context from './context/user';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,7 +15,9 @@ root.render(
   <React.StrictMode>
     <Grommet theme={theme} full background={'light-3'} >
       <BrowserRouter>
-        <App />
+        <Context>
+          <App />
+        </Context>
       </BrowserRouter>
     </Grommet>
   </React.StrictMode>
