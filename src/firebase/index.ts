@@ -12,9 +12,9 @@ const firebaseConfig = {
   authDomain: "soup-pick-em.firebaseapp.com",
   projectId: "soup-pick-em",
   storageBucket: "soup-pick-em.appspot.com",
-  messagingSenderId: "745609435591",
-  appId: "1:745609435591:web:07f9856dc9e2afbfade1e2",
-  measurementId: "G-43J81PPEPB"
+  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_APP_ID,
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
