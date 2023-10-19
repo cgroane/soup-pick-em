@@ -81,7 +81,7 @@ const Router = () => {
       <Route 
         path="/choose-matchups" 
         element={
-          <PrivateRoutes authenticated={true} >
+          <PrivateRoutes authenticated={!!user} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
               <CreateSlate />
             </RoleGuardedRoutes>
@@ -91,7 +91,7 @@ const Router = () => {
       <Route 
         path="/matchups" 
         element={
-          <PrivateRoutes authenticated={!!user.isAuthenticated} >
+          <PrivateRoutes authenticated={!!user} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
               <Matchups />
             </RoleGuardedRoutes>

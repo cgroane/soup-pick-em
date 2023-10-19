@@ -7,6 +7,7 @@ import { theme } from './theme';
 import { BrowserRouter } from 'react-router-dom';
 import { Grommet } from 'grommet';
 import Context from './context/user';
+import CreateSlateContext from './context/slate';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,7 +17,9 @@ root.render(
     <Grommet theme={theme} full background={'light-3'} >
       <BrowserRouter>
         <Context>
-          <App />
+          <CreateSlateContext>
+            <App />
+          </CreateSlateContext>
         </Context>
       </BrowserRouter>
     </Grommet>

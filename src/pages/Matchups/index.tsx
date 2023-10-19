@@ -1,7 +1,6 @@
 import React from 'react';
  
 const Matchups: React.FC = () => {
-
   return (
     <></>
   )

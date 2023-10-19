@@ -16,7 +16,7 @@ const Navigation: React.FC = () => {
     logout().then(() => navigate('/login'));
   }
   return (
-    <StyledHeader>
+    <StyledHeader gridArea='header' sticky='scrollup' >
       <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator />
       <Menu color={theme.colors.darkBlue} label="account" items={[{ label: 'logout', onClick: () => signOut() }]} />
     </StyledHeader>

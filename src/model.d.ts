@@ -99,6 +99,7 @@ export type Matchup = {
   homeTeamCFPRanking?:   number;
   awayTeamData:          Team;
   homeTeamData:          Team;
+  theOddsId:             string;
 }
 
 export interface Period {
