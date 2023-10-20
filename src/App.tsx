@@ -3,12 +3,21 @@ import Router from './routes';
 import { Provider } from 'react-redux';
 import store from './store';
 import Navigation from './components/Navigation';
+import { Page } from 'grommet';
+import styled from 'styled-components';
 
+const PageWrapper = styled(Page)`
+  /* position: relative;
+  top: 3rem; */
+  height: calc(100% = 6rem);
+`
 function App() {
   return (
     <Provider store={store}>
       <Navigation />
-      <Router />
+      <PageWrapper>
+        <Router />
+      </PageWrapper>
     </Provider>
   );
 }

@@ -13,5 +13,5 @@ export const theOddsInstance = axios.create({
   params: {
     apiKey: process.env.REACT_APP_THE_ODDS_API_KEY
   }
-})
+});
 export default axiosInstane;

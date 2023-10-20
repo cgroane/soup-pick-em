@@ -16,6 +16,7 @@ export const theme: DefaultTheme = {
     darkBlue:'#2B4350',
     salmon: '#FF686B',
     linen: '#FFEDDF',
+    blackBackground: "#0E161B"
   }
 }
 export const darkTheme = {

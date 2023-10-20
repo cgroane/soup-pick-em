@@ -1,12 +1,13 @@
+import { Page } from 'grommet'
 import React from 'react'
-import styled from 'styled-components'
+import LoginAndSignUp from '../../components/LoginAndSignUp';
  
-interface LoginProps {}
-const Login: React.FC<LoginProps> = ({}: LoginProps) => {
+const Login: React.FC = () => {
+
   return (
-    <>
-      Login
-    </>
+    <Page>
+      <LoginAndSignUp signUp={false} />
+    </Page>
   )
 }
  

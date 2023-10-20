@@ -7,18 +7,19 @@ import { stripAndReplaceSpace } from "../utils/stringMatching";
 const year = new Date().getFullYear();
 
 
-interface SpreadsAPIRequest {
+export interface SpreadsAPIRequest {
   bookmakers?: string;
   markets?: string;
   commenceTimeFrom?: string
   commenceTimeTo?: string;
+  event?: string;
 }
 export const getSpreads = async (options: SpreadsAPIRequest) => {
   return theOddsInstance.get<TheOddsMatchup[]>('americanfootball_ncaaf/odds', {
     params: {
       ...options,
       regions: 'us',
-      markets: 'spreads',
+      markets: options.markets ?? 'spreads',
       commenceTimeFrom: '2023-10-17T00:00:00Z',
       commenceTimeTo: '2023-10-21T23:59:00Z',
     }
@@ -52,6 +53,7 @@ export const getGames = async (week: number, options?: SpreadsAPIRequest) => {
       return {
         ...item,
         pointSpread: gameSpread?.bookmakers[0]?.markets[0]?.outcomes[0]?.point ?? item.pointSpread,
+        theOddsId: gameSpread?.id
       }
     })
     .map((item) => {
@@ -62,7 +64,7 @@ export const getGames = async (week: number, options?: SpreadsAPIRequest) => {
       }
       return {
         ...item,
-        pointSpread: remainder ? newPointSpread : item.pointSpread 
+        pointSpread: remainder ? newPointSpread : item.pointSpread,
       }
     })
   })

@@ -1,11 +1,11 @@
 import React from 'react'
-import styled from 'styled-components'
+import { Link } from 'react-router-dom'
  
 interface ProfileProps {}
-const Profile: React.FC<ProfileProps> = ({}: ProfileProps) => {
+const Profile: React.FC<ProfileProps> = () => {
   return (
     <>
-      Profile
+      <Link to={'/choose-matchups'}>Matchups</Link>
     </>
   )
 }

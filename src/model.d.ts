@@ -1,14 +1,15 @@
+import { User } from "firebase/auth";
 
-export type User = {
+export type UserCollectionData = User & {
   id: string;
   email: string;
   fName: string;
   lName: string;
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
   roles: UserRoles[];
-  pickHistory: Picks[];
-  record: WinLossRecord;
-  trophyCase: Trophy[];
+  pickHistory?: Picks[];
+  record?: WinLossRecord;
+  trophyCase?: Trophy[];
 }
 
 export type Picks = {
@@ -98,6 +99,7 @@ export type Matchup = {
   homeTeamCFPRanking?:   number;
   awayTeamData:          Team;
   homeTeamData:          Team;
+  theOddsId:             string;
 }
 
 export interface Period {

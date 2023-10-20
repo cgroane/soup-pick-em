@@ -13,6 +13,7 @@ import {
   Paragraph
 } from 'grommet';
 import { daysOfTheWeek, months } from '../utils/getWeek';
+import { useSlateContext } from '../context/slate';
  
 
 const GameCard = styled(Card)`
@@ -25,22 +26,25 @@ const TeamLogo = styled(Image)`
 
 const CheckboxContainer = styled(CardFooter)`
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 `;
 interface GameProps {
   game: Matchup;
   disable?: boolean;
-  addToSlate: (game: Matchup) => void;
   addedToSlate: boolean;
 }
 const Game: React.FC<GameProps> = ({
   game,
-  addToSlate,
   addedToSlate,
   disable = false
 }: GameProps) => {
 
+  const {
+    addAndRemove
+  } = useSlateContext();
+  
   const dateTime = useMemo(() => {
     const converted = new Date(game.dateTime)
     return {
@@ -66,7 +70,7 @@ const Game: React.FC<GameProps> = ({
 
   return (
     <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
-      <Box flex align='start' justify='center'>
+      <Box flex align='stretch' justify='center'>
         <CardHeader width={'100%'} pad={"medium"} >
             <Paragraph>Away</Paragraph>
             <Paragraph>{game.homeTeam} {game.pointSpread > 0 ? `+${game.pointSpread}` : game.pointSpread}</Paragraph>
@@ -77,7 +81,7 @@ const Game: React.FC<GameProps> = ({
             <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
           </Box>
-          <Box align='center' justify='center' >
+          <Box flex align='center' justify='center' >
             <Paragraph margin={'4px'} size='12px' textAlign='center' >
               {dateTime.dayOfTheWeek}, {dateTime.month} {dateTime.dayOfTheMonth}, {dateTime.year} 
             </Paragraph>
@@ -91,13 +95,26 @@ const Game: React.FC<GameProps> = ({
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
           </Box>
         </CardBody>
-        <CheckboxContainer height={'2rem'} margin={'4px'} >
+        <CheckboxContainer
+          height={'2rem'}
+          margin={'4px'}
+        >
           <CheckBox
             label='Add to slate'
             checked={addedToSlate}
-            onChange={() => addToSlate(game)}
+            onChange={() => addAndRemove(game)}
             disabled={disable && !addedToSlate}
           />
+          {/* {
+            game.theOddsId && (
+              <OtherMarkets
+                gameId={game.theOddsId}
+                addToSlate={addToSlate}
+                addedToSlate={addedToSlate}
+                disableSelections={disable}
+              />
+            )
+          } */}
         </CheckboxContainer>
       </Box>
     </GameCard>

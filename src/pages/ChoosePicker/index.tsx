@@ -1,8 +1,14 @@
 import React from 'react'
-import styled from 'styled-components'
  
 interface ChoosePickerProps {}
-const ChoosePicker: React.FC<ChoosePickerProps> = ({}: ChoosePickerProps) => {
+const ChoosePicker: React.FC<ChoosePickerProps> = () => {
+  /**
+   * iterate over users
+   * show name and whether they are the slate picker
+   * use radio buttons
+   * onchange update role in FB
+   * requires admin role
+   */
   return (
     <>choose picker</>
   )

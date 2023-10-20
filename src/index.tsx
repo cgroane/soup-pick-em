@@ -6,15 +6,21 @@ import reportWebVitals from './reportWebVitals';
 import { theme } from './theme';
 import { BrowserRouter } from 'react-router-dom';
 import { Grommet } from 'grommet';
+import Context from './context/user';
+import CreateSlateContext from './context/slate';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <Grommet theme={theme} full background={'light-3'} >
+    <Grommet theme={theme} full background={theme.colors.blackBackground} >
       <BrowserRouter>
-        <App />
+        <Context>
+          <CreateSlateContext>
+            <App />
+          </CreateSlateContext>
+        </Context>
       </BrowserRouter>
     </Grommet>
   </React.StrictMode>
