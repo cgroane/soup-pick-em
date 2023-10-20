@@ -38,18 +38,18 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setTextFilter(e.target.value);
   }, [setTextFilter]);
 
-  useEffect(() => {
-    if (textFilter) {
-      setFilteredGames(() => {
-        const filtered = games.filter((game) =>
-          Object.values(game).some((val) => typeof val === 'string' && val.toLowerCase().includes(textFilter.toLowerCase())
-        ));
-        return filtered;
-      })
-    } else {
-      setFilteredGames(games);
-    }
-  }, [games, setFilteredGames, textFilter]);
+  // useEffect(() => {
+  //   if (textFilter) {
+  //     setFilteredGames(() => {
+  //       const filtered = games.filter((game) =>
+  //         Object.values(game).some((val) => typeof val === 'string' && val.toLowerCase().includes(textFilter.toLowerCase())
+  //       ));
+  //       return filtered;
+  //     })
+  //   } else {
+  //     setFilteredGames(games);
+  //   }
+  // }, [games, setFilteredGames, textFilter]);
 
   return (
     <Box>

@@ -8,6 +8,7 @@ import Matchups from "./pages/Matchups";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
+import Dashboard from "./pages/Dashboard";
 
 /**
  * admin has all routes, but must be logged in.
@@ -56,6 +57,16 @@ const Router = () => {
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
               <Profile/>
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+      }
+      />
+      <Route
+        path="/dashboard" 
+        element={
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
+              <Dashboard />
             </RoleGuardedRoutes>
           </PrivateRoutes>
       }
