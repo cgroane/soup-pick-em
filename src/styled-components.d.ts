@@ -10,13 +10,7 @@ declare module 'styled-components' {
       },
     },
      colors: {
-      white: string;
-      black: string;
-      lightBlue: string;
-      blue: string;
-      darkBlue: string;
-      salmon: string;
-      linen: string;
+      [key: string]: string;
      }
   }
 }

@@ -7,6 +7,7 @@ import ChoosePicker from "./pages/ChoosePicker";
 import Matchups from "./pages/Matchups";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
+import Colors from "./pages/Colors";
 
 /**
  * admin has all routes, but must be logged in.
@@ -48,10 +49,11 @@ const Router = () => {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Login />} />
-      <Route 
+      <Route path="/colors" element={<Colors />} />
+      <Route
         path="/profile" 
         element={
-          <PrivateRoutes authenticated={!!user} >
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
               <Profile/>
             </RoleGuardedRoutes>
@@ -61,7 +63,7 @@ const Router = () => {
       <Route 
         path="/picks" 
         element={
-          <PrivateRoutes authenticated={!!user.isAuthenticated} >
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
               <Picks />
             </RoleGuardedRoutes>
@@ -71,7 +73,7 @@ const Router = () => {
       <Route 
         path="/choose-picker" 
         element={
-          <PrivateRoutes authenticated={!!user.isAuthenticated} >
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.ADMIN)} >
               <ChoosePicker />
             </RoleGuardedRoutes>
@@ -81,7 +83,7 @@ const Router = () => {
       <Route 
         path="/choose-matchups" 
         element={
-          <PrivateRoutes authenticated={!!user} >
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
               <CreateSlate />
             </RoleGuardedRoutes>
@@ -91,7 +93,7 @@ const Router = () => {
       <Route 
         path="/matchups" 
         element={
-          <PrivateRoutes authenticated={!!user} >
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
               <Matchups />
             </RoleGuardedRoutes>

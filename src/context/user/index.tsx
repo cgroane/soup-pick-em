@@ -6,8 +6,8 @@ import { getUserCollectionData } from "../../firebase/user/users";
 import { useNavigate } from "react-router-dom";
 
 type ValueProp = {
-    user: UserCollectionData;
-    setUser: React.Dispatch<React.SetStateAction<UserCollectionData>>;
+    user: UserCollectionData | null;
+    setUser: React.Dispatch<React.SetStateAction<UserCollectionData | null>>;
 }
 
 type ContextProp = {
@@ -19,13 +19,19 @@ export const AppContext = React.createContext({} as ValueProp); //create the con
 //function body
 export default function Context({ children }: ContextProp) {
 
-const [ user, setUser ] = useState<UserCollectionData>({} as UserCollectionData);
+const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const navigate = useNavigate();
 
 useEffect(() => {
   const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
-      getUserCollectionData(currUser.uid).then((res) => setUser(res?.user as UserCollectionData))
+      getUserCollectionData(currUser.uid).then((res) => {
+        if (res?.user) {
+          setUser(res?.user as UserCollectionData)
+        } else {
+          setUser(null);
+        }
+      })
     } else {
       navigate('/login');
     }

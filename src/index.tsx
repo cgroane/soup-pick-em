@@ -14,7 +14,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <Grommet theme={theme} full background={'light-3'} >
+    <Grommet theme={theme} full background={theme.colors.blackBackground} >
       <BrowserRouter>
         <Context>
           <CreateSlateContext>
