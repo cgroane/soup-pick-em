@@ -28,6 +28,10 @@ const LoginAndSignUp: React.FC<LoginAndSignUpProps> = ({
   const navigate = useNavigate()
 
   const googleAuth = async () => {
+    /**
+     * if signIN -- auth and then getUser
+     * if register -- auth then addUserDoc
+     */
     loginWithGoogle().then(() => navigate('/dashboard'));
   }
   

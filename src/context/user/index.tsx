@@ -2,8 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { app } from "../../firebase";
-import { getUserCollectionData } from "../../firebase/user/users";
 import { useNavigate } from "react-router-dom";
+import { getUserCollectionData } from "../../firebase/user/login";
 
 type ValueProp = {
     user: UserCollectionData | null;
@@ -26,8 +26,8 @@ useEffect(() => {
   const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
       getUserCollectionData(currUser.uid).then((res) => {
-        if (res?.user) {
-          setUser(res?.user as UserCollectionData)
+        if (res) {
+          setUser(res as UserCollectionData)
         } else {
           setUser(null);
         }

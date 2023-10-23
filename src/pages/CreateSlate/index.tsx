@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Page, Paragraph, TextInput, Toolbar } from 'grommet';
+import { Box, Button, Paragraph, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
 import { Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
+import { createSlate } from '../../firebase/slate';
+import { getWeek } from '../../utils/getWeek';
+import { useNavigate } from 'react-router-dom';
  
 const BottomToolbar = styled(Toolbar)`
   position: fixed;
@@ -32,31 +35,39 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setFilteredGames,
   } = useSlateContext()
 
+  const navigate = useNavigate();
+
   const disableSelection = useMemo(() => selectedGames.length >= 10, [selectedGames]);
 
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTextFilter(e.target.value);
   }, [setTextFilter]);
 
-  // useEffect(() => {
-  //   if (textFilter) {
-  //     setFilteredGames(() => {
-  //       const filtered = games.filter((game) =>
-  //         Object.values(game).some((val) => typeof val === 'string' && val.toLowerCase().includes(textFilter.toLowerCase())
-  //       ));
-  //       return filtered;
-  //     })
-  //   } else {
-  //     setFilteredGames(games);
-  //   }
-  // }, [games, setFilteredGames, textFilter]);
+
+  useEffect(() => {
+    if (textFilter) {
+      setFilteredGames(() => {
+        const filtered = games.filter((game) =>
+          Object.values(game).some((val) => typeof val === 'string' && val.toLowerCase().includes(textFilter.toLowerCase())
+        ));
+        return filtered;
+      })
+    } else {
+      setFilteredGames(games);
+    }
+  }, [games, setFilteredGames, textFilter]);
+  const submitSlate = async () => {
+    await createSlate(getWeek().week, selectedGames).then(() => {
+      navigate('/dashboard');
+    })
+  }
 
   return (
     <Box>
       <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
         <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
       </Toolbar>
-      <Box height={'calc(100% - 6rem)'} pad={'medium'} >
+      <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
         {
           filteredGames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC)).map((game) => 
           <Game
@@ -73,7 +84,7 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
           <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames.length}/10</Paragraph>
         <Box width={'100%'} flex direction='row' justify='center' align='center'>
           <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-          <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate"/>
+          <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames.length < 10} />
         </Box>
       </BottomToolbar>
     </Box>
