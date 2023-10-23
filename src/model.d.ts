@@ -17,6 +17,7 @@ export type Picks = {
   isCorrect: boolean;
   matchup: Matchup;
   user: User;
+  week: number;
 }
 
 export type Score = {
@@ -61,8 +62,8 @@ export type Matchup = {
   awayTeamScore:         number;
   homeTeamScore:         number;
   period:                string;
-  timeRemainingMinutes:  null;
-  timeRemainingSeconds:  null;
+  timeRemainingMinutes:  number | null;
+  timeRemainingSeconds:  number | null;
   pointSpread:           number;
   overUnder:             number;
   awayTeamMoneyLine:     number;
@@ -73,14 +74,14 @@ export type Matchup = {
   globalAwayTeamID:      number;
   globalHomeTeamID:      number;
   stadiumID:             number;
-  yardLine:              null;
+  yardLine:              number | null;
   yardLineTerritory:     string;
-  down:                  null;
-  distance:              null;
+  down:                  number | null;
+  distance:              number | null;
   possession:            string;
   isClosed:              boolean;
   gameEndDateTime:       Date;
-  title:                 null;
+  title:                 string | null;
   homeRotationNumber:    number;
   awayRotationNumber:    number;
   channel:               string;

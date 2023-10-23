@@ -3,6 +3,7 @@ import { Matchup, TheOddsMatchup } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { getTeams } from "./getTeams";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
+import { getWeek } from "../utils/getWeek";
 
 const year = new Date().getFullYear();
 
@@ -14,14 +15,27 @@ export interface SpreadsAPIRequest {
   commenceTimeTo?: string;
   event?: string;
 }
-export const getSpreads = async (options: SpreadsAPIRequest) => {
+const buildDateFormat = (date: Date) => {
+  return `${date.toISOString().split('T')[0]}T${date.getHours().toLocaleString('en-us', {
+    minimumIntegerDigits: 2
+  })}:${date.getMinutes().toLocaleString('en-us', {
+    minimumIntegerDigits: 2
+  })}:${date.getSeconds().toLocaleString('en-us', {
+    minimumIntegerDigits: 2
+  })}Z`;
+}
+const thisWeek = getWeek().weekRange;
+
+export const getSpreads = async ({
+  commenceTimeFrom = buildDateFormat(thisWeek[0]),
+  commenceTimeTo = buildDateFormat(thisWeek[1]),
+  ...options
+}: SpreadsAPIRequest) => {
   return theOddsInstance.get<TheOddsMatchup[]>('americanfootball_ncaaf/odds', {
     params: {
       ...options,
       regions: 'us',
       markets: options.markets ?? 'spreads',
-      commenceTimeFrom: '2023-10-17T00:00:00Z',
-      commenceTimeTo: '2023-10-21T23:59:00Z',
     }
   }).then((response) => response.data);
 }

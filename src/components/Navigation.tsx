@@ -41,7 +41,7 @@ const Navigation: React.FC = () => {
   }, [user?.isAuthenticated, navigate, signOut])
   return (
     <StyledHeader gridArea='header' sticky='scrollup' >
-      <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator />
+      <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/dashboard')} />
       {<Menu color={theme.colors.darkBlue} label="Account" items={menuItems} />}
     </StyledHeader>
   )
