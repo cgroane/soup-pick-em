@@ -7,7 +7,7 @@ import {
   signOut,
   User,
 } from 'firebase/auth'
-import { addDoc, collection, doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { app, db } from ".."
 import { UserRoles } from '../../utils/constants';
 import UserClass from '../../classes/user';

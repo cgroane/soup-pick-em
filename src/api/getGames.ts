@@ -67,9 +67,10 @@ export const getGames = async (week: number, options?: SpreadsAPIRequest) => {
       return {
         ...item,
         pointSpread: gameSpread?.bookmakers[0]?.markets[0]?.outcomes[0]?.point ?? item.pointSpread,
-        theOddsId: gameSpread?.id
+        theOddsId: gameSpread?.id,
+        outcomes: gameSpread?.bookmakers[0]?.markets[0]?.outcomes ?? [],
       }
-    })
+    }).filter((item) => item.outcomes.length)
     .map((item) => {
       let newPointSpread: number = item.pointSpread;
       const remainder = item.pointSpread % .5;

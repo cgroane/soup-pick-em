@@ -1,6 +1,6 @@
 import { Button, Header, Menu } from 'grommet'
 import { Home } from 'grommet-icons'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { theme } from '../theme'
 import { logout } from '../firebase/user/login'
@@ -13,9 +13,9 @@ const StyledHeader = styled(Header)`
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
-  const signOut = () => {
+  const signOut = useCallback(() => {
     logout().then(() => navigate('/login'));
-  }
+  }, [navigate])
   const {
     user
   } = useGlobalContext();

@@ -5,7 +5,7 @@ import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { getUserCollectionData } from "../../firebase/user/login";
 
-type ValueProp = {
+export type UserValueProp = {
     user: UserCollectionData | null;
     setUser: React.Dispatch<React.SetStateAction<UserCollectionData | null>>;
 }
@@ -14,7 +14,7 @@ type ContextProp = {
     children: React.ReactNode
 } 
 
-export const AppContext = React.createContext({} as ValueProp); //create the context API
+export const AppContext = React.createContext({} as UserValueProp); //create the context API
 
 //function body
 export default function Context({ children }: ContextProp) {
@@ -46,6 +46,6 @@ useEffect(() => {
   )
 }
 
-export const useGlobalContext = ():ValueProp => {
+export const useGlobalContext = ():UserValueProp => {
     return useContext(AppContext);
 }

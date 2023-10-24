@@ -12,6 +12,7 @@ const PageWrapper = styled(Page)`
   height: calc(100% = 6rem);
 `
 function App() {
+
   return (
     <Provider store={store}>
       <Navigation />
