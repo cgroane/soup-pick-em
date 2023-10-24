@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
+import { getUserCollectionData } from '../../firebase/user/login';
 
 const BottomToolbar = styled(Toolbar)`
   position: fixed;
@@ -29,7 +30,8 @@ const MakePicks: React.FC = () => {
     // setSlate
   } = usePickContext()
   const {
-    user
+    user,
+    setUser
   } = useGlobalContext();
   const navigate = useNavigate();
 
@@ -44,10 +46,11 @@ const MakePicks: React.FC = () => {
     if (!user) navigate('/login');
     setLoading('loading');
     setModalOpen(true);
-    await makePicks(user as UserCollectionData, {slateId: slate.uniqueWeek, picks}).then((res) => {
+    await makePicks(user as UserCollectionData, picks).then((res) => {
       setLoading('idle');
+      getUserCollectionData(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
-  }, [navigate, setLoading, setModalOpen, picks, user, slate.uniqueWeek]);
+  }, [navigate, setLoading, setModalOpen, picks, user, setUser]);
 
   return (
     <>
@@ -66,10 +69,10 @@ const MakePicks: React.FC = () => {
           align='center'
           width={'100%'}
         >
-          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.length}/10</Paragraph>
+          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
             <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.length < 10} />
+            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.length < 10} />
           </Box>
         </BottomToolbar>
       </Box>

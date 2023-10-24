@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { GameCard, TeamLogo } from '../../components/Styled'
 import { Box, Button, CardBody, CardHeader, Heading, Paragraph } from 'grommet'
@@ -49,6 +49,7 @@ const PickCard: React.FC<PickCardProps> = ({
 
   const {
     addPick,
+    slate
   } = usePickContext();
 
   const [choice, setChoice] = useState('PUSH' as Outcome | 'PUSH');
@@ -60,6 +61,15 @@ const PickCard: React.FC<PickCardProps> = ({
       return false;
     }
   }, [choice, game?.outcomes]);
+  
+  useEffect(() => {
+    if (user?.pickHistory?.length) {
+      const pick = user?.pickHistory?.find((p) => p.slateId === slate.uniqueWeek);
+      const thisPick = pick?.picks.find((p) => p.matchup === game.gameID);
+      setChoice(thisPick?.selection as Outcome | "PUSH");
+    }
+  }, [setChoice, user?.pickHistory, game.gameID, slate.uniqueWeek]);
+
 
   const makeSelection = useCallback((outcome: Outcome | "PUSH") => {
     const pick: Picks = {

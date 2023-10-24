@@ -10,7 +10,7 @@ export type UserCollectionData = User & {
   pickHistory?: {
     slateId: string;
     picks: Picks[]
-  };
+  }[];
   record?: WinLossRecord;
   trophyCase?: Trophy[];
 }

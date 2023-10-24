@@ -2,12 +2,13 @@ import { Dispatch, SetStateAction, createContext, useCallback, useContext, useEf
 import { Picks, Slate } from "../../model"
 import { getSlate } from "../../firebase/slate";
 import { getWeek } from "../../utils/getWeek";
+import { useGlobalContext } from "../user";
 
 export type PickValueProp = {
   slate: Slate;
-  picks: Picks[];
+  picks: { slateId: string; picks: Picks[] };
   setSlate: Dispatch<SetStateAction<Slate>>;
-  setPicks: Dispatch<SetStateAction<Picks[]>>;
+  setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
 }
 
@@ -20,30 +21,47 @@ export const PickContext = createContext({} as PickValueProp);
 const Context = ({
   children
 }: ContextProp) => {
+  const { user } = useGlobalContext()
   const [slate, setSlate] = useState({} as Slate);
-  const [picks, setPicks] = useState([] as Picks[]);
+  const [picks, setPicks] = useState({
+    slateId: slate?.uniqueWeek,
+    picks: [] as Picks[]
+  });
   
   const addPick = useCallback((pick: Picks) => {
-    const findPick = picks.find((p) => {
+    const findPick = picks.picks.find((p) => {
       return pick.matchup === p.matchup;
     })
     if (findPick) {
       return;
     } else {
-      setPicks((prev) => ([
+      setPicks((prev) => ({
         ...prev,
+        picks: [
+        ...prev.picks,
         pick
-      ]))
+      ]}))
     }
   }, [picks]);
 
   const fetchSlate = useCallback( async () => {
     const results = await getSlate(getWeek().week);
     setSlate(results as Slate);
-  }, [setSlate]);
+    setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev.picks] }))
+  }, [setSlate, setPicks]);
+
+  const getUserPicks = useCallback(async () => {
+    const findPicks = user?.pickHistory?.find((p) => p.slateId === slate.uniqueWeek);
+    if (findPicks) {
+      setPicks(findPicks);
+    }
+  }, [user?.pickHistory, setPicks, slate.uniqueWeek]);
+
+
   useEffect(() => {
     fetchSlate()
-  }, [fetchSlate]);
+    getUserPicks()
+  }, [fetchSlate, getUserPicks]);
 
   return (
     <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick }} >
