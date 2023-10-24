@@ -8,6 +8,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { Grommet } from 'grommet';
 import Context from './context/user';
 import CreateSlateContext from './context/slate';
+import UiContext from './context/ui';
+import PickContext from './context/pick';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -17,9 +19,13 @@ root.render(
     <Grommet theme={theme} full background={theme.colors.blackBackground} >
       <BrowserRouter>
         <Context>
-          <CreateSlateContext>
-            <App />
-          </CreateSlateContext>
+          <UiContext>
+            <CreateSlateContext>
+              <PickContext>
+                <App />
+              </PickContext>
+            </CreateSlateContext>
+          </UiContext>
         </Context>
       </BrowserRouter>
     </Grommet>

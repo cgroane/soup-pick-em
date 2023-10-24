@@ -4,11 +4,11 @@ import Picks from "./pages/Picks";import Login from "./pages/Login";
 import { PropsWithChildren } from "react";
 import { UserRoles } from "./utils/constants";
 import ChoosePicker from "./pages/ChoosePicker";
-import Matchups from "./pages/Matchups";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
 import Dashboard from "./pages/Dashboard";
+import MakePicks from "./pages/MakePicks";
 
 /**
  * admin has all routes, but must be logged in.
@@ -102,14 +102,14 @@ const Router = () => {
       }
       />
       <Route 
-        path="/matchups" 
+        path="/pick" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
-              <Matchups />
+              <MakePicks />
             </RoleGuardedRoutes>
           </PrivateRoutes>
-      }
+        }
       />
     </Routes>
   );

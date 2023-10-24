@@ -1,28 +1,19 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import { Matchup } from '../model'
 import {
   Box,
-  Card,
   CardBody,
   CardFooter,
   CardHeader,
   CheckBox,
   Heading,
-  Image,
   Paragraph
 } from 'grommet';
-import { daysOfTheWeek, months } from '../utils/getWeek';
 import { useSlateContext } from '../context/slate';
+import { GameCard, TeamLogo } from './Styled';
+import { useGetTeamData } from '../hooks/useGetTeamData';
  
-
-const GameCard = styled(Card)`
-  height: 18rem;
-`;
-const TeamLogo = styled(Image)`
-  width: 3rem;
-  height: 3rem;
-`;
 
 const CheckboxContainer = styled(CardFooter)`
   display: flex;
@@ -45,27 +36,10 @@ const Game: React.FC<GameProps> = ({
     addAndRemove
   } = useSlateContext();
   
-  const dateTime = useMemo(() => {
-    const converted = new Date(game.dateTime)
-    return {
-      dayOfTheWeek: daysOfTheWeek[converted.getDay() - 1],
-      minutes: converted.getMinutes().toLocaleString('en-US', {
-        minimumIntegerDigits: 2
-      }),
-      hours: converted.getHours() > 12 ? converted.getHours() - 12 : converted.getHours(),
-      amPm: converted.getHours() > 12 ? 'P.M.' : 'A.M.',
-      dayOfTheMonth: converted.getDay(),
-      year: converted.getFullYear(),
-      month: months[converted.getMonth() - 1]
-    }
-  }, [game.dateTime]);
-
-  const rankings = useMemo(() => {
-    return {
-      awayRank: game.awayTeamData.playoffRank ? game.awayTeamData.playoffRank : game.awayTeamData.apRank,
-      homeRank: game.homeTeamData.playoffRank ? game.homeTeamData.playoffRank : game.homeTeamData.apRank,
-    }
-  }, [game.awayTeamData, game.homeTeamData]);
+  const {
+    rankings,
+    dateTime
+  } = useGetTeamData(game);
 
 
   return (

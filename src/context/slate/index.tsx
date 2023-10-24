@@ -4,7 +4,7 @@ import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek, getWeek } from '../../utils/getWeek';
 
-type SlateProps = {
+export type SlateValueProps = {
   games: Matchup[];
   selectedGames: Matchup[];
   filteredGames: Matchup[];
@@ -12,13 +12,15 @@ type SlateProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
+  loading: string;
+  setLoading: Dispatch<SetStateAction<string>>;
 }
 
 type ContextProp = {
   children: React.ReactNode
 }
 
-export const SlateContext = React.createContext({} as SlateProps); //create the context API
+export const SlateContext = React.createContext({} as SlateValueProps); //create the context API
 
 //function body
 export default function CreateSlateContext({ children }: ContextProp) {
@@ -26,6 +28,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   // const [textFilter, setTextFilter] = useState('');
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
+  const [loading, setLoading] = useState('');
 
   const week = useMemo(() => getWeek().week, []);
   const fetchMatchups = useCallback(async () => {
@@ -119,6 +122,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
         awayTeamData:          game.awayTeamData,
         homeTeamData:          game.homeTeamData,
         theOddsId:             game.theOddsId ?? '',
+        outcomes: game.outcomes ?? []
       }
       newSelections.push(newGame as Matchup);
     }
@@ -133,13 +137,15 @@ export default function CreateSlateContext({ children }: ContextProp) {
       setFilteredGames,
       selectedGames,
       setSelectedGames,
-      addAndRemove
+      addAndRemove,
+      loading,
+      setLoading
     }}>
       {children}
     </SlateContext.Provider>
   )
 }
 
-export const useSlateContext = ():SlateProps => {
+export const useSlateContext = ():SlateValueProps => {
     return useContext(SlateContext);
 }

@@ -7,16 +7,19 @@ export type UserCollectionData = User & {
   lName: string;
   isAuthenticated?: boolean;
   roles: UserRoles[];
-  pickHistory?: Picks[];
+  pickHistory?: {
+    slateId: string;
+    picks: Picks[]
+  };
   record?: WinLossRecord;
   trophyCase?: Trophy[];
 }
 
 export type Picks = {
-  selection: Team | 'PUSH';
+  selection: Outcome | 'PUSH';
   isCorrect: boolean;
-  matchup: Matchup;
-  user: User;
+  matchup: number;
+  userId: string;
   week: number;
 }
 
@@ -41,8 +44,10 @@ export type Trophy = {
 
 export type Slate = {
   weekNumber: number;
-  matchups: Matchup[];
+  games: Matchup[];
   picks: Picks[];
+  providedBy: User;
+  uniqueWeek: string;
 }
 
 export type Matchup = {
@@ -101,6 +106,7 @@ export type Matchup = {
   awayTeamData:          Team;
   homeTeamData:          Team;
   theOddsId:             string;
+  outcomes:    Outcome[];
 }
 
 export interface Period {
