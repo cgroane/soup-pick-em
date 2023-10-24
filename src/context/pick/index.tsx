@@ -29,27 +29,43 @@ const Context = ({
     slateId: slate?.uniqueWeek,
     picks: [] as Picks[]
   });
+  // const [initialPicks, setInitialPicks] = useState<{ slateId: string, picks: Picks[] }>({} as {slateId: string, picks: Picks[]})
   
   const addPick = useCallback((pick: Picks) => {
-    const findPick = picks.picks.find((p) => {
-      return pick.matchup === p.matchup;
+    /**
+     * find outcome selection in pick.picks by matchup ID.
+     * if selection is not the same, udpate selection
+     */
+    setPicks((previousPicks) => {
+      const pickIndex = picks.picks.findIndex((p) => pick.matchup === p.matchup);
+      if (pickIndex >= 0) {
+        const findPick = picks.picks[pickIndex];
+        if (JSON.stringify(pick) !== JSON.stringify(findPick)) {
+          const newPicks = [...previousPicks.picks];
+          newPicks.splice(pickIndex, 1, pick)
+          return {
+            ...previousPicks,
+            picks: [...newPicks]
+          }
+        }
+        return previousPicks;
+      } else {
+        return {
+          ...previousPicks,
+          picks: [
+          ...previousPicks.picks,
+          pick
+        ]}
+      }
     })
-    if (findPick) {
-      return;
-    } else {
-      setPicks((prev) => ({
-        ...prev,
-        picks: [
-        ...prev.picks,
-        pick
-      ]}))
-    }
+
   }, [picks]);
 
   const fetchSlate = useCallback( async () => {
     const results = await getSlate(getWeek().week);
     setSlate(results as Slate);
-    setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev.picks] }))
+    setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }))
+    return results;
   }, [setSlate, setPicks]);
 
   const getUserPicks = useCallback(async () => {
