@@ -1,5 +1,5 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useMemo, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek, getWeek } from '../../utils/getWeek';
@@ -14,6 +14,7 @@ export type SlateValueProps = {
   addAndRemove: (game: Matchup) => void;
   loading: string;
   setLoading: Dispatch<SetStateAction<string>>;
+  fetchMatchups: () => void;
 }
 
 type ContextProp = {
@@ -25,23 +26,21 @@ export const SlateContext = React.createContext({} as SlateValueProps); //create
 //function body
 export default function CreateSlateContext({ children }: ContextProp) {
   const [games, setGames] = useState<Matchup[]>([]);
-  // const [textFilter, setTextFilter] = useState('');
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
   const [loading, setLoading] = useState('');
 
   const week = useMemo(() => getWeek().week, []);
+  /**
+   * update fetchMatchups to accept a week param
+   */
   const fetchMatchups = useCallback(async () => {
 
-    // const results = await getGames(getWeek() + 1);
     const results = await getGames(week);
     setGames(results);
     setFilteredGames(results);
   }, [setGames, week]);
   
-  useEffect(() => {
-    fetchMatchups();
-  }, [fetchMatchups]);
 
   const addAndRemove = useCallback((game: Matchup) => {
     const found = selectedGames.findIndex((selectedGame) => game.gameID === selectedGame.gameID);
@@ -139,7 +138,8 @@ export default function CreateSlateContext({ children }: ContextProp) {
       setSelectedGames,
       addAndRemove,
       loading,
-      setLoading
+      setLoading,
+      fetchMatchups
     }}>
       {children}
     </SlateContext.Provider>

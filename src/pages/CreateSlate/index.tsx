@@ -38,7 +38,8 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     filteredGames,
     setFilteredGames,
     loading,
-    setLoading
+    setLoading,
+    fetchMatchups
   } = useSlateContext()
   const { 
     setModalOpen,
@@ -55,6 +56,10 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTextFilter(e.target.value);
   }, [setTextFilter]);
+
+  useEffect(() => {
+    fetchMatchups();
+  }, [fetchMatchups]);
 
 
   useEffect(() => {

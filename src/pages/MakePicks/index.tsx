@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Text, Toolbar } from 'grommet';
@@ -27,7 +27,9 @@ const MakePicks: React.FC = () => {
     picks,
     // setPicks,
     slate,
-    // setSlate
+    // setSlate,
+    fetchSlate,
+    getUserPicks
   } = usePickContext()
   const {
     user,
@@ -41,6 +43,11 @@ const MakePicks: React.FC = () => {
   } = useUIContext()
 
   const [loading, setLoading] = useState('');
+
+  useEffect(() => {
+    fetchSlate()
+    getUserPicks()
+  }, [fetchSlate, getUserPicks]);
 
   const submitPicks = useCallback( async () => {
     if (!user) navigate('/login');
@@ -56,7 +63,7 @@ const MakePicks: React.FC = () => {
     <>
       <Box>
         <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center'>
-          {slate?.games?.map((game) => <PickCard game={game} />)}
+          {slate?.games?.map((game) => <PickCard key={game.gameID} game={game} />)}
         </Box>
         <BottomToolbar 
           style={{

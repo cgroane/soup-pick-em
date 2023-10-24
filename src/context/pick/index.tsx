@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, createContext, useCallback, useContext, useState } from "react";
 import { Picks, Slate } from "../../model"
 import { getSlate } from "../../firebase/slate";
 import { getWeek } from "../../utils/getWeek";
@@ -10,6 +10,8 @@ export type PickValueProp = {
   setSlate: Dispatch<SetStateAction<Slate>>;
   setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
+  fetchSlate: () => void;
+  getUserPicks: () => void;
 }
 
 type ContextProp = {
@@ -57,14 +59,8 @@ const Context = ({
     }
   }, [user?.pickHistory, setPicks, slate.uniqueWeek]);
 
-
-  useEffect(() => {
-    fetchSlate()
-    getUserPicks()
-  }, [fetchSlate, getUserPicks]);
-
   return (
-    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick }} >
+    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks }} >
       {children}
     </PickContext.Provider>
   )
