@@ -23,13 +23,13 @@ const Navigation: React.FC = () => {
   const menuItems = useMemo(() => {
     const loggedInItems = [
       {
+        label: 'Profile',
+        onClick: () => navigate('/profile')
+      },
+      {
         label: 'Logout',
         onClick: () => signOut()
       },
-      {
-        label: 'Profile',
-        onClick: () => navigate('/profile')
-      }
     ];
     const loggedOut = [
       {
