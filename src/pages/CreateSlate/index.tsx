@@ -5,13 +5,13 @@ import styled from 'styled-components';
 import { Checkmark, Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
-import { createSlate } from '../../firebase/slate';
 import { getWeek } from '../../utils/getWeek';
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { UserCollectionData } from '../../model';
+import { createSlate } from '../../firebase/slate/create';
  
 const BottomToolbar = styled(Toolbar)`
   position: fixed;

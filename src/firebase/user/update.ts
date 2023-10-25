@@ -9,7 +9,7 @@ export const updateUserDoc = async <T,>(fieldName: string, user: UserCollectionD
       ...user,
       [fieldName]: value
     })
-    return userDoc;
+    return userDoc
   } catch (err) {
     console.error(err)
   }

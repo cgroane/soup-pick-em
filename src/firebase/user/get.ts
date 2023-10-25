@@ -1,13 +1,9 @@
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
-import { app, db } from "..";
+import { auth, db } from "..";
 import { UserCollectionData } from "../../model";
 import UserClass from "../../classes/user";
-import { User, getAuth } from "firebase/auth";
+import { User } from "firebase/auth";
 import { UserRoles } from "../../utils/constants";
-
-
-const auth = getAuth(app);
-
 
 export const getAllUsers = async () => {
   /** try to only return name and uid */

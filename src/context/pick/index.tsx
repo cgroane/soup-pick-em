@@ -1,8 +1,8 @@
 import { Dispatch, SetStateAction, createContext, useCallback, useContext, useState } from "react";
 import { Picks, Slate } from "../../model"
-import { getSlate } from "../../firebase/slate";
 import { getWeek } from "../../utils/getWeek";
 import { useGlobalContext } from "../user";
+import { getSlate } from "../../firebase/slate/get";
 
 export type PickValueProp = {
   slate: Slate;
