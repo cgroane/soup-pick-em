@@ -57,7 +57,7 @@ export type Matchup = {
   week:                  number;
   status:                string;
   day:                   Date;
-  dateTime:              string;
+  dateTime:              Date;
   awayTeam:              string;
   homeTeam:              string;
   awayTeamID:            number;

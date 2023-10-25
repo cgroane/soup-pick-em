@@ -13,6 +13,13 @@ import { useGlobalContext } from '../../context/user';
 import { UserCollectionData } from '../../model';
 import { createSlate } from '../../firebase/slate/create';
  
+
+/**
+ * TODO
+ * style fixes
+ * bottom bar overlaps content
+ * narrow screen content overlaps
+ */
 const BottomToolbar = styled(Toolbar)`
   position: fixed;
   bottom: 0%;

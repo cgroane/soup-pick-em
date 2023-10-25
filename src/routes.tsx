@@ -49,7 +49,6 @@ const Router = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Login />} />
       <Route path="/colors" element={<Colors />} />
       <Route
         path="/profile" 

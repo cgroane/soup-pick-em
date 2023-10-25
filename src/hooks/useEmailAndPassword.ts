@@ -1,13 +1,18 @@
 import React, { useCallback, useState } from "react"
 import { logInWithEmailAndPassword } from "../firebase/user/login";
 import { registerWithEmailAndPassword } from "../firebase/user/create";
+import { useNavigate } from "react-router-dom";
 
-export const useEmailAndPassword = (signUp: boolean) => {
+export const useEmailAndPassword = () => {
   const [loginInfo, setLoginInfo] = useState({
     email: '',
     password: '',
-    name: ''
+    fName: '',
+    lName: '',
   });
+  const navigate = useNavigate()
+  const [newUser, setNewUser] = useState(false);
+
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginInfo((prev) => ({
       ...prev,
@@ -16,15 +21,17 @@ export const useEmailAndPassword = (signUp: boolean) => {
   }, [setLoginInfo]);
 
   const handleSubmit = useCallback(() => {
-    if (signUp) {
-      registerWithEmailAndPassword(loginInfo.name, loginInfo.email, loginInfo.password);
+    if (newUser) {
+      registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then(() => navigate('/dashboard'));
     } else {
-      logInWithEmailAndPassword(loginInfo.email, loginInfo.password)
+      logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then(() => navigate('/dashboard'));
     }
-  }, [signUp, loginInfo])
+  }, [loginInfo, newUser, navigate])
   return {
     loginInfo,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    newUser,
+    setNewUser
   }
 }

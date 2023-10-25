@@ -1,9 +1,17 @@
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, createUserWithEmailAndPassword, getAuth, signInWithPopup } from "firebase/auth";
 import { getUserDoc } from "./get";
-import { auth, googleProvider } from "..";
+import { app } from "..";
 
+
+/**
+ * sign in bugs
+ * log in w email and pw not working 
+ * fix routing behavior after sign in and sign up
+ */
+const auth = getAuth(app);
 
 export const loginWithGoogle = async () => {
+const googleProvider = new GoogleAuthProvider();
   try {
     const res = await signInWithPopup(auth, googleProvider);
     const user = res.user
@@ -21,7 +29,7 @@ export const registerWithEmailAndPassword = async (name: string, email: string, 
   try {
     const res = await createUserWithEmailAndPassword(auth, email, password);
     const user = res.user;
-    return await getUserDoc(user);
+    return await getUserDoc(user, name);
   } catch (err) {
     console.error(err);
   }

@@ -13,6 +13,13 @@ import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
 import { getUserCollectionData } from '../../firebase/user/get';
 
+/**
+ * TODO
+ * style fixes
+ * bottom bar overlaps content
+ * narrow screen content overlaps
+ */
+
 const BottomToolbar = styled(Toolbar)`
   position: fixed;
   bottom: 0%;
