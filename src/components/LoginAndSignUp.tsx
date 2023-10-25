@@ -1,9 +1,11 @@
 import { Box, Button, Form, FormField, Paragraph, TextInput } from 'grommet'
-import React from 'react'
+import React, { useCallback } from 'react'
 import { useEmailAndPassword } from '../hooks/useEmailAndPassword'
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { loginWithGoogle } from '../firebase/user/create';
+import { useGlobalContext } from '../context/user';
+import { UserCollectionData } from '../model';
  
 
 const LoginButton = styled(Button)`
@@ -22,15 +24,24 @@ const LoginAndSignUp: React.FC = () => {
     newUser,
     setNewUser
   } = useEmailAndPassword();
+
+  const {
+    setUser
+  } = useGlobalContext();
   const navigate = useNavigate()
 
-  const googleAuth = async () => {
+  const googleAuth = useCallback(async () => {
     /**
      * if signIN -- auth and then getUser
      * if register -- auth then addUserDoc
      */
-    loginWithGoogle().then(() => navigate('/dashboard'));
-  }
+    loginWithGoogle().then((res) => {
+      navigate('/dashboard')
+      // if (typeof res === 'object') {
+        if (res) setUser(res.user as UserCollectionData);
+      // }
+    });
+  }, [setUser, navigate]);
   
   return (
     <>

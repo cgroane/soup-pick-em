@@ -44,7 +44,7 @@ export const getUserCollectionData = async (userId: string) => {
 export const getUserDoc = async (user: User, name?: string) => {
   const userDoc = await getDoc(doc(db, "users", user.uid));
   if (!userDoc.exists()) {
-    const docRef = await setDoc(doc(db, 'users', user.uid), {
+    await setDoc(doc(db, 'users', user.uid), {
       uid: user.uid,
       name: name ? name : user.displayName,
       authProvider: "local",
@@ -61,7 +61,8 @@ export const getUserDoc = async (user: User, name?: string) => {
       isAuthenticated: !!auth.currentUser,
       pickHistory: []
     })
-    return docRef;
+    const newUserDoc = await getDoc(doc(db, 'users', user.uid));
+    return new UserClass(newUserDoc.data() as UserCollectionData);
   } else {
     return new UserClass(userDoc.data() as UserCollectionData);
   }

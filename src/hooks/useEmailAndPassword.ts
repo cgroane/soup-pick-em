@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react"
 import { logInWithEmailAndPassword } from "../firebase/user/login";
 import { registerWithEmailAndPassword } from "../firebase/user/create";
 import { useNavigate } from "react-router-dom";
+import { useGlobalContext } from "../context/user";
 
 export const useEmailAndPassword = () => {
   const [loginInfo, setLoginInfo] = useState({
@@ -12,6 +13,9 @@ export const useEmailAndPassword = () => {
   });
   const navigate = useNavigate()
   const [newUser, setNewUser] = useState(false);
+  const {
+    setUser
+  } = useGlobalContext();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginInfo((prev) => ({
@@ -20,13 +24,20 @@ export const useEmailAndPassword = () => {
     }))
   }, [setLoginInfo]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault()
     if (newUser) {
-      registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then(() => navigate('/dashboard'));
+      registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then((res) => {
+        navigate('/dashboard')
+        if(res) setUser(res.user);
+      });
     } else {
-      logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then(() => navigate('/dashboard'));
+      logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then((res) => {
+        navigate('/dashboard')
+        if(res) setUser(res);
+      });
     }
-  }, [loginInfo, newUser, navigate])
+  }, [loginInfo, newUser, navigate, setUser])
   return {
     loginInfo,
     handleChange,
