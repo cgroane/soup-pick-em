@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
-import { getUserCollectionData } from '../../firebase/user/login';
+import { getUserCollectionData } from '../../firebase/user/get';
 
 const BottomToolbar = styled(Toolbar)`
   position: fixed;

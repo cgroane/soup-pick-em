@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react"
-import { logInWithEmailAndPassword, registerWithEmailAndPassword } from "../firebase/user/login";
+import { logInWithEmailAndPassword } from "../firebase/user/login";
+import { registerWithEmailAndPassword } from "../firebase/user/create";
 
 export const useEmailAndPassword = (signUp: boolean) => {
   const [loginInfo, setLoginInfo] = useState({

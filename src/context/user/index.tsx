@@ -3,7 +3,7 @@ import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
-import { getUserCollectionData } from "../../firebase/user/login";
+import { getUserCollectionData } from "../../firebase/user/get";
 
 export type UserValueProp = {
     user: UserCollectionData | null;

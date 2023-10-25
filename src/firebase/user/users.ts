@@ -1,10 +1,14 @@
 import {
+  collection,
   doc,
+  getDocs,
   setDoc,
 } from 'firebase/firestore';
 import { app, db } from "..";
 import { User, getAuth } from 'firebase/auth';
 import { UserRoles } from '../../utils/constants';
+import { UserCollectionData } from '../../model';
+import UserClass from '../../classes/user';
 
 const auth = getAuth(app);
 
@@ -37,4 +41,4 @@ export const updateUser = async (firebaseUser?: User) => {
   catch (err) {
     console.error(err)
   }
-}
+};

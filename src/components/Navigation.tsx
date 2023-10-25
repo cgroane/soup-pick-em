@@ -29,6 +29,10 @@ const Navigation: React.FC = () => {
       {
         label: 'Logout',
         onClick: () => signOut()
+      },
+      {
+        label: 'Choose Slate Maker',
+        onClick: () => navigate('/choose-picker')
       }
     ];
     const loggedOut = [
