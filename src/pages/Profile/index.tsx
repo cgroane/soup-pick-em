@@ -14,6 +14,7 @@ const Profile: React.FC<ProfileProps> = () => {
   return (
     <>
       <Link to={'/choose-matchups'}>Matchups</Link>
+      <Link to={'/picks'}>Picks</Link>
     </>
   )
 }

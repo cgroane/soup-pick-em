@@ -4,6 +4,10 @@ import { getWeek } from "../../utils/getWeek";
 import { useGlobalContext } from "../user";
 import { getSlate } from "../../firebase/slate/get";
 
+/**
+ * TODO
+ * fetchSlate may need to accept a parameter for week number with current week default
+ */
 export type PickValueProp = {
   slate: Slate;
   picks: { slateId: string; picks: Picks[] };

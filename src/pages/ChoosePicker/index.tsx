@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, RadioButtonGroup } from 'grommet';
 import { UserCollectionData } from '../../model';
 import { UserRoles } from '../../utils/constants';
-import { getAllUsers } from '../../firebase/user/get';
 import { updateUserDoc } from '../../firebase/user/update';
+import { useGlobalContext } from '../../context/user';
  
 interface ChoosePickerProps {}
 const ChoosePicker: React.FC<ChoosePickerProps> = () => {
@@ -14,14 +14,12 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
    * onchange update role in FB
    * requires admin role
    */
-  const [users, setUsers] = useState<UserCollectionData[]>([]);
-  const [selected, setSelected] = useState({} as UserCollectionData);
 
-  const fetchUsers = useCallback(async () => {
-    const results = await getAllUsers();
-    setUsers(results as UserCollectionData[]);
-    console.log(results);
-  }, [setUsers]);
+  const {
+    users,
+    fetchUsers
+  } = useGlobalContext();
+  const [selected, setSelected] = useState({} as UserCollectionData);
 
   useEffect(() => {
     fetchUsers();

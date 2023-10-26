@@ -104,7 +104,7 @@ const Router = () => {
         path="/pick" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.SLATE_PICKER) as boolean} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
             </RoleGuardedRoutes>
           </PrivateRoutes>
