@@ -3,6 +3,7 @@ import { Picks, Slate } from "../../model"
 import { getWeek } from "../../utils/getWeek";
 import { useGlobalContext } from "../user";
 import { getSlate } from "../../firebase/slate/get";
+import { updateSlateScores } from "../../firebase/slate/update";
 
 /**
  * TODO
@@ -16,6 +17,7 @@ export type PickValueProp = {
   addPick: (pick: Picks) => void;
   fetchSlate: () => void;
   getUserPicks: () => void;
+  refreshSlatePicksStatus: () => void;
 }
 
 type ContextProp = {
@@ -71,6 +73,11 @@ const Context = ({
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }))
     return results;
   }, [setSlate, setPicks]);
+  
+  const refreshSlatePicksStatus = useCallback(async () => {
+    const updatedSlate = await updateSlateScores(getWeek().week)
+    setSlate(updatedSlate as Slate)
+  }, [setSlate]);
 
   const getUserPicks = useCallback(async () => {
     const findPicks = user?.pickHistory?.find((p) => p.slateId === slate.uniqueWeek);
@@ -80,7 +87,7 @@ const Context = ({
   }, [user?.pickHistory, setPicks, slate.uniqueWeek]);
 
   return (
-    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks }} >
+    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks, refreshSlatePicksStatus }} >
       {children}
     </PickContext.Provider>
   )

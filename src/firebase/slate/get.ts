@@ -20,4 +20,4 @@ export const getSlate = async (week: number) => {
   } catch (err) {
     console.error(err);
   }
-}
+};

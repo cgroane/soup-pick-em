@@ -40,7 +40,7 @@ export const getSpreads = async ({
   }).then((response) => response.data);
 }
 
-export const getGames = async (week: number, options?: SpreadsAPIRequest) => {
+export const getGames = async (week: number, options?: SpreadsAPIRequest): Promise<Matchup[]> => {
   return axiosInstane.get<Matchup[]>(`/GamesByWeek/${year}/${week}`, {
   }).then(async (res) => {
     const teamInfo = await getTeams();

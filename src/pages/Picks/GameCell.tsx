@@ -1,19 +1,22 @@
 import React, { useMemo } from 'react'
 import styled from 'styled-components'
 import { Matchup, Outcome } from '../../model'
-import { TableCell, TableCellProps } from 'grommet';
+import { Box, TableCell, TableCellProps } from 'grommet';
 
-const StyledGameCell = styled(TableCell)<{ correct?: boolean }>`
-  background-color: ${({correct, theme}) => correct ? theme.colors.brand : `red`};
+const StyledGameCell = styled(TableCell)`
+  text-align: center;
+  background-color: white;
   color: black;
-  :first-of-type {
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
-  }
+  border-left: 1px solid grey;
+  font-size: 12px;
   :last-of-type {
     border-top-right-radius: 12px;
     border-bottom-right-radius: 12px;
   }
+`;
+
+const TextContainer = styled(Box)<{ correct?: boolean }>`
+  border-radius: 4px;
 `
  
 interface GameCellProps extends TableCellProps, React.PropsWithChildren {
@@ -35,8 +38,10 @@ const GameCell: React.FC<GameCellProps> = ({
     } else return false
   }, [game, outcome?.name, outcome?.point]);
   return (
-    <StyledGameCell correct={correct}>
-      {children}
+    <StyledGameCell border={'between'} pad={'4px'}>
+      <TextContainer background={correct ? 'brand' : 'error'} >
+        {children}
+      </TextContainer>
     </StyledGameCell>
   )
 }

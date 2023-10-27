@@ -19,6 +19,19 @@ import GameCell from './GameCell';
  *
  * data -- maybe map user.picks into just this slate's picks?
  */
+const StyledCell = styled(TableCell)`
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  font-size: 12px;
+`;
+const Row = styled(TableRow)`
+  margin-top: 4px;
+  margin-bottom: 4px;
+`
+const StyledTable = styled(Table)`
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
+`
 
 const TableWrapper = styled(Box)`
   width: 100%;
@@ -47,20 +60,18 @@ const PicksTable: React.FC<PicksTableProps> = ({
 
   return (
     <>
-      <TableWrapper className="p-2">
-        <Table>
+      <TableWrapper className="p-2" pad={'3rem'} >
+        <StyledTable>
           <TableHeader>
             {tableInstance.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableCell scope='col' key={header.id}>
-                    {header.id === 'user' ? flexRender(header.column.columnDef.header, header.getContext()) : flexRender(header.column.columnDef.header, header.getContext())}
-                    {/* {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )} */}
+                  <TableCell style={{
+                    textAlign: 'center',
+                  }} scope='col' key={header.id}>
+                    {header.id === 'user' ?
+                    flexRender(header.column.columnDef.header, header.getContext()) :
+                    flexRender(header.column.columnDef.header, header.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
@@ -68,14 +79,14 @@ const PicksTable: React.FC<PicksTableProps> = ({
           </TableHeader>
           <TableBody>
             {tableInstance.getRowModel().rows.map(row => (
-              <TableRow key={row.id}>
+              <Row key={row.id}>
                 {row.getVisibleCells().map(cell => {
                     const cellVal = cell?.getValue<Outcome>() as Outcome ?? "No selection"
                     return (
                       cell.column.id === 'user' ? (
-                        <TableCell>
-                        {cell.getValue<UserCollectionData>().fName ?? ''}
-                      </TableCell>
+                        <StyledCell style={{ textAlign: 'center' }} border={'horizontal'} background={'white'} >
+                          {cell.getValue<UserCollectionData>().fName ?? ''}
+                        </StyledCell>
                       ) :
                       <GameCell game={row.original.game} outcome={cellVal as Outcome} scope='row' key={cell.id}>
                         {cellVal?.name ?? 'No selection'}
@@ -83,10 +94,10 @@ const PicksTable: React.FC<PicksTableProps> = ({
                     )
                   })
                 }
-              </TableRow>
+              </Row>
             ))}
           </TableBody>
-        </Table>
+        </StyledTable>
       <div className="h-4" />
     </TableWrapper>
     </>

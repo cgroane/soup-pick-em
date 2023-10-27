@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react'
-import { Box } from 'grommet';
+import { Box, Button } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable from './PicksTable';
@@ -33,7 +33,8 @@ const Picks: React.FC = () => {
   } = useGlobalContext();
   const {
     slate,
-    fetchSlate
+    fetchSlate,
+    refreshSlatePicksStatus
   } = usePickContext()
   
   useEffect(() => {
@@ -62,15 +63,22 @@ const Picks: React.FC = () => {
 
     if (slate.games) {
       const cols = [
-        columnHelper.accessor('user', {
+        {...columnHelper.accessor('user', {
           cell: info => info.getValue<UserCollectionData>(),
-          header: 'Soup'
+          header: 'Soup',
+          size: 200
         }),
-        ...slate?.games?.map((game) => columnHelper.accessor(`${game.gameID}`, {
-          cell: info => info.getValue<PicksColumnDef>(),
-          header: `${game.awayTeamName} at ${game.homeTeamName}`,
-          
-        })
+      },
+          ...slate?.games?.map((game) => (
+            {
+              ...columnHelper.accessor(`${game.gameID}`, {
+              cell: info => info.getValue<PicksColumnDef>(),
+              header: `${game.awayTeamName} at ${game.homeTeamName}`,
+              size: 500,
+              minSize: undefined,
+              maxSize: undefined
+            }),
+          })
         )
       ];
       return cols as ColumnDef<PicksColumnDef>[]
@@ -83,6 +91,7 @@ const Picks: React.FC = () => {
     <>
       <Box>
         {<PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
+        {/* <Button label='Update Scores' onClick={() => refreshSlatePicksStatus()} /> */}
       </Box>
     </>
   )
