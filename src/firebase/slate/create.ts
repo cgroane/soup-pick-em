@@ -5,6 +5,7 @@ import { db } from "..";
 export const createSlate = async (week: number, games: Matchup[], user: UserCollectionData) => {
   
   try {
+
     const docRef = await setDoc(doc(db, 'slates', `w${week}-${new Date().getFullYear()}`), {
       week: week,
       year: new Date().getFullYear(),

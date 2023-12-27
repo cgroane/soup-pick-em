@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
+import { collection, getDocs, getFirestore } from "firebase/firestore";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -26,3 +26,14 @@ export const db = getFirestore(app);
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+export const getCollection = async <T>(collectionName: string, segments: string[]) => {
+  
+  try {
+    const docs = await getDocs(collection(db, collectionName, ''))
+    let results: T[] = [];
+    docs.forEach((doc) => results.push(doc.data() as T));
+  } catch (error) {
+    console.error(error);
+  }
+}

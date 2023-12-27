@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Box, Button } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable from './PicksTable';
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
 import { Matchup, Outcome, UserCollectionData } from '../../model';
+import SelectWeek from '../../components/SelectWeek';
  
 
 /**
@@ -27,6 +28,7 @@ export interface PicksColumnDef {
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
 const Picks: React.FC = () => {
+
   const {
     users,
     fetchUsers
@@ -46,7 +48,7 @@ const Picks: React.FC = () => {
     return users?.map((user) => {
       return {
         user: user,
-        ...user.pickHistory.find((h) => h.slateId === slate.uniqueWeek)?.picks?.reduce<{game: Matchup, [key: string]: Outcome | Matchup}>((acc, pick) => {
+        ...user.pickHistory.find((h) => h.slateId === slate?.uniqueWeek)?.picks?.reduce<{game: Matchup, [key: string]: Outcome | Matchup}>((acc, pick) => {
           const game = slate?.games.find((g) => g.gameID === pick.matchup);
           return {
             ...acc,
@@ -61,7 +63,7 @@ const Picks: React.FC = () => {
   
   const columns: ColumnDef<PicksColumnDef>[] = useMemo(() => {
 
-    if (slate.games) {
+    if (slate?.games) {
       const cols = [
         {...columnHelper.accessor('user', {
           cell: info => info.getValue<UserCollectionData>(),
@@ -85,13 +87,14 @@ const Picks: React.FC = () => {
     } else {
       return []
     }
-  }, [slate.games])
+  }, [slate?.games])
   
   return (
     <>
       <Box>
         {<PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
-        {/* <Button label='Update Scores' onClick={() => refreshSlatePicksStatus()} /> */}
+        <SelectWeek onChange={fetchSlate} />
+        <Button label='Update Scores' onClick={() => refreshSlatePicksStatus(9)} />
       </Box>
     </>
   )

@@ -34,3 +34,5 @@ export const registerWithEmailAndPassword = async (name: string, email: string, 
     console.error(err);
   }
 };
+
+// src/firebase/user/get.ts

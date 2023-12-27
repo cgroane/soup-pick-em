@@ -7,7 +7,7 @@ import { Slate } from "../../model"
 
 export const updateSlateScores = async (week: number): Promise<Slate | undefined> => {
   try {
-    const games = await getGames(week)
+    const games = await getGames()
     let slate = await getSlate(week);
     await setDoc(doc(db, 'slates', `w${week}-2023`), {
       ...slate,

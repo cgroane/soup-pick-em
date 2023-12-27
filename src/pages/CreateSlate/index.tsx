@@ -12,6 +12,7 @@ import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { UserCollectionData } from '../../model';
 import { createSlate } from '../../firebase/slate/create';
+import { usePickContext } from '../../context/pick';
  
 
 /**
@@ -34,7 +35,6 @@ interface CreateSlateProps {
 const CreateSlate: React.FC<CreateSlateProps> = ({
   week
 }) => {
-
   // const [games, setGames] = useState<Matchup[]>([]);
   const [textFilter, setTextFilter] = useState('');
   // const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
@@ -48,6 +48,9 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setLoading,
     fetchMatchups
   } = useSlateContext()
+  const {
+    fetchSlate
+  } = usePickContext()
   const { 
     setModalOpen,
     modalOpen
@@ -65,9 +68,9 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
   }, [setTextFilter]);
 
   useEffect(() => {
+    fetchSlate()
     fetchMatchups();
-  }, [fetchMatchups]);
-
+  }, [fetchMatchups, fetchSlate]);
 
   useEffect(() => {
     if (textFilter) {
@@ -81,6 +84,7 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
+  
   const submitSlate = async () => {
     setLoading('loading');
     setModalOpen(true);
@@ -121,7 +125,7 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
           {
             label: 'Make your picks',
             onClick: () => {
-              navigate('/slate')
+              navigate('/pick')
               setModalOpen(false)
             }
           }

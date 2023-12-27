@@ -14,7 +14,7 @@ export type SlateValueProps = {
   addAndRemove: (game: Matchup) => void;
   loading: string;
   setLoading: Dispatch<SetStateAction<string>>;
-  fetchMatchups: () => void;
+  fetchMatchups: (weekNumber?: number) => void;
 }
 
 type ContextProp = {
@@ -34,9 +34,11 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async () => {
+  const fetchMatchups = useCallback(async (weekNumber?: number) => {
 
-    const results = await getGames(week);
+    const results = await getGames({
+      weekNumber: weekNumber?.toString()
+    });
     setGames(results);
     setFilteredGames(results);
   }, [setGames, week]);
@@ -147,5 +149,5 @@ export default function CreateSlateContext({ children }: ContextProp) {
 }
 
 export const useSlateContext = ():SlateValueProps => {
-    return useContext(SlateContext);
+  return useContext(SlateContext);
 }
