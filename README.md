@@ -1,3 +1,6 @@
+# Important Note
+
+Unfortunately, without manually creating required data resembling that which comes from the various API's in use, this is on hold until football season
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
