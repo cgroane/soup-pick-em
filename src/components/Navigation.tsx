@@ -23,12 +23,16 @@ const Navigation: React.FC = () => {
   const menuItems = useMemo(() => {
     const loggedInItems = [
       {
+        label: 'Profile',
+        onClick: () => navigate('/profile')
+      },
+      {
         label: 'Logout',
         onClick: () => signOut()
       },
       {
-        label: 'Profile',
-        onClick: () => navigate('/profile')
+        label: 'Choose Slate Maker',
+        onClick: () => navigate('/choose-picker')
       }
     ];
     const loggedOut = [
@@ -42,7 +46,7 @@ const Navigation: React.FC = () => {
   return (
     <StyledHeader gridArea='header' sticky='scrollup' >
       <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/dashboard')} />
-      {<Menu color={theme.colors.darkBlue} label="Account" items={menuItems} />}
+      {<Menu color={theme.colors.darkBlue} items={menuItems} />}
     </StyledHeader>
   )
 }

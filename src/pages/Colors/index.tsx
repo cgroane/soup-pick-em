@@ -3,7 +3,7 @@ import { theme } from '../../theme'
 import { Box, Text } from 'grommet';
  
 interface ColorsProps {}
-const Colors: React.FC<ColorsProps> = ({}: ColorsProps) => {
+const Colors: React.FC<ColorsProps> = () => {
   const colors = Object.entries(theme.colors);
   return (
     <>

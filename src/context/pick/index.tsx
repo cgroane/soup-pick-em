@@ -1,17 +1,23 @@
 import { Dispatch, SetStateAction, createContext, useCallback, useContext, useState } from "react";
 import { Picks, Slate } from "../../model"
-import { getSlate } from "../../firebase/slate";
 import { getWeek } from "../../utils/getWeek";
 import { useGlobalContext } from "../user";
+import { getSlate } from "../../firebase/slate/get";
+import { updateSlateScores } from "../../firebase/slate/update";
 
+/**
+ * TODO
+ * fetchSlate may need to accept a parameter for week number with current week default
+ */
 export type PickValueProp = {
   slate: Slate;
   picks: { slateId: string; picks: Picks[] };
   setSlate: Dispatch<SetStateAction<Slate>>;
   setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
-  fetchSlate: () => void;
+  fetchSlate: (week?: number) => void;
   getUserPicks: () => void;
+  refreshSlatePicksStatus: (week?: number) => void;
 }
 
 type ContextProp = {
@@ -25,6 +31,7 @@ const Context = ({
 }: ContextProp) => {
   const { user } = useGlobalContext()
   const [slate, setSlate] = useState({} as Slate);
+  const [weeklyResults, setWeeklyResults] = useState()
   const [picks, setPicks] = useState({
     slateId: slate?.uniqueWeek,
     picks: [] as Picks[]
@@ -61,22 +68,27 @@ const Context = ({
 
   }, [picks]);
 
-  const fetchSlate = useCallback( async () => {
-    const results = await getSlate(getWeek().week);
+  const fetchSlate = useCallback( async (week?: number) => {
+    const results = await getSlate(week ? week : getWeek().week);
     setSlate(results as Slate);
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }))
     return results;
   }, [setSlate, setPicks]);
+  
+  const refreshSlatePicksStatus = useCallback(async (week?: number) => {
+    const updatedSlate = await updateSlateScores(week ? week: getWeek().week)
+    setSlate(updatedSlate as Slate)
+  }, [setSlate]);
 
   const getUserPicks = useCallback(async () => {
-    const findPicks = user?.pickHistory?.find((p) => p.slateId === slate.uniqueWeek);
+    const findPicks = user?.pickHistory?.find((p) => p.slateId === slate?.uniqueWeek);
     if (findPicks) {
       setPicks(findPicks);
     }
-  }, [user?.pickHistory, setPicks, slate.uniqueWeek]);
+  }, [user?.pickHistory, setPicks, slate?.uniqueWeek]);
 
   return (
-    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks }} >
+    <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks, refreshSlatePicksStatus }} >
       {children}
     </PickContext.Provider>
   )

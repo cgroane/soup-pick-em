@@ -5,14 +5,22 @@ import styled from 'styled-components';
 import { Checkmark, Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
-import { createSlate } from '../../firebase/slate';
 import { getWeek } from '../../utils/getWeek';
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { UserCollectionData } from '../../model';
+import { createSlate } from '../../firebase/slate/create';
+import { usePickContext } from '../../context/pick';
  
+
+/**
+ * TODO
+ * style fixes
+ * bottom bar overlaps content
+ * narrow screen content overlaps
+ */
 const BottomToolbar = styled(Toolbar)`
   position: fixed;
   bottom: 0%;
@@ -27,7 +35,6 @@ interface CreateSlateProps {
 const CreateSlate: React.FC<CreateSlateProps> = ({
   week
 }) => {
-
   // const [games, setGames] = useState<Matchup[]>([]);
   const [textFilter, setTextFilter] = useState('');
   // const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
@@ -41,6 +48,9 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setLoading,
     fetchMatchups
   } = useSlateContext()
+  const {
+    fetchSlate
+  } = usePickContext()
   const { 
     setModalOpen,
     modalOpen
@@ -58,9 +68,9 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
   }, [setTextFilter]);
 
   useEffect(() => {
+    fetchSlate()
     fetchMatchups();
-  }, [fetchMatchups]);
-
+  }, [fetchMatchups, fetchSlate]);
 
   useEffect(() => {
     if (textFilter) {
@@ -74,6 +84,7 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
+  
   const submitSlate = async () => {
     setLoading('loading');
     setModalOpen(true);
@@ -114,7 +125,7 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
           {
             label: 'Make your picks',
             onClick: () => {
-              navigate('/slate')
+              navigate('/pick')
               setModalOpen(false)
             }
           }

@@ -1,4 +1,5 @@
 import { User } from "firebase/auth";
+import { PickHistory } from "./pages/Picks/PicksTable";
 
 export type UserCollectionData = User & {
   id: string;
@@ -7,10 +8,7 @@ export type UserCollectionData = User & {
   lName: string;
   isAuthenticated?: boolean;
   roles: UserRoles[];
-  pickHistory?: {
-    slateId: string;
-    picks: Picks[]
-  }[];
+  pickHistory: PickHistory[];
   record?: WinLossRecord;
   trophyCase?: Trophy[];
 }
@@ -57,7 +55,7 @@ export type Matchup = {
   week:                  number;
   status:                string;
   day:                   Date;
-  dateTime:              string;
+  dateTime:              Date;
   awayTeam:              string;
   homeTeam:              string;
   awayTeamID:            number;
