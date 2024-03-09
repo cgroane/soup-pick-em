@@ -1,4 +1,4 @@
-import axiosInstane, { theOddsInstance } from "."
+import axiosInstance, { theOddsInstance } from "."
 import { Matchup, TheOddsMatchup } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { getTeams } from "./getTeams";
@@ -41,7 +41,7 @@ export const getSpreads = async ({
 }
 
 export const getGames = async (week: number, options?: SpreadsAPIRequest) => {
-  return axiosInstane.get<Matchup[]>(`/GamesByWeek/${year}/${week}`, {
+  return axiosInstance.get<Matchup[]>(`/GamesByWeek/${year}/${week}`, {
   }).then(async (res) => {
     const teamInfo = await getTeams();
     const spreads = await getSpreads({ ...options });

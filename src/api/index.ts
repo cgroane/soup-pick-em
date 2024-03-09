@@ -1,7 +1,7 @@
 import axios from "axios";
 
 
-const axiosInstane = axios.create({
+const axiosInstance = axios.create({
   baseURL: `https://api.sportsdata.io/v3/cfb/scores/json/`,
   params: {
     key: process.env.REACT_APP_MATCHUPS_API_KEY
@@ -14,4 +14,4 @@ export const theOddsInstance = axios.create({
     apiKey: process.env.REACT_APP_THE_ODDS_API_KEY
   }
 });
-export default axiosInstane;
+export default axiosInstance;
