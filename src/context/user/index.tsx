@@ -3,7 +3,7 @@ import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
-import { getAllUsers, getUserCollectionData } from "../../firebase/user/get";
+import FirebaseUsersClassInstance from "../../firebase/user/get";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
@@ -23,7 +23,7 @@ const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollecti
 const [users, setUsers] = useState<UserCollectionData[]>([]);
   
 const fetchUsers = useCallback(async () => {
-  const results = await getAllUsers();
+  const results = await FirebaseUsersClassInstance.getCollection();
   setUsers(results as UserCollectionData[]);
 }, [setUsers]);
 
@@ -32,7 +32,7 @@ const navigate = useNavigate();
 useEffect(() => {
   const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
-      getUserCollectionData(currUser.uid).then((res) => {
+      FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
         if (res) {
           setUser(res as UserCollectionData)
         } else {

@@ -9,7 +9,7 @@ const axiosInstance = axios.create({
 });
 
 export const theOddsInstance = axios.create({
-  baseURL: `https://api.the-odds-api.com/v4/sports/`,
+  baseURL: `https://api.the-odds-api.com/v4${process.env.REACT_APP_SEASON_KEY === 'offseason' ? `/historical` : ''}/sports/`,
   params: {
     apiKey: process.env.REACT_APP_THE_ODDS_API_KEY
   }

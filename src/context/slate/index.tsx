@@ -35,14 +35,14 @@ export default function CreateSlateContext({ children }: ContextProp) {
    * update fetchMatchups to accept a week param
    */
   const fetchMatchups = useCallback(async (weekNumber?: number) => {
-
+    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1'
     const results = await getGames({
-      weekNumber: weekNumber ? weekNumber?.toString() : seasonData.ApiWeek.toString(),
-      season: seasonData.ApiSeason
+      weekNumber: week,
+      season: seasonData?.ApiSeason
     });
     setGames(results);
     setFilteredGames(results);
-  }, [setGames, seasonData.ApiSeason, seasonData.ApiWeek]);
+  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek]);
   
 
   const addAndRemove = useCallback((game: Matchup) => {

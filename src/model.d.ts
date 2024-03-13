@@ -151,7 +151,7 @@ export type Team = {
   rankSeasonType:   null;
 }
 
-export interface TheOddsMatchup {
+export interface TheOddsResult {
   id:            string;
   sport_key:     string;
   sport_title:   string;
@@ -159,6 +159,10 @@ export interface TheOddsMatchup {
   home_team:     string;
   away_team:     string;
   bookmakers:    Bookmaker[];
+}
+
+export interface TheOddsMatchup {
+  data: TheOddsResult[]
 }
 
 export interface Bookmaker {

@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react"
 import { logInWithEmailAndPassword } from "../firebase/user/login";
-import { registerWithEmailAndPassword } from "../firebase/user/create";
 import { useNavigate } from "react-router-dom";
 import { useGlobalContext } from "../context/user";
+import FirebaseUsersClassInstance from "../firebase/user/get";
 
 export const useEmailAndPassword = () => {
   const [loginInfo, setLoginInfo] = useState({
@@ -27,7 +27,7 @@ export const useEmailAndPassword = () => {
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     if (newUser) {
-      registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then((res) => {
+      FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then((res) => {
         navigate('/dashboard')
         if(res) setUser(res.user);
       });

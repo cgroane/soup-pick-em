@@ -1,5 +1,5 @@
 import axiosInstance, { theOddsInstance } from "."
-import { Matchup, TheOddsMatchup } from "../model";
+import { Matchup, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { getTeams } from "./getTeams";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
@@ -12,6 +12,7 @@ export interface SpreadsAPIRequest {
   commenceTimeFrom?: string
   commenceTimeTo?: string;
   event?: string;
+  date?: string;
 }
 const buildDateFormat = (date: string) => {
   const convertedToDate = new Date(date);
@@ -25,7 +26,7 @@ const buildDateFormat = (date: string) => {
 }
 
 export const getSpreads = async (options: SpreadsAPIRequest) => {
-  return theOddsInstance.get<TheOddsMatchup[]>('americanfootball_ncaaf/odds', {
+  return theOddsInstance.get(`americanfootball_ncaaf/odds`, {
     params: {
       ...options,
       regions: 'us',
@@ -39,12 +40,6 @@ export const getSpreads = async (options: SpreadsAPIRequest) => {
 export const getCurrentWeek = async () => {
   try {
     const response = await axiosInstance.get<SeasonDetails>(`/scores/json/CurrentSeasonDetails`);
-    if (response.data.ApiSeason.includes('OFF') || response.data.ApiSeason.includes('POST')) {
-      return {
-        ...response.data,
-        ApiWeek: 1
-      }
-    }
     return response.data
   } catch (err) {
     console.error(err)
@@ -71,7 +66,8 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         await getSpreads({
           ...options,
           commenceTimeFrom: buildDateFormat((weekRange.start?.dateTimeUTC)),
-          commenceTimeTo: buildDateFormat((weekRange.end?.dateTimeUTC))
+          commenceTimeTo: buildDateFormat((weekRange.end?.dateTimeUTC)),
+          date: buildDateFormat(weekRange?.end?.dateTimeUTC)
         })
       ]);
       const [teamInfo, spreads] = await compoundRequest;
@@ -87,7 +83,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         const strippedHomeTeam = stripAndReplaceSpace(item.homeTeamName);
         const strippedAwayTeam = stripAndReplaceSpace(item.awayTeamName);
   
-        const gameSpread: TheOddsMatchup | undefined = spreads?.find((spread: TheOddsMatchup) => {
+        const gameSpread: TheOddsResult | undefined = spreads?.data?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
           return ((strippedHome === strippedHomeTeam) &&

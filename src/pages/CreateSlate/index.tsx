@@ -22,7 +22,7 @@ import { usePickContext } from '../../context/pick';
  * narrow screen content overlaps
  */
 const BottomToolbar = styled(Toolbar)`
-  position: fixed;
+  position: sticky;
   bottom: 0%;
   left: 0;
   width: 100%;

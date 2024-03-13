@@ -6,14 +6,17 @@ import { daysOfTheWeek, months } from "../utils/getWeek";
 export const useGetTeamData = (game: Matchup) => {
   const dateTime = useMemo(() => {
     const converted = new Date(game.dateTime)
+    if (game.awayTeam.includes('LSU')) {
+      console.log(converted, converted.getDay())
+    }
     return {
-      dayOfTheWeek: daysOfTheWeek[converted.getDay() - 1],
+      dayOfTheWeek: daysOfTheWeek[converted.getDay()],
       minutes: converted.getMinutes().toLocaleString('en-US', {
         minimumIntegerDigits: 2
       }),
       hours: converted.getHours() > 12 ? converted.getHours() - 12 : converted.getHours(),
       amPm: converted.getHours() > 12 ? 'P.M.' : 'A.M.',
-      dayOfTheMonth: converted.getDay(),
+      dayOfTheMonth: converted.getDate(),
       year: converted.getFullYear(),
       month: months[converted.getMonth() - 1]
     }

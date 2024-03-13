@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
-import { getUserCollectionData } from '../../firebase/user/get';
+import FirebaseUsersClassInstance from '../../firebase/user/get';
 // import { getWeek } from '../../utils/getWeek';
 
 /**
@@ -75,7 +75,7 @@ const MakePicks: React.FC = () => {
     // })
     await makePicks(user as UserCollectionData, picks).then((res) => {
       setLoading('idle');
-      getUserCollectionData(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
+      FirebaseUsersClassInstance.getUserCollectionData(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
   }, [navigate, setLoading, setModalOpen, picks, user, setUser]);
   

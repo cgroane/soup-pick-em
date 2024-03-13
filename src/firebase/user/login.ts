@@ -6,7 +6,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from ".."
 import { UserRoles } from '../../utils/constants';
-import { getUserCollectionData } from './get';
+import { FirebaseUsers } from './get';
 
 /**
  * Login / register
@@ -24,7 +24,7 @@ export const logInWithEmailAndPassword = async (email: string, password: string)
   try {
     const res = await signInWithEmailAndPassword(auth, email, password);
     const user = res.user;
-    return await getUserCollectionData(user.uid);
+    return await new FirebaseUsers().getUserCollectionData(user.uid);
   } catch (err) {
     console.error(err);
   }
