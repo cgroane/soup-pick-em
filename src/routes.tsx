@@ -7,7 +7,6 @@ import ChoosePicker from "./pages/ChoosePicker";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
-import Dashboard from "./pages/Dashboard";
 import MakePicks from "./pages/MakePicks";
 
 /**
@@ -44,38 +43,30 @@ const PrivateRoutes: React.FC<PropsWithChildren & {authenticated: boolean}> = ({
 
 const Router = () => {
   // const userRoles = useSelector(selectUserRoles);
-  const userRoles: UserRoles[] = [UserRoles.BASIC, UserRoles.SLATE_PICKER, UserRoles.ADMIN];
+  // const userRoles: UserRoles[] = [UserRoles.BASIC, UserRoles.SLATE_PICKER, UserRoles.ADMIN];
   const { user } = useGlobalContext();
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Login />} />
       <Route path="/colors" element={<Colors />} />
       <Route
         path="/profile" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <Profile/>
             </RoleGuardedRoutes>
           </PrivateRoutes>
       }
       />
-      <Route
-        path="/dashboard" 
-        element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
-              <Dashboard />
-            </RoleGuardedRoutes>
-          </PrivateRoutes>
-      }
-      />
+      {/* 
+        * page for showing a table of everyone's choices
+       */}
       <Route 
         path="/picks" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.BASIC)} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <Picks />
             </RoleGuardedRoutes>
           </PrivateRoutes>
@@ -85,7 +76,7 @@ const Router = () => {
         path="/choose-picker" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.ADMIN)} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean} >
               <ChoosePicker />
             </RoleGuardedRoutes>
           </PrivateRoutes>
@@ -95,7 +86,7 @@ const Router = () => {
         path="/choose-matchups" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.SLATE_PICKER) as boolean} >
               <CreateSlate />
             </RoleGuardedRoutes>
           </PrivateRoutes>
@@ -105,7 +96,7 @@ const Router = () => {
         path="/pick" 
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={userRoles.includes(UserRoles.SLATE_PICKER)} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
             </RoleGuardedRoutes>
           </PrivateRoutes>

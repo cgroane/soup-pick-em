@@ -10,4 +10,13 @@ export const TeamLogo = styled(Image)`
   position: relative;
   opacity: 1;
 `;
+
+export const ProfileCard = styled(Card)`
+  ${({ pad = '1rem', width = '90%', margin = '1rem auto'}) => `
+      padding: ${pad};
+      pad: ${pad};
+      margin: ${margin};
+      width: ${width};
+  `}
+`;
 export {};

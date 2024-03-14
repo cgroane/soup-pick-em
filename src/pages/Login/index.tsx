@@ -6,7 +6,7 @@ const Login: React.FC = () => {
 
   return (
     <Page>
-      <LoginAndSignUp signUp={false} />
+      <LoginAndSignUp />
     </Page>
   )
 }

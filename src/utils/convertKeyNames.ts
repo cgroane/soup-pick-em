@@ -21,7 +21,7 @@ export const convertKeyNames = <T extends {}>(obj: T[]) => {
 }
 
 // export const getGames = async (week: number) => {
-//   return axiosInstane.get<Matchup[]>(`/GamesByWeek/${year}/${week}`, {
+//   return axiosInstance.get<Matchup[]>(`/GamesByWeek/${year}/${week}`, {
 //   }).then((res) => {
 //     const teamInfo = getTeams().then((response) => response.data);
 //     const keys = Object.keys(res.data[0]);
