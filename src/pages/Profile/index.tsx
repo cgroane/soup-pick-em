@@ -78,6 +78,9 @@ const Profile: React.FC<ProfileProps> = () => {
             {/* find user whose id === cur user id, make bold / highlighted somehow */}
             {leaderBoard.map((leader, index) => <li key={index} >{leader.fName} {leader.lName} {leader?.record?.wins}-{leader?.record?.losses}</li>)}
           </ol>
+          <Link to={'/picks'} >
+            <Button label="see more" primary/>
+          </Link>
         </CardBody>
       </ProfileCard>
     </>
