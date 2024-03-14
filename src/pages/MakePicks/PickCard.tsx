@@ -7,6 +7,7 @@ import { useGetTeamData } from '../../hooks/useGetTeamData'
 import { usePickContext } from '../../context/pick'
 import { useGlobalContext } from '../../context/user'
 import { getWeek } from '../../utils/getWeek'
+import { useUIContext } from '../../context/ui'
 
 const Team = styled(Box)`
   position: absolute;
@@ -39,7 +40,7 @@ const PickCard: React.FC<PickCardProps> = ({
   game,
 }: PickCardProps) => {
   const {
-    user
+    user,
   } = useGlobalContext();
 
   const {
@@ -51,6 +52,9 @@ const PickCard: React.FC<PickCardProps> = ({
     addPick,
     slate
   } = usePickContext();
+  const { 
+    seasonData
+  } = useUIContext();
 
   const [choice, setChoice] = useState('PUSH' as Outcome | 'PUSH');
 
@@ -76,8 +80,8 @@ const PickCard: React.FC<PickCardProps> = ({
       matchup: game.gameID,
       userId: user?.uid as string,
       isCorrect: false,
-      week: getWeek().week,
-      selection: outcome
+      week: seasonData?.ApiWeek as number,
+      selection: outcome
     }
     addPick(pick);
     setChoice(outcome);
