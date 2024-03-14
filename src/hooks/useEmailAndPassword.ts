@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react"
-import { logInWithEmailAndPassword } from "../firebase/user/login";
 import { useNavigate } from "react-router-dom";
 import { useGlobalContext } from "../context/user";
-import FirebaseUsersClassInstance from "../firebase/user/get";
+import FirebaseUsersClassInstance from "../firebase/user/user";
+import { UserCollectionData } from "../model";
 
 export const useEmailAndPassword = () => {
   const [loginInfo, setLoginInfo] = useState({
@@ -29,10 +29,10 @@ export const useEmailAndPassword = () => {
     if (newUser) {
       FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password).then((res) => {
         navigate('/dashboard')
-        if(res) setUser(res.user);
+        if(res) setUser(res as UserCollectionData);
       });
     } else {
-      logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then((res) => {
+      FirebaseUsersClassInstance.logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then((res) => {
         navigate('/dashboard')
         if(res) setUser(res);
       });

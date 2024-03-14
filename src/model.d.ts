@@ -43,8 +43,7 @@ export type Trophy = {
 export type Slate = {
   weekNumber: number;
   games: Matchup[];
-  picks: Picks[];
-  providedBy: User;
+  providedBy: UserCollectionData;
   uniqueWeek: string;
 }
 

@@ -9,14 +9,13 @@ const WinPercentage = ({
     const { user } = useGlobalContext();
     const val = useMemo(() => {
         if (user?.record && (user?.record?.wins !== 0 && user?.record?.losses !== 0)) {
-            return (user?.record?.wins as number / (user?.record?.wins as number + user?.record?.losses as number) ) as number
+            return (user?.record?.wins as number / (user?.record?.wins as number + user?.record?.losses) ) as number
         }
         return 0;
     }, [user?.record]);
     
   return (
     <>
-    <Box direction="row" pad={"small"} >
         <Box align="center" pad="large">
             <Stack anchor="center" >
                 <Meter
@@ -43,7 +42,6 @@ const WinPercentage = ({
                 {user?.record?.wins} - {user?.record?.losses}
             </Text>
         </Box>
-      </Box>
     </>
   )
 };

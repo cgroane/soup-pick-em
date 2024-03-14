@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Box, Button } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
@@ -41,7 +41,7 @@ const Picks: React.FC = () => {
   
   useEffect(() => {
     fetchUsers();
-    fetchSlate();
+    fetchSlate({  });
   }, [fetchUsers, fetchSlate]);
 
   const thisWeeksPickHistory = useMemo(() => {
@@ -94,7 +94,7 @@ const Picks: React.FC = () => {
       <Box>
         {<PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
         <SelectWeek onChange={fetchSlate} />
-        <Button label='Update Scores' onClick={() => refreshSlatePicksStatus(9)} />
+        <Button label='Update Scores' onClick={() => refreshSlatePicksStatus({ week: 9 })} />
       </Box>
     </>
   )

@@ -1,9 +1,10 @@
-import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
-import FirebaseUsersClassInstance from "../../firebase/user/get";
+import FirebaseUsersClassInstance from "../../firebase/user/user";
+import { UserRoles } from "../../utils/constants";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
@@ -11,6 +12,7 @@ export type UserValueProp = {
     users: UserCollectionData[];
     setUsers: Dispatch<SetStateAction<UserCollectionData[]>>;
     fetchUsers: () => void;
+    isSlatePicker: boolean;
 }
 
 
@@ -46,7 +48,12 @@ useEffect(() => {
   return unsubscribe;
 }, [navigate]);
 
-
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+  const isSlatePicker = useMemo(() => {
+    return !!user?.roles?.includes(UserRoles.SLATE_PICKER);
+  }, [user?.roles])
 
   return (
     <AppContext.Provider value={{
@@ -54,7 +61,8 @@ useEffect(() => {
       setUser,
       users,
       setUsers,
-      fetchUsers
+      fetchUsers,
+      isSlatePicker
     }}>
       {children}
     </AppContext.Provider>

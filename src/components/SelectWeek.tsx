@@ -3,7 +3,7 @@ import React from 'react'
 import { getWeek } from '../utils/getWeek'
  
 interface SelectWeekProps {
-  onChange: (num: number) => void;
+  onChange: ({ week, year }: { week?: number; year?: number }) => void;
 }
 const SelectWeek: React.FC<SelectWeekProps> = ({
   onChange

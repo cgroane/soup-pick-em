@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference, DocumentData, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, updateDoc } from "firebase/firestore";
+import { CollectionReference, DocumentData, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, setDoc, updateDoc } from "firebase/firestore";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -19,19 +19,10 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const getCollection = async <T>(collectionName: string, segments: string[]) => {
-  
-  try {
-    const docs = await getDocs(collection(db, collectionName, ''))
-    let results: T[] = [];
-    docs.forEach((doc) => results.push(doc.data() as T));
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 /**
  * parent class for firebase basic functions for each collection
+ * each data type (user, slate, pick) should have CRUD ops.
+ * creating class based firebase arch so i only have to instantiate auth, provider, db, app, once
  */
 export class FirebaseDB<T> {
   collectionName: string;
@@ -43,6 +34,16 @@ export class FirebaseDB<T> {
   }
   db = db;
   app = app;
+  /** create */
+  addDocument = async <V extends {}>(docData: V, docId?: string) => {
+    try {
+      const docRef = await setDoc(doc(this.db, this.collectionName, docId ?? ''), docData)
+      return docRef;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  /** read */
   getCollection = async () => {
     try {
       const docs = await getDocs(collection(db, this.collectionName, ''))
@@ -62,15 +63,12 @@ export class FirebaseDB<T> {
       console.error(err);
     }
   }
-  deleteDocumentInCollection = async (docId: string) => {
-    try {
-      const docRef = await deleteDoc(doc(this.db, this.collectionName, docId));
-      return docRef;
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  /** update */
   updateDocumentInCollection = async <V extends {}>(docId: string, values: V) => {
+    /**
+     * if the value property type is an object or an array, you have to copy the initial vals of that property into the new val
+     * the question is whether to do this here, or in the invocation
+    */
     try {
       await updateDoc(doc(this.db, this.collectionName, docId), values);
       const updatedDoc = await this.getDocumentInCollection(docId);
@@ -79,4 +77,18 @@ export class FirebaseDB<T> {
       console.error(error);
     }
   }
+  /** delete */
+  deleteDocumentInCollection = async (docId: string) => {
+    try {
+      const docRef = await deleteDoc(doc(this.db, this.collectionName, docId));
+      return docRef;
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
+
+/**
+ * each isntance of a collection (1 for user, 1 for slate) is an instance of this class 
+ * so FirebaseUsersClassInstance 
+ */

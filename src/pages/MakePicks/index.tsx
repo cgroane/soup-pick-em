@@ -4,19 +4,13 @@ import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Text, Toolbar } from 'grommet';
 import styled from 'styled-components';
 import { theme } from '../../theme';
-import {
-  // getUserPicksFromFirestore,
-  makePicks,
-  // makePicksAsACollection
-} from '../../firebase/picks';
 import { UserCollectionData } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
-import FirebaseUsersClassInstance from '../../firebase/user/get';
-// import { getWeek } from '../../utils/getWeek';
+import FirebaseUsersClassInstance from '../../firebase/user/user';
 
 /**
  * TODO
@@ -37,9 +31,7 @@ const BottomToolbar = styled(Toolbar)`
 const MakePicks: React.FC = () => {
   const {
     picks,
-    // setPicks,
     slate,
-    // setSlate,
     fetchSlate,
     getUserPicks
   } = usePickContext()
@@ -57,7 +49,7 @@ const MakePicks: React.FC = () => {
   const [loading, setLoading] = useState('');
 
   useEffect(() => {
-    fetchSlate()
+    fetchSlate({ })
     getUserPicks()
   }, [fetchSlate, getUserPicks]);
 
@@ -65,17 +57,9 @@ const MakePicks: React.FC = () => {
     if (!user) navigate('/login');
     setLoading('loading');
     setModalOpen(true);
-    // await makePicksAsACollection(user?.uid as string, { week: getWeek().week, matchups: picks.picks.map((pick) => ({
-    //   outcome: pick.selection,
-    //   outcomeIndex: 0,
-    //   gameId: pick.matchup
-    // })) }).then(() => getUserPicksFromFirestore(getWeek().week, user?.uid as string)).then((resp) => {
-    //   setLoading('idle');
-    //   console.log(resp);
-    // })
-    await makePicks(user as UserCollectionData, picks).then((res) => {
+    await FirebaseUsersClassInstance.updateDocumentInCollection(user?.uid as string, { pickHistory: [...user?.pickHistory ?? [], picks] }).then(() => {
       setLoading('idle');
-      FirebaseUsersClassInstance.getUserCollectionData(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
+      FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
   }, [navigate, setLoading, setModalOpen, picks, user, setUser]);
   

@@ -1,9 +1,10 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek } from '../../utils/getWeek';
 import { useUIContext } from '../ui';
+import { usePickContext } from '../pick';
 
 export type SlateValueProps = {
   games: Matchup[];
@@ -26,11 +27,19 @@ export const SlateContext = React.createContext({} as SlateValueProps); //create
 
 //function body
 export default function CreateSlateContext({ children }: ContextProp) {
+
+  const {
+    slate
+  } = usePickContext();
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
   const [loading, setLoading] = useState('');
   const { seasonData } = useUIContext();
+
+  useEffect(() => {
+    setSelectedGames(slate?.games ?? []);
+  }, [slate, setSelectedGames])
   /**
    * update fetchMatchups to accept a week param
    */

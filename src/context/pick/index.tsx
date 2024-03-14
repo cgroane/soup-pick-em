@@ -1,9 +1,8 @@
-import { Dispatch, SetStateAction, createContext, useCallback, useContext, useState } from "react";
+import { Dispatch, SetStateAction, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Picks, Slate } from "../../model"
-import { getWeek } from "../../utils/getWeek";
 import { useGlobalContext } from "../user";
-import { getSlate } from "../../firebase/slate/get";
-import { updateSlateScores } from "../../firebase/slate/update";
+import FBSlateClassInstance from "../../firebase/slate/slate";
+import { useUIContext } from "../ui";
 
 /**
  * TODO
@@ -15,9 +14,9 @@ export type PickValueProp = {
   setSlate: Dispatch<SetStateAction<Slate>>;
   setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
-  fetchSlate: (week?: number) => void;
+  fetchSlate: ({ week, year }: { week?: number; year?: number }) => void;
   getUserPicks: () => void;
-  refreshSlatePicksStatus: (week?: number) => void;
+  refreshSlatePicksStatus: ({ week, year }: { week?: number; year?: number }) => void;
 }
 
 type ContextProp = {
@@ -30,8 +29,9 @@ const Context = ({
   children
 }: ContextProp) => {
   const { user } = useGlobalContext()
+  const { seasonData } = useUIContext();
   const [slate, setSlate] = useState({} as Slate);
-  const [weeklyResults, setWeeklyResults] = useState()
+  // const [weeklyResults, setWeeklyResults] = useState()
   const [picks, setPicks] = useState({
     slateId: slate?.uniqueWeek,
     picks: [] as Picks[]
@@ -68,17 +68,18 @@ const Context = ({
 
   }, [picks]);
 
-  const fetchSlate = useCallback( async (week?: number) => {
-    const results = await getSlate(week ? week : getWeek().week);
+  const fetchSlate = useCallback( async ({ week, year }: { week?: number; year?: number }) => {
+    /** update to use seasons data as fallback */
+    const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : seasonData?.Season as number}`); 
     setSlate(results as Slate);
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }))
     return results;
-  }, [setSlate, setPicks]);
+  }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season]);
   
-  const refreshSlatePicksStatus = useCallback(async (week?: number) => {
-    const updatedSlate = await updateSlateScores(week ? week: getWeek().week)
+  const refreshSlatePicksStatus = useCallback(async ({ week, year }: { week?: number; year?: number }) => {
+    const updatedSlate = await FBSlateClassInstance.updateSlateScores({ week: week ? week: seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })
     setSlate(updatedSlate as Slate)
-  }, [setSlate]);
+  }, [setSlate, seasonData?.ApiWeek, seasonData?.Season]);
 
   const getUserPicks = useCallback(async () => {
     const findPicks = user?.pickHistory?.find((p) => p.slateId === slate?.uniqueWeek);
@@ -86,6 +87,9 @@ const Context = ({
       setPicks(findPicks);
     }
   }, [user?.pickHistory, setPicks, slate?.uniqueWeek]);
+  useEffect(() => {
+    fetchSlate({ });
+  }, [fetchSlate]);
 
   return (
     <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks, refreshSlatePicksStatus }} >

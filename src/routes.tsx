@@ -7,7 +7,6 @@ import ChoosePicker from "./pages/ChoosePicker";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
-import Dashboard from "./pages/Dashboard";
 import MakePicks from "./pages/MakePicks";
 
 /**
@@ -60,16 +59,9 @@ const Router = () => {
           </PrivateRoutes>
       }
       />
-      <Route
-        path="/dashboard" 
-        element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
-              <Dashboard />
-            </RoleGuardedRoutes>
-          </PrivateRoutes>
-      }
-      />
+      {/* 
+        * page for showing a table of everyone's choices
+       */}
       <Route 
         path="/picks" 
         element={

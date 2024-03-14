@@ -3,9 +3,9 @@ import { Home } from 'grommet-icons'
 import React, { useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { theme } from '../theme'
-import { logout } from '../firebase/user/login'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalContext } from '../context/user'
+import FirebaseUsersClassInstance from '../firebase/user/user'
  
 const StyledHeader = styled(Header)`
   background-color: ${({theme}) => theme.colors.lightBlue};
@@ -14,7 +14,7 @@ const StyledHeader = styled(Header)`
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const signOut = useCallback(() => {
-    logout().then(() => navigate('/login'));
+    FirebaseUsersClassInstance.logout().then(() => navigate('/login'));
   }, [navigate])
   const {
     user
@@ -45,7 +45,7 @@ const Navigation: React.FC = () => {
   }, [user?.isAuthenticated, navigate, signOut])
   return (
     <StyledHeader gridArea='header' sticky='scrollup' >
-      <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/dashboard')} />
+      <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/profile')} />
       {<Menu color={theme.colors.darkBlue} items={menuItems} />}
     </StyledHeader>
   )

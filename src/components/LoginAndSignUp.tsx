@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useGlobalContext } from '../context/user';
 import { UserCollectionData } from '../model';
-import FirebaseUsersClassInstance from '../firebase/user/get';
+import FirebaseUsersClassInstance from '../firebase/user/user';
  
 
 const LoginButton = styled(Button)`
@@ -38,7 +38,7 @@ const LoginAndSignUp: React.FC = () => {
     FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
       navigate('/dashboard')
       // if (typeof res === 'object') {
-        if (res) setUser(res.user as UserCollectionData);
+        if (res) setUser(res as UserCollectionData);
       // }
     });
   }, [setUser, navigate]);

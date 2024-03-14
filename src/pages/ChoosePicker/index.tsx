@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, RadioButtonGroup } from 'grommet';
 import { UserCollectionData } from '../../model';
 import { UserRoles } from '../../utils/constants';
-import { updateUserDoc } from '../../firebase/user/update';
 import { useGlobalContext } from '../../context/user';
+import FirebaseUsersClassInstance from '../../firebase/user/user';
  
 interface ChoosePickerProps {}
 const ChoosePicker: React.FC<ChoosePickerProps> = () => {
@@ -42,11 +42,11 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
   }, [users]);
 
   const getUpdatedUserWithRoles = useCallback(async (user: UserCollectionData, previous: UserCollectionData) => {
-    await updateUserDoc<UserRoles[]>('roles', user, [...user.roles, UserRoles.SLATE_PICKER]);
+    await FirebaseUsersClassInstance.updateDocumentInCollection(user.uid, {roles: [...user.roles, UserRoles.SLATE_PICKER]});
     const findPreviousUserSlatePickIndex = previous.roles.findIndex((r) => r === UserRoles.SLATE_PICKER);
     const newRolesForPrevPicker = [...previous.roles];
     newRolesForPrevPicker.splice(findPreviousUserSlatePickIndex, 1);
-    await updateUserDoc<UserRoles[]>('roles', previous, newRolesForPrevPicker);
+    await FirebaseUsersClassInstance.updateDocumentInCollection(user.uid, {roles: newRolesForPrevPicker});
     return await fetchUsers();
     
   }, [fetchUsers])
