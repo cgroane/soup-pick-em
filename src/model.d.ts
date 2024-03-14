@@ -1,4 +1,5 @@
 import { User } from "firebase/auth";
+import { PickHistory } from "./pages/Picks/PicksTable";
 
 export type UserCollectionData = User & {
   id: string;
@@ -7,10 +8,7 @@ export type UserCollectionData = User & {
   lName: string;
   isAuthenticated?: boolean;
   roles: UserRoles[];
-  pickHistory?: {
-    slateId: string;
-    picks: Picks[]
-  }[];
+  pickHistory: PickHistory[];
   record?: WinLossRecord;
   trophyCase?: Trophy[];
 }
@@ -45,8 +43,7 @@ export type Trophy = {
 export type Slate = {
   weekNumber: number;
   games: Matchup[];
-  picks: Picks[];
-  providedBy: User;
+  providedBy: UserCollectionData;
   uniqueWeek: string;
 }
 
@@ -57,7 +54,7 @@ export type Matchup = {
   week:                  number;
   status:                string;
   day:                   Date;
-  dateTime:              string;
+  dateTime:              Date;
   awayTeam:              string;
   homeTeam:              string;
   awayTeamID:            number;
@@ -153,7 +150,7 @@ export type Team = {
   rankSeasonType:   null;
 }
 
-export interface TheOddsMatchup {
+export interface TheOddsResult {
   id:            string;
   sport_key:     string;
   sport_title:   string;
@@ -161,6 +158,10 @@ export interface TheOddsMatchup {
   home_team:     string;
   away_team:     string;
   bookmakers:    Bookmaker[];
+}
+
+export interface TheOddsMatchup {
+  data: TheOddsResult[]
 }
 
 export interface Bookmaker {

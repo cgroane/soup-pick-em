@@ -13,6 +13,12 @@ const PageWrapper = styled(Page)`
 `
 function App() {
 
+  /**
+   * get necessary global data
+   * user info (done in ui context)
+   * need slate context
+   */
+
   return (
     <Provider store={store}>
       <Navigation />

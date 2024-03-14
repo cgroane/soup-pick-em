@@ -5,33 +5,34 @@ import styled from 'styled-components';
 import { Checkmark, Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
-import { createSlate } from '../../firebase/slate';
-import { getWeek } from '../../utils/getWeek';
 import { useNavigate } from 'react-router-dom';
 import { useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
-import { UserCollectionData } from '../../model';
+import { Slate, UserCollectionData } from '../../model';
+import { usePickContext } from '../../context/pick';
+import FBSlateClassInstance from '../../firebase/slate/slate';
  
+
+/**
+ * TODO
+ * style fixes
+ * bottom bar overlaps content
+ * narrow screen content overlaps
+ */
 const BottomToolbar = styled(Toolbar)`
-  position: fixed;
+  position: sticky;
   bottom: 0%;
   left: 0;
   width: 100%;
   height: 8rem;
   background-color: ${({theme}) => theme.colors.darkBlue};
 `
-interface CreateSlateProps {
-  week?: number;
-}
-const CreateSlate: React.FC<CreateSlateProps> = ({
-  week
-}) => {
 
-  // const [games, setGames] = useState<Matchup[]>([]);
+const CreateSlate: React.FC = () => {
   const [textFilter, setTextFilter] = useState('');
-  // const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
-  // const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
+
+  /** contexts */
   const {
     games,
     selectedGames,
@@ -41,26 +42,33 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
     setLoading,
     fetchMatchups
   } = useSlateContext()
+  const {
+    fetchSlate
+  } = usePickContext()
   const { 
     setModalOpen,
-    modalOpen
+    modalOpen,
+    seasonData
   } = useUIContext()
   const {
-    user
+    user,
+    isSlatePicker
   } = useGlobalContext()
 
+  /** hooks */
   const navigate = useNavigate();
 
-  const disableSelection = useMemo(() => selectedGames.length >= 10, [selectedGames]);
+  const disableSelection = useMemo(() => selectedGames?.length >= 10, [selectedGames]);
 
+  /** stateful operations */
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTextFilter(e.target.value);
   }, [setTextFilter]);
 
   useEffect(() => {
+    fetchSlate({})
     fetchMatchups();
-  }, [fetchMatchups]);
-
+  }, [fetchMatchups, fetchSlate]);
 
   useEffect(() => {
     if (textFilter) {
@@ -74,10 +82,18 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
+  
+  /** api request */
   const submitSlate = async () => {
     setLoading('loading');
     setModalOpen(true);
-    await createSlate(getWeek().week, selectedGames, user as UserCollectionData).then(() => {
+    const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
+    await FBSlateClassInstance.addDocument<Slate>({
+      weekNumber: seasonData?.ApiWeek as number,
+      uniqueWeek: uniqueId,
+      providedBy: user as UserCollectionData,
+      games: selectedGames,
+    }, uniqueId).then(() => {
       setLoading('idle');
     })
   }
@@ -92,29 +108,30 @@ const CreateSlate: React.FC<CreateSlateProps> = ({
           {
             filteredGames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC)).map((game) => 
             <Game
-              addedToSlate={!!selectedGames.find((selectedGame) => game.gameID === selectedGame.gameID)}
+              addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
               disable={disableSelection}
               key={game.gameID}
               game={game}
             />)
           }
         </Box>
+        {isSlatePicker && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
-            <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames.length}/10</Paragraph>
+            <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
             <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-            <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames.length < 10} />
+            <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
           </Box>
-        </BottomToolbar>
+        </BottomToolbar>}
       </Box>
       {modalOpen && (
         <Modal actions={[
           {
             label: 'Make your picks',
             onClick: () => {
-              navigate('/slate')
+              navigate('/pick')
               setModalOpen(false)
             }
           }

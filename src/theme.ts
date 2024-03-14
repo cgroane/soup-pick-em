@@ -17,7 +17,8 @@ export const theme: DefaultTheme = {
     salmon: '#FF686B',
     linen: '#FFEDDF',
     blackBackground: "#0E161B",
-    royal: "#1E30FA"
+    royal: "#1E30FA",
+    brand: '#6FFFB0'
   }
 }
 export const darkTheme = {

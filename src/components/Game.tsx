@@ -13,6 +13,7 @@ import {
 import { useSlateContext } from '../context/slate';
 import { GameCard, TeamLogo } from './Styled';
 import { useGetTeamData } from '../hooks/useGetTeamData';
+import { useGlobalContext } from '../context/user';
  
 
 const CheckboxContainer = styled(CardFooter)`
@@ -35,6 +36,9 @@ const Game: React.FC<GameProps> = ({
   const {
     addAndRemove
   } = useSlateContext();
+  const { 
+    isSlatePicker
+  } = useGlobalContext();
   
   const {
     rankings,
@@ -69,27 +73,32 @@ const Game: React.FC<GameProps> = ({
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
           </Box>
         </CardBody>
-        <CheckboxContainer
-          height={'2rem'}
-          margin={'4px'}
-        >
-          <CheckBox
-            label='Add to slate'
-            checked={addedToSlate}
-            onChange={() => addAndRemove(game)}
-            disabled={disable && !addedToSlate}
-          />
-          {/* {
-            game.theOddsId && (
-              <OtherMarkets
-                gameId={game.theOddsId}
-                addToSlate={addToSlate}
-                addedToSlate={addedToSlate}
-                disableSelections={disable}
+        {
+          isSlatePicker && (
+            <CheckboxContainer
+              height={'2rem'}
+              margin={'4px'}
+            >
+              <CheckBox
+                  label='Add to slate'
+                  checked={addedToSlate}
+                  onChange={() => addAndRemove(game)}
+                  disabled={disable && !addedToSlate}
               />
-            )
-          } */}
-        </CheckboxContainer>
+              {/* {
+                game.theOddsId && (
+                  <OtherMarkets
+                    gameId={game.theOddsId}
+                    addToSlate={addToSlate}
+                    addedToSlate={addedToSlate}
+                    disableSelections={disable}
+                  />
+                )
+              } */}
+            </CheckboxContainer>
+          )
+        }
+        
       </Box>
     </GameCard>
   )
