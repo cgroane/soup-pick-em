@@ -6,7 +6,6 @@ import { Matchup, Outcome, Picks } from '../../model'
 import { useGetTeamData } from '../../hooks/useGetTeamData'
 import { usePickContext } from '../../context/pick'
 import { useGlobalContext } from '../../context/user'
-import { getWeek } from '../../utils/getWeek'
 import { useUIContext } from '../../context/ui'
 
 const Team = styled(Box)`
