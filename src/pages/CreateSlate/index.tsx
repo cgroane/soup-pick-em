@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, Button, Paragraph, Spinner, Text, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
@@ -6,12 +6,13 @@ import { Checkmark, Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
-import { useUIContext } from '../../context/ui';
+import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { Slate, UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
+import Loading from '../../components/Loading';
  
 
 /**
@@ -38,8 +39,6 @@ const CreateSlate: React.FC = () => {
     selectedGames,
     filteredGames,
     setFilteredGames,
-    loading,
-    setLoading,
     fetchMatchups
   } = useSlateContext()
   const {
@@ -48,7 +47,9 @@ const CreateSlate: React.FC = () => {
   const { 
     setModalOpen,
     modalOpen,
-    seasonData
+    seasonData,
+    setStatus,
+    status
   } = useUIContext()
   const {
     user,
@@ -85,7 +86,7 @@ const CreateSlate: React.FC = () => {
   
   /** api request */
   const submitSlate = async () => {
-    setLoading('loading');
+    setStatus(LoadingState.LOADING);
     setModalOpen(true);
     const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
     await FBSlateClassInstance.addDocument<Slate>({
@@ -94,12 +95,13 @@ const CreateSlate: React.FC = () => {
       providedBy: user as UserCollectionData,
       games: selectedGames,
     }, uniqueId).then(() => {
-      setLoading('idle');
+      setStatus(LoadingState.IDLE);
     })
   }
 
   return (
     <>
+      <Suspense fallback={<Loading type='gameCard' iterations={3} />}>
       <Box>
         <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
@@ -136,7 +138,7 @@ const CreateSlate: React.FC = () => {
             }
           }
         ]} >
-          { loading === 'loading' ? <Spinner /> :  (
+          { status === LoadingState.LOADING ? <Spinner /> :  (
             <Box width={'100%'} >
               <Text color={'black'} >Done</Text>
               <Checkmark color='primary' />
@@ -144,6 +146,7 @@ const CreateSlate: React.FC = () => {
           )}
         </Modal>
       )}
+      </Suspense>
     </>
   )
 }

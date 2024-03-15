@@ -36,7 +36,7 @@ const LoginAndSignUp: React.FC = () => {
      * if register -- auth then addUserDoc
      */
     FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
-      navigate('/dashboard')
+      navigate('/profile')
       // if (typeof res === 'object') {
         if (res) setUser(res as UserCollectionData);
       // }

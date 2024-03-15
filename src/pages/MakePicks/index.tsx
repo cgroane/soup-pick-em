@@ -7,7 +7,7 @@ import { theme } from '../../theme';
 import { UserCollectionData } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
-import { useUIContext } from '../../context/ui';
+import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
@@ -43,10 +43,10 @@ const MakePicks: React.FC = () => {
 
   const {
     modalOpen,
-    setModalOpen
+    setModalOpen,
+    status,
+    setStatus
   } = useUIContext()
-
-  const [loading, setLoading] = useState('');
 
   useEffect(() => {
     fetchSlate({ })
@@ -55,13 +55,13 @@ const MakePicks: React.FC = () => {
 
   const submitPicks = useCallback( async () => {
     if (!user) navigate('/login');
-    setLoading('loading');
+    setStatus(LoadingState.LOADING)
     setModalOpen(true);
     await FirebaseUsersClassInstance.updateDocumentInCollection(user?.uid as string, { pickHistory: [...user?.pickHistory ?? [], picks] }).then(() => {
-      setLoading('idle');
+      setStatus(LoadingState.IDLE)
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
-  }, [navigate, setLoading, setModalOpen, picks, user, setUser]);
+  }, [navigate, setModalOpen, picks, user, setUser]);
   
 
   return (
@@ -96,7 +96,7 @@ const MakePicks: React.FC = () => {
             }
           }
         ]} >
-          { loading === 'loading' ? <Spinner /> :  (
+          { status === LoadingState.LOADING ? <Spinner /> :  (
             <Box width={'100%'} >
               <Text color={'black'} >Done</Text>
               <Checkmark color='primary' />

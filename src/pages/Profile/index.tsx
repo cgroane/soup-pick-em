@@ -1,11 +1,12 @@
 import { Button, CardBody, Heading } from 'grommet'
-import React, { useMemo } from 'react'
+import React, { Suspense, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import WinPercentage from '../../components/WinPercentage'
 import { ProfileCard } from '../../components/Styled'
 import { useUIContext } from '../../context/ui'
 import { useGlobalContext } from '../../context/user'
 import { usePickContext } from '../../context/pick'
+import Loading from '../../components/Loading'
 
 /**
  * show record
@@ -45,6 +46,7 @@ const Profile: React.FC<ProfileProps> = () => {
 
   return (
     <>
+    <Suspense fallback={<Loading type='profileCard' iterations={4} />} >
       <ProfileCard background='light-1' >
         <Heading margin={{ top: '0' }} size='medium'>
           Week {seasonData?.ApiWeek ?? 1}, {seasonData?.ApiSeason}
@@ -83,6 +85,7 @@ const Profile: React.FC<ProfileProps> = () => {
           </Link>
         </CardBody>
       </ProfileCard>
+      </Suspense>
     </>
   )
 }

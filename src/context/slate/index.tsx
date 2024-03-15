@@ -14,8 +14,6 @@ export type SlateValueProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
-  loading: string;
-  setLoading: Dispatch<SetStateAction<string>>;
   fetchMatchups: (weekNumber?: number) => void;
 }
 
@@ -34,7 +32,6 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
-  const [loading, setLoading] = useState('');
   const { seasonData } = useUIContext();
 
   useEffect(() => {
@@ -149,8 +146,6 @@ export default function CreateSlateContext({ children }: ContextProp) {
       selectedGames,
       setSelectedGames,
       addAndRemove,
-      loading,
-      setLoading,
       fetchMatchups
     }}>
       {children}

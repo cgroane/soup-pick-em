@@ -20,11 +20,11 @@ root.render(
       <BrowserRouter>
         <Context>
           <UiContext>
-              <PickContext>
-            <CreateSlateContext>
+            <PickContext>
+              <CreateSlateContext>
                 <App />
-            </CreateSlateContext>
-              </PickContext>
+              </CreateSlateContext>
+            </PickContext>
           </UiContext>
         </Context>
       </BrowserRouter>
