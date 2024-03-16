@@ -1,5 +1,5 @@
 import React from "react"
-import { Card, CardBody, Heading, Skeleton } from "grommet";
+import { Box, Card, CardBody, Heading, Skeleton } from "grommet";
 import { GameCard, ProfileCard } from "./Styled";
 
 const options = {
@@ -27,12 +27,14 @@ const Loading = ({
   return (
     <>
       {arrayOfSkels.map((_, index) => 
+      <Box pad={'medium'} align="center" >
       <ParentComponent key={`skeleton-${index}`} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
         <Heading><Skeleton ></Skeleton></Heading>
         <CardBody>
             <Skeleton/>
         </CardBody>
       </ParentComponent>
+      </Box>
       )}
     </>
   )

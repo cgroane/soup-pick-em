@@ -14,7 +14,7 @@ export type UserCollectionData = User & {
 }
 
 export type Picks = {
-  selection: Outcome | 'PUSH';
+  selection: Outcome | 'PUSH'; /** Make Outcome handle type variability IE name = 'PUSH' number ='0' price = '0' */
   isCorrect: boolean;
   matchup: number;
   userId: string;

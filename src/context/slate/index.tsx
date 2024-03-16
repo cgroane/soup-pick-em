@@ -3,7 +3,7 @@ import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, us
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek } from '../../utils/getWeek';
-import { useUIContext } from '../ui';
+import { LoadingState, useUIContext } from '../ui';
 import { usePickContext } from '../pick';
 
 export type SlateValueProps = {
@@ -29,6 +29,9 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const {
     slate
   } = usePickContext();
+  const {
+    setStatus
+  } = useUIContext()
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
@@ -41,14 +44,16 @@ export default function CreateSlateContext({ children }: ContextProp) {
    * update fetchMatchups to accept a week param
    */
   const fetchMatchups = useCallback(async (weekNumber?: number) => {
-    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1'
+    setStatus(LoadingState.LOADING);
+    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = await getGames({
       weekNumber: week,
       season: seasonData?.ApiSeason
     });
     setGames(results);
     setFilteredGames(results);
-  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek]);
+    return results;
+  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek, setStatus]);
   
 
   const addAndRemove = useCallback((game: Matchup) => {

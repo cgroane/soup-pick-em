@@ -1,8 +1,8 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Paragraph, Spinner, Text, TextInput, Toolbar } from 'grommet';
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { Box, Button, Paragraph, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
-import { Checkmark, Search } from 'grommet-icons';
+import {  Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
@@ -67,9 +67,12 @@ const CreateSlate: React.FC = () => {
   }, [setTextFilter]);
 
   useEffect(() => {
-    fetchSlate({})
-    fetchMatchups();
-  }, [fetchMatchups, fetchSlate]);
+    Promise.all([
+      fetchSlate({}).then((result) => result),
+    fetchMatchups()
+    ]).then(() => setStatus(LoadingState.IDLE));
+    
+  }, [fetchMatchups, fetchSlate, setStatus]);
 
   useEffect(() => {
     if (textFilter) {
@@ -85,7 +88,7 @@ const CreateSlate: React.FC = () => {
   }, [games, setFilteredGames, textFilter]);
   
   /** api request */
-  const submitSlate = async () => {
+  const submitSlate = useCallback( async () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
     const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
@@ -97,16 +100,20 @@ const CreateSlate: React.FC = () => {
     }, uniqueId).then(() => {
       setStatus(LoadingState.IDLE);
     })
-  }
+  }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen]);
 
   return (
     <>
-      <Suspense fallback={<Loading type='gameCard' iterations={3} />}>
       <Box>
         <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
-        <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
+        {
+          status === LoadingState.LOADING ? (
+            <Loading iterations={3} type='gameCard'/>
+          ) : (
+            <>
+            <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
           {
             filteredGames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC)).map((game) => 
             <Game
@@ -127,6 +134,10 @@ const CreateSlate: React.FC = () => {
             <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
           </Box>
         </BottomToolbar>}
+            </>
+          )
+        }
+        
       </Box>
       {modalOpen && (
         <Modal actions={[
@@ -138,15 +149,9 @@ const CreateSlate: React.FC = () => {
             }
           }
         ]} >
-          { status === LoadingState.LOADING ? <Spinner /> :  (
-            <Box width={'100%'} >
-              <Text color={'black'} >Done</Text>
-              <Checkmark color='primary' />
-            </Box>
-          )}
+
         </Modal>
       )}
-      </Suspense>
     </>
   )
 }

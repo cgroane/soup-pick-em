@@ -5,13 +5,14 @@ import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { UserRoles } from "../../utils/constants";
+import { LoadingState, useUIContext } from "../ui";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
     setUser: Dispatch<React.SetStateAction<UserCollectionData | null>>;
     users: UserCollectionData[];
     setUsers: Dispatch<SetStateAction<UserCollectionData[]>>;
-    fetchUsers: () => void;
+    fetchUsers: () => Promise<void>;
     isSlatePicker: boolean;
 }
 
@@ -21,13 +22,18 @@ export const AppContext = React.createContext({} as UserValueProp); //create the
 //function body
 const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChildren) => {
 
+const {
+  setStatus
+} = useUIContext();
+
 const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const [users, setUsers] = useState<UserCollectionData[]>([]);
   
 const fetchUsers = useCallback(async () => {
+  setStatus(LoadingState.LOADING);
   const results = await FirebaseUsersClassInstance.getCollection();
   setUsers(results as UserCollectionData[]);
-}, [setUsers]);
+}, [setUsers, setStatus]);
 
 const navigate = useNavigate();
 
@@ -51,6 +57,7 @@ useEffect(() => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
   const isSlatePicker = useMemo(() => {
     return !!user?.roles?.includes(UserRoles.SLATE_PICKER);
   }, [user?.roles])

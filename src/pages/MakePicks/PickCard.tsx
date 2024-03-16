@@ -26,6 +26,9 @@ const TeamWrapper = styled(Box)<{selected: boolean}>`
   }
 `;
 const Push = styled(Button)<{selected: boolean}>`
+  width: 80%;
+  font-size: 12px;
+  padding: 4px;
   ${({ selected, theme }) => selected ? `
     background: ${theme.colors.brand};
     color: white;
@@ -84,7 +87,7 @@ const PickCard: React.FC<PickCardProps> = ({
     }
     addPick(pick);
     setChoice(outcome);
-  }, [addPick, game.gameID, user?.uid]);
+  }, [addPick, game.gameID, user?.uid, seasonData?.ApiWeek]);
   
   return (
     <>
@@ -107,7 +110,7 @@ const PickCard: React.FC<PickCardProps> = ({
               <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
             </Team>
           </TeamWrapper>
-          <Box flex align='center' justify='center' >
+          <Box flex align='center' justify='center' width={'20%'} >
             <Paragraph margin={'4px'} size='12px' textAlign='center' >
               {dateTime.dayOfTheWeek}, {dateTime.month} {dateTime.dayOfTheMonth}, {dateTime.year} 
             </Paragraph>

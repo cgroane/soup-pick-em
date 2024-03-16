@@ -55,7 +55,7 @@ const Game: React.FC<GameProps> = ({
             <Paragraph>Home</Paragraph>
         </CardHeader>
         <CardBody flex direction='row' align='stretch' >
-          <Box width={'40%'} height={'100%'} align='center' justify='center' >
+          <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
           </Box>
@@ -68,7 +68,7 @@ const Game: React.FC<GameProps> = ({
             </Paragraph>
 
           </Box>
-          <Box width={'40%'} height={'100%'} align='center' justify='center' >
+          <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.homeTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
           </Box>

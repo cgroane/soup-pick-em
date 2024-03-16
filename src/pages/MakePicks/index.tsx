@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Text, Toolbar } from 'grommet';
@@ -46,12 +46,20 @@ const MakePicks: React.FC = () => {
     setModalOpen,
     status,
     setStatus
-  } = useUIContext()
+  } = useUIContext();
+
+  const getDataForPage = useCallback(async () => {
+    const compoundRequest = Promise.all([
+      await fetchSlate({ }),
+      await getUserPicks()
+    ]);
+    const [slateResult, picksResult] = await compoundRequest;
+    if (slateResult && picksResult) setStatus(LoadingState.IDLE);
+  }, [fetchSlate, getUserPicks, setStatus]);
 
   useEffect(() => {
-    fetchSlate({ })
-    getUserPicks()
-  }, [fetchSlate, getUserPicks]);
+    getDataForPage();
+  }, [getDataForPage]);
 
   const submitPicks = useCallback( async () => {
     if (!user) navigate('/login');
@@ -61,7 +69,7 @@ const MakePicks: React.FC = () => {
       setStatus(LoadingState.IDLE)
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
-  }, [navigate, setModalOpen, picks, user, setUser]);
+  }, [navigate, setModalOpen, picks, user, setUser, setStatus]);
   
 
   return (

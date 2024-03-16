@@ -4,9 +4,9 @@ import { SeasonDetails } from "../../api/schema/sportsDataIO";
 
 
 export enum LoadingState {
-  LOADING = 'LOADING',
+  IDLE = 'IDLE',
   ERROR = 'ERROR',
-  IDLE = 'IDLE'
+  LOADING = 'LOADING',
 };
 
 export type UIValueProp = {
@@ -51,8 +51,7 @@ const getSeasonData = useCallback(async () => {
 }, [setSeasonData])
 useEffect(() => {
   getSeasonData()
-
-}, [getSeasonData])
+}, [getSeasonData, status]);
 const [modalOpen, setModalOpen] = useState(false);
 
 
