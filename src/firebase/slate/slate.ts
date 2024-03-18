@@ -1,6 +1,6 @@
-import { doc, setDoc } from "firebase/firestore"
+import { doc, setDoc, writeBatch } from "firebase/firestore"
 import { FirebaseDB, db } from ".."
-import { Slate } from "../../model"
+import { Slate, UserCollectionData } from "../../model"
 import { getGames } from "../../api/getGames";
 
 /**
@@ -9,6 +9,14 @@ import { getGames } from "../../api/getGames";
 
 export class FirebaseSlatesClass extends FirebaseDB<Slate> {
   constructor(collectionName: string = 'slates') { super(collectionName) }
+  addSlate = async (data: Slate, users: UserCollectionData[]) => {
+    const batch = writeBatch(this.db);
+    users.forEach((userData, _, array) => {
+      const docRef = doc(this.db, this.collectionName, userData.uid);
+      batch.set(docRef, { ...userData, pickHistory: userData.pickHistory })
+    })
+    this.addDocument(data);
+  }
   updateSlateScores = async ({ week, year }: { week: number; year: number }): Promise<Slate | undefined> => {
     const slateId = `w${week}-${year}`;
     

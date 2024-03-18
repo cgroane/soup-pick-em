@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference, DocumentData, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, setDoc, updateDoc } from "firebase/firestore";
+import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc } from "firebase/firestore";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -35,20 +35,20 @@ export class FirebaseDB<T> {
   db = db;
   app = app;
   /** create */
-  addDocument = async <V extends {}>(docData: V, docId?: string) => {
+  addDocument = async <V extends {}>(docData: V, docId?: string, segments?: string[]) => {
     try {
-      const docRef = await setDoc(doc(this.db, this.collectionName, docId ?? ''), docData)
+      const docRef = await setDoc(doc(this.db, this.collectionName, docId ?? '', ...segments as []), docData)
       return docRef;
     } catch (error) {
       console.error(error);
     }
   }
   /** read */
-  getCollection = async () => {
+  getCollection = async <V extends {}>(segments?: string[]) => {
     try {
-      const docs = await getDocs(collection(db, this.collectionName, ''))
-      let results: T[] = [];
-      docs.forEach((doc) => results.push(doc.data() as T));
+      const docs = await getDocs(collection(db, this.collectionName, ...segments as [] ?? ''));
+      let results: V[] = [];
+      docs.forEach((doc) => results.push(doc.data() as V));
       return results;
     } catch (error) {
       console.error(error);
@@ -63,14 +63,26 @@ export class FirebaseDB<T> {
       console.error(err);
     }
   }
+  getSubCollection = async <V extends{}>(subColName: string) => {
+    try {
+      const subCollectionRef = query(collectionGroup(this.db, subColName));
+      const querySnapshot = await getDocs(subCollectionRef);
+      let results: V[] = [];
+      querySnapshot.forEach((doc) => results.push(doc.data() as V));
+      return results;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Error getting user data');
+    }
+  }
   /** update */
-  updateDocumentInCollection = async <V extends {}>(docId: string, values: V) => {
+  updateDocumentInCollection = async <V extends {}>(docId: string, values: V, segments?: string[]) => {
     /**
      * if the value property type is an object or an array, you have to copy the initial vals of that property into the new val
      * the question is whether to do this here, or in the invocation
     */
     try {
-      await updateDoc(doc(this.db, this.collectionName, docId), values);
+      await updateDoc(doc(this.db, this.collectionName, docId, ...segments as []), values);
       const updatedDoc = await this.getDocumentInCollection(docId);
       return updatedDoc;
     } catch (error) {

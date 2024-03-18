@@ -45,7 +45,8 @@ const MakePicks: React.FC = () => {
     modalOpen,
     setModalOpen,
     status,
-    setStatus
+    setStatus,
+    seasonData
   } = useUIContext();
 
   const getDataForPage = useCallback(async () => {
@@ -65,11 +66,18 @@ const MakePicks: React.FC = () => {
     if (!user) navigate('/login');
     setStatus(LoadingState.LOADING)
     setModalOpen(true);
-    await FirebaseUsersClassInstance.updateDocumentInCollection(user?.uid as string, { pickHistory: [...user?.pickHistory ?? [], picks] }).then(() => {
+    await FirebaseUsersClassInstance.addDocument({ 
+      name: `${user?.fName} ${user?.lName}`,
+      slateId: picks?.slateId,
+      week: slate?.week,
+      year: seasonData?.Season,
+      picks: picks?.picks,
+      userId: user?.uid
+    }, user?.uid, ['picks', picks.slateId]).then(() => {
       setStatus(LoadingState.IDLE)
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
-  }, [navigate, setModalOpen, picks, user, setUser, setStatus]);
+  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
   
 
   return (

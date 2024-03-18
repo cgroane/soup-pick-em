@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { UserRoles } from "../../utils/constants";
 import { LoadingState, useUIContext } from "../ui";
+import { PickHistory } from "../../pages/Picks/PicksTable";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
@@ -14,8 +15,8 @@ export type UserValueProp = {
     setUsers: Dispatch<SetStateAction<UserCollectionData[]>>;
     fetchUsers: () => Promise<void>;
     isSlatePicker: boolean;
+    allPickHistories: PickHistory[];
 }
-
 
 export const AppContext = React.createContext({} as UserValueProp); //create the context API
 
@@ -28,12 +29,15 @@ const {
 
 const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const [users, setUsers] = useState<UserCollectionData[]>([]);
+const [ usersPicks, setUsersPicks ] = useState<PickHistory[]>([] as PickHistory[]);
   
 const fetchUsers = useCallback(async () => {
   setStatus(LoadingState.LOADING);
-  const results = await FirebaseUsersClassInstance.getCollection();
+  const allPickHistories = await FirebaseUsersClassInstance.getSubCollection<PickHistory>('picks');
+  const results = await FirebaseUsersClassInstance.getCollection<UserCollectionData>();
   setUsers(results as UserCollectionData[]);
-}, [setUsers, setStatus]);
+  setUsersPicks(allPickHistories)
+}, [setUsers, setStatus, setUsersPicks]);
 
 const navigate = useNavigate();
 
@@ -41,11 +45,14 @@ useEffect(() => {
   const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
       FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
-        if (res) {
-          setUser(res as UserCollectionData)
-        } else {
-          setUser(null);
-        }
+        /** get doc in colletion with extra path segment to get all picks */
+        FirebaseUsersClassInstance.getCollection<PickHistory>([`${res?.id}`, 'picks']).then((completeRequest) => {
+          if (res) {
+            setUser({ ...res as Omit<UserCollectionData, 'pickHistory'>, pickHistory: completeRequest as PickHistory[] })
+          } else {
+            setUser(null);
+          }
+        });
       })
     } else {
       navigate('/login');
@@ -69,7 +76,8 @@ useEffect(() => {
       users,
       setUsers,
       fetchUsers,
-      isSlatePicker
+      isSlatePicker,
+      allPickHistories: usersPicks
     }}>
       {children}
     </AppContext.Provider>

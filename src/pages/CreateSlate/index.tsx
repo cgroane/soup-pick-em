@@ -93,7 +93,7 @@ const CreateSlate: React.FC = () => {
     setModalOpen(true);
     const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
     await FBSlateClassInstance.addDocument<Slate>({
-      weekNumber: seasonData?.ApiWeek as number,
+      week: seasonData?.ApiWeek as number,
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
       games: selectedGames,
