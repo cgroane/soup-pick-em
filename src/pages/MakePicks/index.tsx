@@ -96,10 +96,10 @@ const MakePicks: React.FC = () => {
           align='center'
           width={'100%'}
         >
-          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.length}/10</Paragraph>
+          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
             <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.length < 10} />
+            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
           </Box>
         </BottomToolbar>
       {modalOpen && (
