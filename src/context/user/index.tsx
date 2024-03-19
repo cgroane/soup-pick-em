@@ -35,6 +35,7 @@ const fetchUsers = useCallback(async () => {
   setStatus(LoadingState.LOADING);
   const allPickHistories = await FirebaseUsersClassInstance.getSubCollection<PickHistory>('picks');
   const results = await FirebaseUsersClassInstance.getCollection<UserCollectionData>();
+  results?.map((u) => u.pickHistory = allPickHistories.filter((p) => p.userId === u.uid))
   setUsers(results as UserCollectionData[]);
   setUsersPicks(allPickHistories)
 }, [setUsers, setStatus, setUsersPicks]);

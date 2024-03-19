@@ -15,6 +15,7 @@ export type SlateValueProps = {
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
   fetchMatchups: (weekNumber?: number) => void;
+  deletions: number[];
 }
 
 type ContextProp = {
@@ -35,6 +36,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
+  const [deletions, setDeletions] = useState<number[]>([])
   const { seasonData } = useUIContext();
 
   useEffect(() => {
@@ -57,11 +59,23 @@ export default function CreateSlateContext({ children }: ContextProp) {
   
 
   const addAndRemove = useCallback((game: Matchup) => {
+    /**
+     * this runs either if updating or adding from scratch
+     * need to differentiate between edit and new
+     * on remove, if slate.games includes removed -- edit bc slate.games is the original from the api
+     * otherwise it is new
+     */
     const found = selectedGames.findIndex((selectedGame) => game.gameID === selectedGame.gameID);
-    
+    const dels = [...deletions];
     const newSelections = [...selectedGames];
     if (found >= 0) {
       newSelections.splice(found, 1);
+      const deletedItem = slate?.games.find((g) => g.gameID === selectedGames[found].gameID)
+      if (deletedItem) {
+        dels.push(found);
+        setDeletions(dels);
+      }
+
     } else {
       const newGame = {
         gameID:                game.gameID ?? 0,
@@ -151,7 +165,8 @@ export default function CreateSlateContext({ children }: ContextProp) {
       selectedGames,
       setSelectedGames,
       addAndRemove,
-      fetchMatchups
+      fetchMatchups,
+      deletions
     }}>
       {children}
     </SlateContext.Provider>

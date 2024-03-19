@@ -40,7 +40,7 @@ const getSeasonData = useCallback(async () => {
       ApiSeason: (data.Season - 1).toString(),
       Season: data.Season - 1,
       EndYear: data.EndYear - 1,
-      ApiWeek: 9,
+      ApiWeek: 2,
       Description: (parseInt(data.Description) - 1).toString()
     })
   } else {

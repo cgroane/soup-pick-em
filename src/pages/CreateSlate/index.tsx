@@ -39,7 +39,8 @@ const CreateSlate: React.FC = () => {
     selectedGames,
     filteredGames,
     setFilteredGames,
-    fetchMatchups
+    fetchMatchups,
+    deletions
   } = useSlateContext()
   const {
     fetchSlate
@@ -53,6 +54,7 @@ const CreateSlate: React.FC = () => {
   } = useUIContext()
   const {
     user,
+    users,
     isSlatePicker
   } = useGlobalContext()
 
@@ -92,14 +94,12 @@ const CreateSlate: React.FC = () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
     const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
-    await FBSlateClassInstance.addDocument<Slate>({
+    await FBSlateClassInstance.addSlate({ 
       week: seasonData?.ApiWeek as number,
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
       games: selectedGames,
-    }, uniqueId).then(() => {
-      setStatus(LoadingState.IDLE);
-    })
+     }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
   }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen]);
 
   return (
