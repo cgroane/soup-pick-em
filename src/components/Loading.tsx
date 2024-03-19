@@ -27,8 +27,8 @@ const Loading = ({
   return (
     <>
       {arrayOfSkels.map((_, index) => 
-      <Box pad={'medium'} align="center" >
-      <ParentComponent key={`skeleton-${index}`} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
+      <Box key={`skeleton-${index}`} pad={'medium'} align="center" >
+      <ParentComponent pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
         <Heading><Skeleton ></Skeleton></Heading>
         <CardBody>
             <Skeleton/>

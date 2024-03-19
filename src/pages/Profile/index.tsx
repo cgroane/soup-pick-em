@@ -30,7 +30,9 @@ const Profile: React.FC<ProfileProps> = () => {
   }, [fetchSlate, fetchUsers, setStatus])
 
   const hasPicksThisWeek = useMemo(() => {
-    return user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.length === 10;
+    const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
+    
+    return allValid?.length === 10;
   }, [user?.pickHistory, slate?.uniqueWeek]);
   const leaderBoard = useMemo(() => {
 

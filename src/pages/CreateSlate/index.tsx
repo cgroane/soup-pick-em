@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
-import { Slate, UserCollectionData } from '../../model';
+import { UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
@@ -100,7 +100,7 @@ const CreateSlate: React.FC = () => {
       providedBy: user as UserCollectionData,
       games: selectedGames,
      }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
-  }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen]);
+  }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
 
   return (
     <>

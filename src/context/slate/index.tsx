@@ -154,7 +154,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
       newSelections.push(newGame as Matchup);
     }
     setSelectedGames(newSelections);
-  }, [setSelectedGames, selectedGames]);
+  }, [setSelectedGames, selectedGames, deletions, setDeletions, slate?.games]);
 
   return (
     <SlateContext.Provider value={{

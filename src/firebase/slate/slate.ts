@@ -1,6 +1,6 @@
 import { doc, setDoc, writeBatch } from "firebase/firestore"
 import { FirebaseDB, db } from ".."
-import { Matchup, Picks, Slate, UserCollectionData } from "../../model"
+import { Matchup, Slate, UserCollectionData } from "../../model"
 import { getGames } from "../../api/getGames";
 
 /**
