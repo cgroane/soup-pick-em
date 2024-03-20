@@ -1,7 +1,6 @@
 import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
-import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { UserRoles } from "../../utils/constants";
@@ -43,7 +42,7 @@ const fetchUsers = useCallback(async () => {
 const navigate = useNavigate();
 
 useEffect(() => {
-  const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
+  const unsubscribe = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
       FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
         /** get doc in colletion with extra path segment to get all picks */
