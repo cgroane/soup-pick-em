@@ -56,15 +56,17 @@ useEffect(() => {
         });
       })
     } else {
-      navigate('/login');
+      navigate('/');
     }
   });
   return unsubscribe;
 }, [navigate]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (user?.uid) {
+      fetchUsers();
+    }
+  }, [fetchUsers, user?.uid]);
 
   const isSlatePicker = useMemo(() => {
     return !!user?.roles?.includes(UserRoles.SLATE_PICKER);

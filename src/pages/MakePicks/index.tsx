@@ -63,7 +63,7 @@ const MakePicks: React.FC = () => {
   }, [getDataForPage]);
 
   const submitPicks = useCallback( async () => {
-    if (!user) navigate('/login');
+    if (!user) navigate('/');
     setStatus(LoadingState.LOADING)
     setModalOpen(true);
     await FirebaseUsersClassInstance.addDocument({ 

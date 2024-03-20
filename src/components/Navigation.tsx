@@ -14,7 +14,7 @@ const StyledHeader = styled(Header)`
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const signOut = useCallback(() => {
-    FirebaseUsersClassInstance.logout().then(() => navigate('/login'));
+    FirebaseUsersClassInstance.logout().then(() => navigate('/'));
   }, [navigate])
   const {
     user
@@ -38,7 +38,7 @@ const Navigation: React.FC = () => {
     const loggedOut = [
       {
         label: 'Login',
-        onClick: () => navigate('/login')
+        onClick: () => navigate('/')
       }
     ]
     return !!user?.isAuthenticated ? loggedInItems : loggedOut;

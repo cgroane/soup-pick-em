@@ -45,15 +45,25 @@ export const getCurrentWeek = async () => {
     console.error(err)
   }
 }
+
+/**
+ * 
+ * @param options --> used to handle week and season, which are also passed into getSpreads to ensure we are getting data
+ * from each api that is of the same time period.
+ * This requires transforming the responses to match casing of types, and to match the results from one api to another,
+ * and then again to another
+ * 
+ * refactor perhaps
+ * @returns 
+ */
 export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> => {
   const matchupRequestOptions: SpreadsAPIRequest = {
     ...options,
     weekNumber: options?.weekNumber,
     season: options?.season
   }
-  return axiosInstance.get<Matchup[]>(`/stats/json/GamesByWeek/${matchupRequestOptions.season}/${matchupRequestOptions.weekNumber}`, {
-
-  }).then(async (res) => {
+  return axiosInstance.get<Matchup[]>(`/stats/json/GamesByWeek/${matchupRequestOptions.season}/${matchupRequestOptions.weekNumber}`, {})
+  .then(async (res) => {
     const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.dateTime) - Date.parse(b?.dateTime))
     const weekRange = {
       start: resWithUpdatedPropertyNames[0],
@@ -77,6 +87,9 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         })
       ]);
       const [teamInfo, spreads] = await compoundRequest;
+
+      // bottle neck here with map containing an array.find -- REFACTOR
+
       return resWithUpdatedPropertyNames.map((item) => {
         const away = teamInfo.find((team) => team.teamID === item.awayTeamID);
         const home = teamInfo.find((team) => team.teamID === item.homeTeamID);

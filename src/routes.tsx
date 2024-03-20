@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom"
+import {  Route, Routes } from "react-router-dom"
 import Profile from "./pages/Profile";
 import Picks from "./pages/Picks";import Login from "./pages/Login";
 import { PropsWithChildren } from "react";
@@ -33,7 +33,7 @@ const PrivateRoutes: React.FC<PropsWithChildren & {authenticated: boolean}> = ({
   return (
     <>
       {
-        authenticated ? children : <Navigate to={'/login'} replace />
+        authenticated && children 
       }
     </>
   )
@@ -42,12 +42,11 @@ const PrivateRoutes: React.FC<PropsWithChildren & {authenticated: boolean}> = ({
 
 
 const Router = () => {
-  // const userRoles = useSelector(selectUserRoles);
-  // const userRoles: UserRoles[] = [UserRoles.BASIC, UserRoles.SLATE_PICKER, UserRoles.ADMIN];
   const { user } = useGlobalContext();
+
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/colors" element={<Colors />} />
       <Route
         path="/profile" 
