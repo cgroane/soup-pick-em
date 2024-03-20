@@ -6,6 +6,7 @@ import { theme } from '../theme'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalContext } from '../context/user'
 import FirebaseUsersClassInstance from '../firebase/user/user'
+import { UserRoles } from '../utils/constants'
  
 const StyledHeader = styled(Header)`
   background-color: ${({theme}) => theme.colors.lightBlue};
@@ -30,17 +31,19 @@ const Navigation: React.FC = () => {
         label: 'Logout',
         onClick: () => signOut()
       },
-      {
-        label: 'Choose Slate Maker',
-        onClick: () => navigate('/choose-picker')
-      }
     ];
     const loggedOut = [
       {
         label: 'Login',
         onClick: () => navigate('/')
       }
-    ]
+    ];
+    if (user?.roles?.includes(UserRoles.ADMIN)) {
+      loggedInItems.push({
+        label: 'Choose Slate Maker',
+        onClick: () => navigate('/choose-picker')
+      });
+    }
     return !!user?.isAuthenticated ? loggedInItems : loggedOut;
   }, [user?.isAuthenticated, navigate, signOut])
   return (

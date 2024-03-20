@@ -115,7 +115,7 @@ const MakePicks: React.FC = () => {
           { status === LoadingState.LOADING ? <Spinner /> :  (
             <Box width={'100%'} >
               <Text color={'black'} >Done</Text>
-              <Checkmark color='primary' />
+              <Checkmark color='brand' />
             </Box>
           )}
         </Modal>
