@@ -1,17 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Paragraph, Spinner, Text, TextInput, Toolbar } from 'grommet';
+import { Box, Button, Paragraph, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
-import { Checkmark, Search } from 'grommet-icons';
+import {  Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
-import { useUIContext } from '../../context/ui';
+import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
-import { Slate, UserCollectionData } from '../../model';
+import { UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
+import Loading from '../../components/Loading';
  
 
 /**
@@ -38,9 +39,9 @@ const CreateSlate: React.FC = () => {
     selectedGames,
     filteredGames,
     setFilteredGames,
-    loading,
-    setLoading,
-    fetchMatchups
+    fetchMatchups,
+    deletions,
+    canEdit
   } = useSlateContext()
   const {
     fetchSlate
@@ -48,17 +49,20 @@ const CreateSlate: React.FC = () => {
   const { 
     setModalOpen,
     modalOpen,
-    seasonData
+    seasonData,
+    setStatus,
+    status
   } = useUIContext()
   const {
     user,
+    users,
     isSlatePicker
   } = useGlobalContext()
 
   /** hooks */
   const navigate = useNavigate();
 
-  const disableSelection = useMemo(() => selectedGames?.length >= 10, [selectedGames]);
+  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
 
   /** stateful operations */
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,9 +70,12 @@ const CreateSlate: React.FC = () => {
   }, [setTextFilter]);
 
   useEffect(() => {
-    fetchSlate({})
-    fetchMatchups();
-  }, [fetchMatchups, fetchSlate]);
+    Promise.all([
+      fetchSlate({}).then((result) => result),
+    fetchMatchups()
+    ]).then(() => setStatus(LoadingState.IDLE));
+    
+  }, [fetchMatchups, fetchSlate, setStatus]);
 
   useEffect(() => {
     if (textFilter) {
@@ -84,19 +91,17 @@ const CreateSlate: React.FC = () => {
   }, [games, setFilteredGames, textFilter]);
   
   /** api request */
-  const submitSlate = async () => {
-    setLoading('loading');
+  const submitSlate = useCallback( async () => {
+    setStatus(LoadingState.LOADING);
     setModalOpen(true);
     const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
-    await FBSlateClassInstance.addDocument<Slate>({
-      weekNumber: seasonData?.ApiWeek as number,
+    await FBSlateClassInstance.addSlate({ 
+      week: seasonData?.ApiWeek as number,
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
       games: selectedGames,
-    }, uniqueId).then(() => {
-      setLoading('idle');
-    })
-  }
+     }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
+  }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
 
   return (
     <>
@@ -104,7 +109,12 @@ const CreateSlate: React.FC = () => {
         <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
-        <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
+        {
+          status === LoadingState.LOADING ? (
+            <Loading iterations={3} type='gameCard'/>
+          ) : (
+            <>
+            <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
           {
             filteredGames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC)).map((game) => 
             <Game
@@ -115,7 +125,7 @@ const CreateSlate: React.FC = () => {
             />)
           }
         </Box>
-        {isSlatePicker && 
+        {(isSlatePicker && canEdit) && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
@@ -125,6 +135,10 @@ const CreateSlate: React.FC = () => {
             <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
           </Box>
         </BottomToolbar>}
+            </>
+          )
+        }
+        
       </Box>
       {modalOpen && (
         <Modal actions={[
@@ -136,12 +150,7 @@ const CreateSlate: React.FC = () => {
             }
           }
         ]} >
-          { loading === 'loading' ? <Spinner /> :  (
-            <Box width={'100%'} >
-              <Text color={'black'} >Done</Text>
-              <Checkmark color='primary' />
-            </Box>
-          )}
+
         </Modal>
       )}
     </>

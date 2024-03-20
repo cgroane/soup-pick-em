@@ -30,21 +30,22 @@ interface GameProps {
 const Game: React.FC<GameProps> = ({
   game,
   addedToSlate,
-  disable = false
+  disable
 }: GameProps) => {
 
   const {
-    addAndRemove
+    addAndRemove,
+    canEdit
   } = useSlateContext();
   const { 
     isSlatePicker
   } = useGlobalContext();
+
   
   const {
     rankings,
     dateTime
   } = useGetTeamData(game);
-
 
   return (
     <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
@@ -55,7 +56,7 @@ const Game: React.FC<GameProps> = ({
             <Paragraph>Home</Paragraph>
         </CardHeader>
         <CardBody flex direction='row' align='stretch' >
-          <Box width={'40%'} height={'100%'} align='center' justify='center' >
+          <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
           </Box>
@@ -68,7 +69,7 @@ const Game: React.FC<GameProps> = ({
             </Paragraph>
 
           </Box>
-          <Box width={'40%'} height={'100%'} align='center' justify='center' >
+          <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.homeTeamData?.teamLogoUrl} fit='contain' />
             <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
           </Box>
@@ -80,21 +81,11 @@ const Game: React.FC<GameProps> = ({
               margin={'4px'}
             >
               <CheckBox
-                  label='Add to slate'
+                  label={`Add${addedToSlate ? 'ed' : ''} to slate`}
                   checked={addedToSlate}
                   onChange={() => addAndRemove(game)}
-                  disabled={disable && !addedToSlate}
+                  disabled={(disable && !addedToSlate) || !canEdit}
               />
-              {/* {
-                game.theOddsId && (
-                  <OtherMarkets
-                    gameId={game.theOddsId}
-                    addToSlate={addToSlate}
-                    addedToSlate={addedToSlate}
-                    disableSelections={disable}
-                  />
-                )
-              } */}
             </CheckboxContainer>
           )
         }

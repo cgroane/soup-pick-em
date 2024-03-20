@@ -21,17 +21,17 @@ import SelectWeek from '../../components/SelectWeek';
  */
 
 export interface PicksColumnDef {
-  user: UserCollectionData;
+  user: { name: string; id: string };
   game: Matchup;
-  [key: string]: Outcome | Matchup | UserCollectionData | string;
+  [key: string]: Outcome | Matchup | { name: string; id: string } | string;
 };
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
 const Picks: React.FC = () => {
 
   const {
-    users,
-    fetchUsers
+    fetchUsers,
+    allPickHistories,
   } = useGlobalContext();
   const {
     slate,
@@ -45,21 +45,21 @@ const Picks: React.FC = () => {
   }, [fetchUsers, fetchSlate]);
 
   const thisWeeksPickHistory = useMemo(() => {
-    return users?.map((user) => {
+    return allPickHistories?.map((userPicks) => {
       return {
-        user: user,
-        ...user.pickHistory.find((h) => h.slateId === slate?.uniqueWeek)?.picks?.reduce<{game: Matchup, [key: string]: Outcome | Matchup}>((acc, pick) => {
+        user: { name: userPicks?.name, id: userPicks?.userId },
+        ...userPicks?.picks.reduce((acc, pick) => {
           const game = slate?.games.find((g) => g.gameID === pick.matchup);
           return {
             ...acc,
             game: game as Matchup,
             [pick.matchup]: pick.selection
-          }
-        }, {} as { game: Matchup; [key: string]: Outcome | Matchup })
+          };
+        }, {})
       } 
     }) as PicksColumnDef[]
     ;
-  }, [users, slate]);
+  }, [slate, allPickHistories]);
   
   const columns: ColumnDef<PicksColumnDef>[] = useMemo(() => {
 

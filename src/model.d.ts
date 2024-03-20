@@ -14,7 +14,7 @@ export type UserCollectionData = User & {
 }
 
 export type Picks = {
-  selection: Outcome | 'PUSH';
+  selection: Outcome | 'PUSH'; /** Make Outcome handle type variability IE name = 'PUSH' number ='0' price = '0' */
   isCorrect: boolean;
   matchup: number;
   userId: string;
@@ -41,7 +41,7 @@ export type Trophy = {
 }
 
 export type Slate = {
-  weekNumber: number;
+  week: number;
   games: Matchup[];
   providedBy: UserCollectionData;
   uniqueWeek: string;
@@ -54,7 +54,7 @@ export type Matchup = {
   week:                  number;
   status:                string;
   day:                   Date;
-  dateTime:              Date;
+  dateTime:              string;
   awayTeam:              string;
   homeTeam:              string;
   awayTeamID:            number;

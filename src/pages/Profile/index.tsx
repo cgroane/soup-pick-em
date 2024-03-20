@@ -1,11 +1,13 @@
 import { Button, CardBody, Heading } from 'grommet'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import WinPercentage from '../../components/WinPercentage'
 import { ProfileCard } from '../../components/Styled'
-import { useUIContext } from '../../context/ui'
+import { LoadingState, useUIContext } from '../../context/ui'
 import { useGlobalContext } from '../../context/user'
 import { usePickContext } from '../../context/pick'
+import Loading from '../../components/Loading'
+import { useSlateContext } from '../../context/slate'
 
 /**
  * show record
@@ -17,16 +19,26 @@ import { usePickContext } from '../../context/pick'
 interface ProfileProps {}
 const Profile: React.FC<ProfileProps> = () => {
 
-  const { seasonData } = useUIContext();
-  const { user, users } = useGlobalContext();
-  const { slate } = usePickContext();
+  const { seasonData, setStatus, status } = useUIContext();
+  const { user, users, fetchUsers, } = useGlobalContext();
+  const { slate, fetchSlate } = usePickContext();
+  const { canEdit } = useSlateContext();
+
+  useEffect(() => {
+    Promise.all([
+      fetchUsers().then(() => null),
+      fetchSlate({  }).then(() => null)
+    ]).then(() => setStatus(LoadingState.IDLE));
+  }, [fetchSlate, fetchUsers, setStatus])
 
   const hasPicksThisWeek = useMemo(() => {
-    return user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.length === 10;
+    const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
+    
+    return allValid?.length === 10;
   }, [user?.pickHistory, slate?.uniqueWeek]);
   const leaderBoard = useMemo(() => {
 
-    return users.map((leader) => {
+    return users?.map((leader) => {
       const wins = leader?.record?.wins ?? 0;
       const losses = leader?.record?.losses ?? 0;
       const pctg = (wins + losses > 0) ? wins / (wins + losses) : 0
@@ -38,11 +50,14 @@ const Profile: React.FC<ProfileProps> = () => {
         pctg: pctg
       }
     })
-    .sort((a, b) => {
+    ?.sort((a, b) => {
       return b.pctg - a.pctg
     })
   }, [users])
 
+  if (status === LoadingState.LOADING) {
+    return <Loading iterations={4} type='profileCard'/>
+  }
   return (
     <>
       <ProfileCard background='light-1' >
@@ -51,7 +66,7 @@ const Profile: React.FC<ProfileProps> = () => {
           </Heading>
           <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>
-            <Button primary label="See Games"/>  
+            <Button primary label={canEdit ? `Pick Slate` : `View Games`}/>  
           </Link>
           </CardBody>
         </ProfileCard>
@@ -76,8 +91,11 @@ const Profile: React.FC<ProfileProps> = () => {
         <CardBody>
           <ol>
             {/* find user whose id === cur user id, make bold / highlighted somehow */}
-            {leaderBoard.map((leader, index) => <li key={index} >{leader.fName} {leader.lName} {leader?.record?.wins}-{leader?.record?.losses}</li>)}
+            {leaderBoard?.map((leader, index) => <li key={index} >{leader.fName} {leader.lName} {leader?.record?.wins}-{leader?.record?.losses}</li>)}
           </ol>
+          <Link to={'/picks'} >
+            <Button label="see more" primary/>
+          </Link>
         </CardBody>
       </ProfileCard>
     </>

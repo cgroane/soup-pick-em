@@ -1,56 +1,72 @@
 import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
-import { app } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { UserRoles } from "../../utils/constants";
+import { LoadingState, useUIContext } from "../ui";
+import { PickHistory } from "../../pages/Picks/PicksTable";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
     setUser: Dispatch<React.SetStateAction<UserCollectionData | null>>;
     users: UserCollectionData[];
     setUsers: Dispatch<SetStateAction<UserCollectionData[]>>;
-    fetchUsers: () => void;
+    fetchUsers: () => Promise<void>;
     isSlatePicker: boolean;
+    allPickHistories: PickHistory[];
 }
-
 
 export const AppContext = React.createContext({} as UserValueProp); //create the context API
 
 //function body
 const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChildren) => {
 
+const {
+  setStatus
+} = useUIContext();
+
 const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const [users, setUsers] = useState<UserCollectionData[]>([]);
+const [ usersPicks, setUsersPicks ] = useState<PickHistory[]>([] as PickHistory[]);
   
 const fetchUsers = useCallback(async () => {
-  const results = await FirebaseUsersClassInstance.getCollection();
+  setStatus(LoadingState.LOADING);
+  const allPickHistories = await FirebaseUsersClassInstance.getSubCollection<PickHistory>('picks');
+  const results = await FirebaseUsersClassInstance.getCollection<UserCollectionData>();
+  results?.map((u) => u.pickHistory = allPickHistories.filter((p) => p.userId === u.uid))
   setUsers(results as UserCollectionData[]);
-}, [setUsers]);
+  setUsersPicks(allPickHistories)
+}, [setUsers, setStatus, setUsersPicks]);
 
 const navigate = useNavigate();
 
 useEffect(() => {
-  const unsubscribe = getAuth(app).onAuthStateChanged((currUser) => {
+  const unsubscribe = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
       FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
-        if (res) {
-          setUser(res as UserCollectionData)
-        } else {
-          setUser(null);
-        }
+        /** get doc in colletion with extra path segment to get all picks */
+        FirebaseUsersClassInstance.getCollection<PickHistory>([`${res?.id}`, 'picks']).then((completeRequest) => {
+          if (res) {
+            setUser({ ...res as Omit<UserCollectionData, 'pickHistory'>, pickHistory: completeRequest as PickHistory[] })
+          } else {
+            setUser(null);
+          }
+        });
       })
     } else {
-      navigate('/login');
+      navigate('/');
     }
   });
   return unsubscribe;
 }, [navigate]);
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (user?.uid) {
+      fetchUsers();
+    }
+  }, [fetchUsers, user?.uid]);
+
   const isSlatePicker = useMemo(() => {
     return !!user?.roles?.includes(UserRoles.SLATE_PICKER);
   }, [user?.roles])
@@ -62,7 +78,8 @@ useEffect(() => {
       users,
       setUsers,
       fetchUsers,
-      isSlatePicker
+      isSlatePicker,
+      allPickHistories: usersPicks
     }}>
       {children}
     </AppContext.Provider>

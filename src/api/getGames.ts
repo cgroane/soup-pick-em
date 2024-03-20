@@ -45,32 +45,51 @@ export const getCurrentWeek = async () => {
     console.error(err)
   }
 }
+
+/**
+ * 
+ * @param options --> used to handle week and season, which are also passed into getSpreads to ensure we are getting data
+ * from each api that is of the same time period.
+ * This requires transforming the responses to match casing of types, and to match the results from one api to another,
+ * and then again to another
+ * 
+ * refactor perhaps
+ * @returns 
+ */
 export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> => {
   const matchupRequestOptions: SpreadsAPIRequest = {
     ...options,
     weekNumber: options?.weekNumber,
     season: options?.season
   }
-  return axiosInstance.get<Matchup[]>(`/stats/json/GamesByWeek/${matchupRequestOptions.season}/${matchupRequestOptions.weekNumber}`, {
-
-  }).then(async (res) => {
-    const resWithUpdatedPropertyNames = convertKeyNames(res.data);
+  return axiosInstance.get<Matchup[]>(`/stats/json/GamesByWeek/${matchupRequestOptions.season}/${matchupRequestOptions.weekNumber}`, {})
+  .then(async (res) => {
+    const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.dateTime) - Date.parse(b?.dateTime))
     const weekRange = {
-      start: resWithUpdatedPropertyNames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC))[0],
-      end: resWithUpdatedPropertyNames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC))[res.data.length - 1]
+      start: resWithUpdatedPropertyNames[0],
+      end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1]
     };
 
     try {
+      const spreadsOptions = process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
+        ...options,
+        date: buildDateFormat(weekRange?.start?.dateTime)
+      } : {
+        ...options,
+        commenceTimeFrom: buildDateFormat((weekRange.start?.dateTime)),
+        commenceTimeTo: buildDateFormat((weekRange.end?.dateTime)),
+        date: buildDateFormat(weekRange?.start?.dateTime)
+      }
       const compoundRequest = await Promise.all([
         await getTeams(),
         await getSpreads({
-          ...options,
-          commenceTimeFrom: buildDateFormat((weekRange.start?.dateTimeUTC)),
-          commenceTimeTo: buildDateFormat((weekRange.end?.dateTimeUTC)),
-          date: buildDateFormat(weekRange?.end?.dateTimeUTC)
+          ...spreadsOptions
         })
       ]);
       const [teamInfo, spreads] = await compoundRequest;
+
+      // bottle neck here with map containing an array.find -- REFACTOR
+
       return resWithUpdatedPropertyNames.map((item) => {
         const away = teamInfo.find((team) => team.teamID === item.awayTeamID);
         const home = teamInfo.find((team) => team.teamID === item.homeTeamID);
@@ -80,23 +99,29 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           homeTeamData: { ...home }
         }
       }).map((item) => {
-        const strippedHomeTeam = stripAndReplaceSpace(item.homeTeamName);
-        const strippedAwayTeam = stripAndReplaceSpace(item.awayTeamName);
-  
+        const strippedHomeTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.homeTeamName).join('')));
+        const strippedAwayTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.awayTeamName).join('')));
+        
         const gameSpread: TheOddsResult | undefined = spreads?.data?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
-          return ((strippedHome === strippedHomeTeam) &&
-          (strippedAway === strippedAwayTeam))
-        }
-        );
+          return ((strippedHomeTeam.includes(strippedHome)) &&
+          (strippedAwayTeam.includes(strippedAway)))
+        });
+        
+      const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
+        const asArray = a.name.split(' ');
+        const stripped = stripAndReplaceSpace(asArray.splice(asArray.length - 1, 1).join(''));
+        return !!strippedHomeTeam.includes(stripped) ? -1 : 1
+      })
         return {
           ...item,
           pointSpread: gameSpread?.bookmakers[0]?.markets[0]?.outcomes[0]?.point ?? item.pointSpread,
           theOddsId: gameSpread?.id,
-          outcomes: gameSpread?.bookmakers[0]?.markets[0]?.outcomes ?? [],
+          outcomes: orderedOutcomes ?? [],
         }
-      }).filter((item) => item.outcomes.length)
+      })
+      .filter((item) => item.outcomes.length)
       .map((item) => {
         let newPointSpread: number = item.pointSpread;
         const remainder = item.pointSpread % .5;

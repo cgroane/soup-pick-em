@@ -1,10 +1,12 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek } from '../../utils/getWeek';
-import { useUIContext } from '../ui';
+import { LoadingState, useUIContext } from '../ui';
 import { usePickContext } from '../pick';
+import { useGlobalContext } from '../user';
+import { UserRoles } from '../../utils/constants';
 
 export type SlateValueProps = {
   games: Matchup[];
@@ -14,9 +16,9 @@ export type SlateValueProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
-  loading: string;
-  setLoading: Dispatch<SetStateAction<string>>;
   fetchMatchups: (weekNumber?: number) => void;
+  deletions: number[];
+  canEdit: boolean;
 }
 
 type ContextProp = {
@@ -31,35 +33,63 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const {
     slate
   } = usePickContext();
+  const {
+    setStatus
+  } = useUIContext();
+  const {
+    user
+  } = useGlobalContext()
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
-  const [loading, setLoading] = useState('');
+  const [deletions, setDeletions] = useState<number[]>([])
   const { seasonData } = useUIContext();
 
   useEffect(() => {
     setSelectedGames(slate?.games ?? []);
   }, [slate, setSelectedGames])
+
+  const canEdit = useMemo(() => {
+    const today = new Date();
+    const earliestGame = Date.parse(slate?.games?.sort((a, b) => Date.parse(a.dateTime) - Date.parse(b.dateTime))[0].dateTime)
+    const now = Date.parse(today.toDateString())
+    const pastDate = now > earliestGame;
+    return !!((!pastDate && user?.roles?.includes(UserRoles.SLATE_PICKER)) || user?.roles?.includes(UserRoles.ADMIN))
+  }, [slate?.games, user?.roles])
   /**
    * update fetchMatchups to accept a week param
    */
   const fetchMatchups = useCallback(async (weekNumber?: number) => {
-    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1'
+    setStatus(LoadingState.LOADING);
+    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = await getGames({
       weekNumber: week,
       season: seasonData?.ApiSeason
     });
     setGames(results);
     setFilteredGames(results);
-  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek]);
+    return results;
+  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek, setStatus]);
   
 
   const addAndRemove = useCallback((game: Matchup) => {
+    /**
+     * this runs either if updating or adding from scratch
+     * need to differentiate between edit and new
+     * on remove, if slate.games includes removed -- edit bc slate.games is the original from the api
+     * otherwise it is new
+     */
     const found = selectedGames.findIndex((selectedGame) => game.gameID === selectedGame.gameID);
-    
+    const dels = [...deletions];
     const newSelections = [...selectedGames];
     if (found >= 0) {
       newSelections.splice(found, 1);
+      const deletedItem = slate?.games.find((g) => g.gameID === selectedGames[found].gameID)
+      if (deletedItem) {
+        dels.push(found);
+        setDeletions(dels);
+      }
+
     } else {
       const newGame = {
         gameID:                game.gameID ?? 0,
@@ -138,7 +168,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
       newSelections.push(newGame as Matchup);
     }
     setSelectedGames(newSelections);
-  }, [setSelectedGames, selectedGames]);
+  }, [setSelectedGames, selectedGames, deletions, setDeletions, slate?.games]);
 
   return (
     <SlateContext.Provider value={{
@@ -149,9 +179,9 @@ export default function CreateSlateContext({ children }: ContextProp) {
       selectedGames,
       setSelectedGames,
       addAndRemove,
-      loading,
-      setLoading,
-      fetchMatchups
+      fetchMatchups,
+      deletions,
+      canEdit
     }}>
       {children}
     </SlateContext.Provider>

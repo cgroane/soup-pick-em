@@ -16,5 +16,5 @@ const slateState = createSlice({
   // extraReducers: (builder) => {},
 });
 
-export const selectWeek = (state: RootState) => state.slate.data?.weekNumber;
+export const selectWeek = (state: RootState) => state.slate.data?.week;
 export default slateState.reducer;

@@ -1,5 +1,5 @@
 import { collection } from "firebase/firestore";
-import { FirebaseDB, auth, db } from "..";
+import { FirebaseDB, auth } from "..";
 import { UserCollectionData } from "../../model";
 import { GoogleAuthProvider, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth";
 import { UserRoles } from "../../utils/constants";
@@ -8,7 +8,7 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
   constructor(collectionName: string = 'users') { super(collectionName) }
   auth = auth;
   googleProvider = new GoogleAuthProvider();
-  usersRef = collection(db, 'users');
+  usersRef = collection(this.db, 'users');
   /** 
    * on sign in / sign up, need to get user info into document
    * addDoc does not do anything other than add user to the db users collection

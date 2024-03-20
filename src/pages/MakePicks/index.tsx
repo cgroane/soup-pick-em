@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Text, Toolbar } from 'grommet';
@@ -7,7 +7,7 @@ import { theme } from '../../theme';
 import { UserCollectionData } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
-import { useUIContext } from '../../context/ui';
+import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { Checkmark } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
@@ -43,25 +43,41 @@ const MakePicks: React.FC = () => {
 
   const {
     modalOpen,
-    setModalOpen
-  } = useUIContext()
+    setModalOpen,
+    status,
+    setStatus,
+    seasonData
+  } = useUIContext();
 
-  const [loading, setLoading] = useState('');
+  const getDataForPage = useCallback(async () => {
+    const compoundRequest = Promise.all([
+      await fetchSlate({ }),
+      await getUserPicks()
+    ]);
+    const [slateResult, picksResult] = await compoundRequest;
+    if (slateResult && picksResult) setStatus(LoadingState.IDLE);
+  }, [fetchSlate, getUserPicks, setStatus]);
 
   useEffect(() => {
-    fetchSlate({ })
-    getUserPicks()
-  }, [fetchSlate, getUserPicks]);
+    getDataForPage();
+  }, [getDataForPage]);
 
   const submitPicks = useCallback( async () => {
-    if (!user) navigate('/login');
-    setLoading('loading');
+    if (!user) navigate('/');
+    setStatus(LoadingState.LOADING)
     setModalOpen(true);
-    await FirebaseUsersClassInstance.updateDocumentInCollection(user?.uid as string, { pickHistory: [...user?.pickHistory ?? [], picks] }).then(() => {
-      setLoading('idle');
+    await FirebaseUsersClassInstance.addDocument({ 
+      name: `${user?.fName} ${user?.lName}`,
+      slateId: picks?.slateId,
+      week: slate?.week,
+      year: seasonData?.Season,
+      picks: picks?.picks,
+      userId: user?.uid
+    }, user?.uid, ['picks', picks.slateId]).then(() => {
+      setStatus(LoadingState.IDLE)
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
-  }, [navigate, setLoading, setModalOpen, picks, user, setUser]);
+  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
   
 
   return (
@@ -80,10 +96,10 @@ const MakePicks: React.FC = () => {
           align='center'
           width={'100%'}
         >
-          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.length}/10</Paragraph>
+          <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
             <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.length < 10} />
+            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
           </Box>
         </BottomToolbar>
       {modalOpen && (
@@ -96,10 +112,10 @@ const MakePicks: React.FC = () => {
             }
           }
         ]} >
-          { loading === 'loading' ? <Spinner /> :  (
+          { status === LoadingState.LOADING ? <Spinner /> :  (
             <Box width={'100%'} >
               <Text color={'black'} >Done</Text>
-              <Checkmark color='primary' />
+              <Checkmark color='brand' />
             </Box>
           )}
         </Modal>

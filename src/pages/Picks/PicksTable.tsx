@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Outcome, Picks, UserCollectionData } from '../../model';
+import { Outcome, Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
 import { Box, Table, TableBody, TableCell, TableHeader, TableRow } from 'grommet';
@@ -41,6 +41,10 @@ const TableWrapper = styled(Box)`
 `;
 export interface PickHistory {
   slateId: string;
+  name: string;
+  userId: string;
+  week: number;
+  year: number;
   picks: Picks[];
 }
 interface PicksTableProps {
@@ -84,8 +88,8 @@ const PicksTable: React.FC<PicksTableProps> = ({
                     const cellVal = cell?.getValue<Outcome>() as Outcome ?? "No selection"
                     return (
                       cell.column.id === 'user' ? (
-                        <StyledCell style={{ textAlign: 'center' }} border={'horizontal'} background={'white'} >
-                          {cell.getValue<UserCollectionData>().fName ?? ''}
+                        <StyledCell key={cell.id} style={{ textAlign: 'center' }} border={'horizontal'} background={'white'} >
+                          {cell.getValue<{ name: string; id: string }>().name ?? ''}
                         </StyledCell>
                       ) :
                       <GameCell game={row.original.game} outcome={cellVal as Outcome} scope='row' key={cell.id}>
