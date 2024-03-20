@@ -38,7 +38,7 @@ const Context = ({
     picks: [] as Picks[]
   });
   // const [initialPicks, setInitialPicks] = useState<{ slateId: string, picks: Picks[] }>({} as {slateId: string, picks: Picks[]})
-  
+
   const addPick = useCallback((pick: Picks) => {
     /**
      * find outcome selection in pick.picks by matchup ID.

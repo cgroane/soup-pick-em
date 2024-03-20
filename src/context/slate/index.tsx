@@ -1,10 +1,12 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { daysOfTheWeek } from '../../utils/getWeek';
 import { LoadingState, useUIContext } from '../ui';
 import { usePickContext } from '../pick';
+import { useGlobalContext } from '../user';
+import { UserRoles } from '../../utils/constants';
 
 export type SlateValueProps = {
   games: Matchup[];
@@ -16,6 +18,7 @@ export type SlateValueProps = {
   addAndRemove: (game: Matchup) => void;
   fetchMatchups: (weekNumber?: number) => void;
   deletions: number[];
+  canEdit: boolean;
 }
 
 type ContextProp = {
@@ -32,7 +35,10 @@ export default function CreateSlateContext({ children }: ContextProp) {
   } = usePickContext();
   const {
     setStatus
-  } = useUIContext()
+  } = useUIContext();
+  const {
+    user
+  } = useGlobalContext()
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
@@ -42,6 +48,14 @@ export default function CreateSlateContext({ children }: ContextProp) {
   useEffect(() => {
     setSelectedGames(slate?.games ?? []);
   }, [slate, setSelectedGames])
+
+  const canEdit = useMemo(() => {
+    const today = new Date();
+    const earliestGame = Date.parse(slate?.games?.sort((a, b) => Date.parse(a.dateTime) - Date.parse(b.dateTime))[0].dateTime)
+    const now = Date.parse(today.toDateString())
+    const pastDate = now > earliestGame;
+    return !!((!pastDate && user?.roles?.includes(UserRoles.SLATE_PICKER)) || user?.roles?.includes(UserRoles.ADMIN))
+  }, [slate?.games, user?.roles])
   /**
    * update fetchMatchups to accept a week param
    */
@@ -166,7 +180,8 @@ export default function CreateSlateContext({ children }: ContextProp) {
       setSelectedGames,
       addAndRemove,
       fetchMatchups,
-      deletions
+      deletions,
+      canEdit
     }}>
       {children}
     </SlateContext.Provider>

@@ -40,7 +40,8 @@ const CreateSlate: React.FC = () => {
     filteredGames,
     setFilteredGames,
     fetchMatchups,
-    deletions
+    deletions,
+    canEdit
   } = useSlateContext()
   const {
     fetchSlate
@@ -61,7 +62,7 @@ const CreateSlate: React.FC = () => {
   /** hooks */
   const navigate = useNavigate();
 
-  const disableSelection = useMemo(() => selectedGames?.length >= 10, [selectedGames]);
+  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
 
   /** stateful operations */
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +125,7 @@ const CreateSlate: React.FC = () => {
             />)
           }
         </Box>
-        {isSlatePicker && 
+        {(isSlatePicker && canEdit) && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >

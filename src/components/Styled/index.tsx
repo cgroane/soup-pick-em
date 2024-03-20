@@ -1,8 +1,12 @@
 import { Card, Image } from "grommet";
 import styled from "styled-components";
 
-export const GameCard = styled(Card)`
+export const GameCard = styled(Card)<{disabled?: boolean}>`
   height: 18rem;
+  ${({ disabled }) => disabled ? `
+    opacity: 0.6;
+    cursor: not-allowed;
+  ` : ''}
 `;
 export const TeamLogo = styled(Image)`
   width: 3rem;

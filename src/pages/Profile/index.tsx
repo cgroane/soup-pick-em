@@ -7,6 +7,7 @@ import { LoadingState, useUIContext } from '../../context/ui'
 import { useGlobalContext } from '../../context/user'
 import { usePickContext } from '../../context/pick'
 import Loading from '../../components/Loading'
+import { useSlateContext } from '../../context/slate'
 
 /**
  * show record
@@ -21,6 +22,7 @@ const Profile: React.FC<ProfileProps> = () => {
   const { seasonData, setStatus, status } = useUIContext();
   const { user, users, fetchUsers, } = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
+  const { canEdit } = useSlateContext();
 
   useEffect(() => {
     Promise.all([
@@ -64,7 +66,7 @@ const Profile: React.FC<ProfileProps> = () => {
           </Heading>
           <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>
-            <Button primary label="See Games"/>  
+            <Button primary label={canEdit ? `Pick Slate` : `View Games`}/>  
           </Link>
           </CardBody>
         </ProfileCard>

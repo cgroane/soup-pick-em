@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 import { GameCard, TeamLogo } from '../../components/Styled'
 import { Box, Button, CardBody, CardHeader, Heading, Paragraph } from 'grommet'
@@ -7,6 +7,7 @@ import { useGetTeamData } from '../../hooks/useGetTeamData'
 import { usePickContext } from '../../context/pick'
 import { useGlobalContext } from '../../context/user'
 import { useUIContext } from '../../context/ui'
+import { Lock } from 'grommet-icons'
 
 const Team = styled(Box)`
   position: absolute;
@@ -52,13 +53,16 @@ const PickCard: React.FC<PickCardProps> = ({
 
   const {
     addPick,
-    slate
+    slate,
   } = usePickContext();
   const { 
     seasonData
   } = useUIContext();
 
   const [choice, setChoice] = useState('PUSH' as Outcome | 'PUSH');
+  const pastDate = useMemo(() => {
+    return Date.parse(game?.dateTime) < Date.parse(new Date().toDateString())
+  }, [game])
 
   const getSelected = useCallback((ouctomeIndex: number) => {
     if (typeof choice === 'object') {
@@ -91,7 +95,7 @@ const PickCard: React.FC<PickCardProps> = ({
   
   return (
     <>
-      <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
+      <GameCard disabled={!pastDate} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
       <Box flex align='stretch' justify='center'>
         <CardHeader width={'100%'} pad={"medium"} >
             <Paragraph>Away</Paragraph>
@@ -100,7 +104,7 @@ const PickCard: React.FC<PickCardProps> = ({
         </CardHeader>
         <CardBody flex direction='row' align='stretch' >
           <TeamWrapper 
-            onClick={() => makeSelection(game.outcomes[1])}
+            onClick={!pastDate ? () => makeSelection(game.outcomes[1]) : undefined}
             selected={getSelected(1)}
             width={'37%'}
             height={'100%'}
@@ -111,6 +115,7 @@ const PickCard: React.FC<PickCardProps> = ({
             </Team>
           </TeamWrapper>
           <Box flex align='center' justify='center' width={'20%'} >
+            { pastDate && <Lock color='brand' /> }
             <Paragraph margin={'4px'} size='12px' textAlign='center' >
               {dateTime.dayOfTheWeek}, {dateTime.month} {dateTime.dayOfTheMonth}, {dateTime.year} 
             </Paragraph>
@@ -122,14 +127,14 @@ const PickCard: React.FC<PickCardProps> = ({
               <Push
                 margin={{ top: '4px' }}
                 label="PUSH"
-                onClick={() => makeSelection("PUSH")}
+                onClick={!pastDate ? () => makeSelection("PUSH") : undefined}
                 selected={choice === "PUSH"}
               />
             }
 
           </Box>
           <TeamWrapper
-            onClick={() => makeSelection(game.outcomes[0])} 
+            onClick={!pastDate ? () => makeSelection(game.outcomes[0]) : undefined}
             width={'37%'} 
             height={'100%'}  
             selected={getSelected(0)}
