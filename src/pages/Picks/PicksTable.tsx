@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Outcome, Picks } from '../../model';
+import { Matchup, Outcome, Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
 import { Box, Table, TableBody, TableCell, TableHeader, TableRow } from 'grommet';
@@ -59,7 +59,12 @@ const PicksTable: React.FC<PicksTableProps> = ({
   const tableInstance = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
+    initialState: {
+      columnPinning: {
+        left: ['soup']
+      }
+    }
   });
 
   return (
@@ -85,15 +90,16 @@ const PicksTable: React.FC<PicksTableProps> = ({
             {tableInstance.getRowModel().rows.map(row => (
               <Row key={row.id}>
                 {row.getVisibleCells().map(cell => {
-                    const cellVal = cell?.getValue<Outcome>() as Outcome ?? "No selection"
+                    const cellVal = cell?.getValue<Matchup & { selection: Outcome }>() ?? "No selection"
+                    console.log(cell.getValue(), row.original)
                     return (
                       cell.column.id === 'user' ? (
                         <StyledCell key={cell.id} style={{ textAlign: 'center' }} border={'horizontal'} background={'white'} >
                           {cell.getValue<{ name: string; id: string }>().name ?? ''}
                         </StyledCell>
                       ) :
-                      <GameCell game={row.original.game} outcome={cellVal as Outcome} scope='row' key={cell.id}>
-                        {cellVal?.name ?? 'No selection'}
+                      <GameCell game={row.original[cell.column.id] as Matchup} outcome={cellVal.selection as Outcome} scope='row' key={cell.id}>
+                        {cellVal?.selection.name ?? 'No selection'}
                       </GameCell>
                     )
                   })

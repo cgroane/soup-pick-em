@@ -31,8 +31,8 @@ const GameCell: React.FC<GameCellProps> = ({
 }: GameCellProps) => {
   const correct = useMemo(() => {
     if (game) {
-      const homePick = (game?.homeTeamName.toLowerCase().replace(/ /g , '') === outcome?.name?.toLowerCase().replace(/ /g , '')) ? 'homeTeam' : 'awayTeam';
-    
+      const homePick = (game?.homeTeamName?.toLowerCase().replace(/ /g , '') === outcome?.name?.toLowerCase().replace(/ /g , '')) ? 'homeTeam' : 'awayTeam';
+      
       const newScore = game[`${homePick}Score`] + outcome?.point;
       return newScore > game[`${homePick === 'homeTeam' ? 'awayTeam' : 'homeTeam'}Score`];
     } else return false
