@@ -84,7 +84,10 @@ const Picks: React.FC = () => {
             } else {
               const homePick = (game?.homeTeamName?.toLowerCase().replace(/ /g , '') === pick.selection?.name?.toLowerCase().replace(/ /g , '')) ? 'homeTeam' : 'awayTeam';
               const newScore = game[`${homePick}Score`] + pick.selection?.point;
-              if (newScore > game[`${homePick === 'homeTeam' ? 'awayTeam' : 'homeTeam'}Score`]) { sumCorrect++; isCorrect = true }
+              if (newScore > game[`${homePick === 'homeTeam' ? 'awayTeam' : 'homeTeam'}Score`]) {
+                sumCorrect++; 
+                isCorrect = true
+              }
             }
           }
           
