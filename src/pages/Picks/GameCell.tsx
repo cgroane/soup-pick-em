@@ -29,7 +29,7 @@ const GameCell: React.FC<GameCellProps> = ({
 }: GameCellProps) => {
   return (
     <StyledGameCell border={'between'} pad={'4px'}>
-      <TextContainer background={game.isCorrect ? 'brand' : 'error'} >
+      <TextContainer background={game?.isCorrect ? 'brand' : 'error'} >
         {children}
       </TextContainer>
     </StyledGameCell>

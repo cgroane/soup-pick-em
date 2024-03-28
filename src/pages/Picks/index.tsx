@@ -76,7 +76,7 @@ const Picks: React.FC = () => {
         ...userPicks?.picks.reduce((acc, pick) => {
           const game = slate?.games.find((g) => g.gameID === pick.matchup);
           const fav = game?.outcomes.find((o) => o.point < 0);
-          let isCorrect = false;
+          let isCorrect = pick.isCorrect;
           if (game) {
             if (pick.selection?.name === 'PUSH' && ((fav?.point ?? 0 + game?.pointSpread) === 0)) {
               sumCorrect++;
@@ -139,7 +139,7 @@ const Picks: React.FC = () => {
                 // get row
                 const selection = props.row.original[props.column.id] as Matchup & {isCorrect: boolean; selection: Outcome };
                 return <GameCell scope='row' game={selection as Matchup & {isCorrect: boolean}} >
-                  { selection.selection.name }
+                  { selection?.selection?.name }
                 </GameCell>
               }
             }),

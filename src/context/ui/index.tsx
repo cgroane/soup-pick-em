@@ -33,14 +33,16 @@ const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDL
  */
 const getSeasonData = useCallback(async () => {
   const data: SeasonDetails = await getCurrentWeek() as SeasonDetails;
-
+  /**
+   * MOCK
+   */
   if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
     setSeasonData({
       ...data,
       ApiSeason: (data.Season - 1).toString(),
       Season: data.Season - 1,
       EndYear: data.EndYear - 1,
-      ApiWeek: 2,
+      ApiWeek: 9,
       Description: (parseInt(data.Description) - 1).toString()
     })
   } else {
