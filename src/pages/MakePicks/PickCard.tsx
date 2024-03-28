@@ -59,9 +59,9 @@ const PickCard: React.FC<PickCardProps> = ({
     seasonData
   } = useUIContext();
 
-  const [choice, setChoice] = useState('PUSH' as Outcome | 'PUSH');
+  const [choice, setChoice] = useState({ name: 'PUSH', point: 0, price: 0 });
   const pastDate = useMemo(() => {
-    return Date.parse(game?.dateTime) < Date.parse(new Date().toDateString())
+    return !(Date.parse(game?.dateTime) < Date.parse(new Date().toDateString()))
   }, [game])
 
   const getSelected = useCallback((ouctomeIndex: number) => {
@@ -76,12 +76,12 @@ const PickCard: React.FC<PickCardProps> = ({
     if (user?.pickHistory?.length) {
       const pick = user?.pickHistory?.find((p) => p.slateId === slate.uniqueWeek);
       const thisPick = pick?.picks.find((p) => p.matchup === game.gameID);
-      setChoice(thisPick?.selection as Outcome | "PUSH");
+      setChoice(thisPick?.selection as Outcome);
     }
   }, [setChoice, user?.pickHistory, game.gameID, slate.uniqueWeek]);
 
 
-  const makeSelection = useCallback((outcome: Outcome | "PUSH") => {
+  const makeSelection = useCallback((outcome: Outcome) => {
     const pick: Picks = {
       matchup: game.gameID,
       userId: user?.uid as string,
@@ -95,7 +95,7 @@ const PickCard: React.FC<PickCardProps> = ({
   
   return (
     <>
-      <GameCard disabled={!pastDate} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
+      <GameCard disabled={pastDate} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
       <Box flex align='stretch' justify='center'>
         <CardHeader width={'100%'} pad={"medium"} >
             <Paragraph>Away</Paragraph>
@@ -127,8 +127,8 @@ const PickCard: React.FC<PickCardProps> = ({
               <Push
                 margin={{ top: '4px' }}
                 label="PUSH"
-                onClick={!pastDate ? () => makeSelection("PUSH") : undefined}
-                selected={choice === "PUSH"}
+                onClick={!pastDate ? () => makeSelection({name: "PUSH", point: 0, price: 0 }) : undefined}
+                selected={choice?.name === "PUSH"}
               />
             }
 

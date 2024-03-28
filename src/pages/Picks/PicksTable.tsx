@@ -1,10 +1,9 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Outcome, Picks } from '../../model';
+import { Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
 import { Box, Table, TableBody, TableCell, TableHeader, TableRow } from 'grommet';
-import GameCell from './GameCell';
  
 
 /**
@@ -19,7 +18,8 @@ import GameCell from './GameCell';
  *
  * data -- maybe map user.picks into just this slate's picks?
  */
-const StyledCell = styled(TableCell)`
+
+export const StyledCell = styled(TableCell)`
   border-top-left-radius: 12px;
   border-bottom-left-radius: 12px;
   font-size: 12px;
@@ -59,7 +59,15 @@ const PicksTable: React.FC<PicksTableProps> = ({
   const tableInstance = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    defaultColumn: {
+      enableResizing: false
+    },
+    getCoreRowModel: getCoreRowModel(),
+    initialState: {
+      columnPinning: {
+        left: ['soup']
+      }
+    }
   });
 
   return (
@@ -72,6 +80,7 @@ const PicksTable: React.FC<PicksTableProps> = ({
                 {headerGroup.headers.map(header => (
                   <TableCell style={{
                     textAlign: 'center',
+                    width: `${header.getSize()}px`,
                   }} scope='col' key={header.id}>
                     {header.id === 'user' ?
                     flexRender(header.column.columnDef.header, header.getContext()) :
@@ -85,16 +94,9 @@ const PicksTable: React.FC<PicksTableProps> = ({
             {tableInstance.getRowModel().rows.map(row => (
               <Row key={row.id}>
                 {row.getVisibleCells().map(cell => {
-                    const cellVal = cell?.getValue<Outcome>() as Outcome ?? "No selection"
-                    return (
-                      cell.column.id === 'user' ? (
-                        <StyledCell key={cell.id} style={{ textAlign: 'center' }} border={'horizontal'} background={'white'} >
-                          {cell.getValue<{ name: string; id: string }>().name ?? ''}
-                        </StyledCell>
-                      ) :
-                      <GameCell game={row.original.game} outcome={cellVal as Outcome} scope='row' key={cell.id}>
-                        {cellVal?.name ?? 'No selection'}
-                      </GameCell>
+                    return (<>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </>
                     )
                   })
                 }
