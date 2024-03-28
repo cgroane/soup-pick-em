@@ -76,7 +76,7 @@ const Picks: React.FC = () => {
         ...userPicks?.picks.reduce((acc, pick) => {
           const game = slate?.games.find((g) => g.gameID === pick.matchup);
           const fav = game?.outcomes.find((o) => o.point < 0);
-          let isCorrect = pick.isCorrect;
+          let isCorrect = !!pick.isCorrect;
           if (game) {
             if (pick.selection?.name === 'PUSH' && ((fav?.point ?? 0 + game?.pointSpread) === 0)) {
               sumCorrect++;
