@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Box, Button } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
@@ -8,6 +8,7 @@ import { Matchup, Outcome } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
+import { useUIContext } from '../../context/ui';
 
 const HeaderCell = styled.td`
 border-radius: 12px;
@@ -46,7 +47,13 @@ export interface PicksColumnDef {
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
 const Picks: React.FC = () => {
-
+  const {
+    seasonData
+  } = useUIContext();
+  const [selectedWeek, setSelectedWeek] = useState({
+    week: seasonData?.ApiWeek,
+    year: seasonData?.Season
+  });
   const {
     fetchUsers,
     allPickHistories,
@@ -54,13 +61,12 @@ const Picks: React.FC = () => {
   const {
     slate,
     fetchSlate,
-    refreshSlatePicksStatus
   } = usePickContext()
   
   useEffect(() => {
     fetchUsers();
-    fetchSlate({  });
-  }, [fetchUsers, fetchSlate]);
+    fetchSlate({ week: selectedWeek?.week, year: selectedWeek?.year });
+  }, [fetchUsers, fetchSlate, selectedWeek]);
 
   /**
    * allpickhistoryies -- each obj in array contains user data, and array of games
@@ -173,8 +179,7 @@ const Picks: React.FC = () => {
     <>
       <Box>
         {<PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
-        <SelectWeek onChange={fetchSlate} />
-        <Button label='Update Scores' onClick={() => refreshSlatePicksStatus({ week: 9 })} />
+        <SelectWeek onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))} />
       </Box>
     </>
   )
