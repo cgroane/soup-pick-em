@@ -64,7 +64,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
     const results = (await getGames({
       weekNumber: week,
       season: seasonData?.ApiSeason
-    })).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
+    }))?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
     setGames(results);
     setFilteredGames(results);
     return results;

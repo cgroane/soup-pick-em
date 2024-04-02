@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Paragraph, TextInput, Toolbar } from 'grommet';
+import { Box, Button, Paragraph, Spinner, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
 import {  Search } from 'grommet-icons';
@@ -15,6 +15,7 @@ import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import SelectWeek from '../../components/SelectWeek';
+import { StatusGood } from 'grommet-icons';
  
 
 /**
@@ -172,7 +173,12 @@ const CreateSlate: React.FC = () => {
             }
           }
         ]} >
-
+          
+            <Box margin={'0 auto'}>
+              {status === LoadingState.LOADING && <Spinner color={'accent-1'} size='large' />}
+              {status === LoadingState.IDLE && <StatusGood color='accent-1' size='xlarge' />}
+            </Box>
+          
         </Modal>
       )}
     </>

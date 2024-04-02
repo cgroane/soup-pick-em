@@ -117,12 +117,12 @@ const Picks: React.FC = () => {
           cell: info => {
             return (
               <StyledCell
-                key={info.cell.id}
+                key={info?.cell?.id}
                 style={{ textAlign: 'center' }}
                 border={'horizontal'}
                 background={'white'}
               >
-                {info.row.original.user.name}
+                {info?.row?.original?.user?.name}
               </StyledCell>
             )
           },
@@ -134,21 +134,23 @@ const Picks: React.FC = () => {
         }),
       },
           ...slate?.games?.map((game) => ({
-              ...columnHelper.accessor(`${game.gameID}`, {
+              ...columnHelper.accessor(`${game?.gameID}`, {
               header: () => <HeaderCell >
-                  <p>{game.awayTeam}</p>
+                  <p>{game?.awayTeam}</p>
                   <p><span style={{ fontWeight: 600 }} >at</span></p>
-                  <p>{game.homeTeam}</p>
+                  <p>{game?.homeTeam}</p>
                 </HeaderCell>,
               minSize: undefined,
               maxSize: undefined,
               size: 250,
               cell: (props) => {
                 // get row
-                const selection = props.row.original[props.column.id] as Matchup & {isCorrect: boolean; selection: Outcome };
+                if (props?.row.original) {
+                const selection = props?.row?.original[props?.column?.id] as Matchup & {isCorrect: boolean; selection: Outcome };
                 return <GameCell scope='row' game={selection as Matchup & {isCorrect: boolean}} >
                   { selection?.selection?.name }
                 </GameCell>
+                }
               }
             }),
           })
@@ -157,9 +159,9 @@ const Picks: React.FC = () => {
           ...columnHelper.accessor('numberCorrect', {
             header: `Record`,
             cell: info => {
-              const incorrect = Math.abs((info.row.original.numberCorrect) - 10)
+              const incorrect = Math.abs((info?.row?.original?.numberCorrect) - 10)
               return <StyledGameCell >
-                { info.row.original.numberCorrect } - { incorrect }
+                { info?.row?.original?.numberCorrect } - { incorrect }
               </StyledGameCell>
             },
             size: 100,
@@ -177,7 +179,7 @@ const Picks: React.FC = () => {
   return (
     <>
       <Box>
-        {<PicksTable data={mockedLongArray as PicksColumnDef[]} columns={columns} />}
+        {thisWeeksPickHistory && <PicksTable data={mockedLongArray as PicksColumnDef[]} columns={columns} />}
         <SelectWeek
           heading={<Heading style={{ width: '100%' }} >
           View Results from:

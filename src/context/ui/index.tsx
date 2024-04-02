@@ -27,6 +27,7 @@ export const UiContext = React.createContext({} as UIValueProp); //create the co
 export default function Context({ children }: ContextProp) {
 const [seasonData, setSeasonData] = useState<SeasonDetails | undefined>({} as SeasonDetails);
 const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
+const [modalOpen, setModalOpen] = useState(false);
 
 /**
  * is there a better way to force historical? 
@@ -56,7 +57,6 @@ const getSeasonData = useCallback(async () => {
 useEffect(() => {
   getSeasonData()
 }, [getSeasonData]);
-const [modalOpen, setModalOpen] = useState(false);
 
 
   return (
