@@ -147,7 +147,7 @@ const CreateSlate: React.FC = () => {
             />)
           }
         </Box>
-        {(isSlatePicker && canEdit && !viewingOldData) && 
+        {(isSlatePicker && canEdit && viewingOldData) && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
