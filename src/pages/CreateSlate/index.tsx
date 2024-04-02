@@ -89,8 +89,8 @@ const CreateSlate: React.FC = () => {
   useEffect(() => {
     if (textFilter) {
       setFilteredGames(() => {
-        const filtered = games.filter((game) =>
-          JSON.stringify(Object.values(game)).includes(textFilter));
+        const filtered = games.filter((game) => 
+          JSON.stringify(Object.values(game)).toLowerCase().includes(textFilter.toLowerCase()));
         return filtered;
       })
     } else {
