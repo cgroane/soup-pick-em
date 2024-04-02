@@ -5,7 +5,7 @@ import { daysOfTheWeek, months } from "../utils/getWeek";
 
 export const useGetTeamData = (game: Matchup) => {
   const dateTime = useMemo(() => {
-    const converted = new Date(game.dateTime)
+    const converted = new Date(game.startDate)
     if (game.awayTeam.includes('LSU')) {
       console.log(converted, converted.getDay())
     }
@@ -20,7 +20,7 @@ export const useGetTeamData = (game: Matchup) => {
       year: converted.getFullYear(),
       month: months[converted.getMonth() - 1]
     }
-  }, [game.dateTime]);
+  }, [game.startDate, game.awayTeam]);
 
   const rankings = useMemo(() => {
     return {

@@ -48,54 +48,38 @@ export type Slate = {
 }
 
 export type Matchup = {
-  gameID:                number;
-  season:                number;
-  seasonType:            number;
-  week:                  number;
-  status:                string;
-  day:                   Date;
-  dateTime:              string;
-  awayTeam:              string;
-  homeTeam:              string;
-  awayTeamID:            number;
-  homeTeamID:            number;
-  awayTeamName:          string;
-  homeTeamName:          string;
-  awayTeamScore:         number;
-  homeTeamScore:         number;
-  period:                string;
-  timeRemainingMinutes:  number | null;
-  timeRemainingSeconds:  number | null;
-  pointSpread:           number;
-  overUnder:             number;
-  awayTeamMoneyLine:     number;
-  homeTeamMoneyLine:     number;
-  updated:               Date;
-  created:               Date;
-  globalGameID:          number;
-  globalAwayTeamID:      number;
-  globalHomeTeamID:      number;
-  stadiumID:             number;
-  yardLine:              number | null;
-  yardLineTerritory:     string;
-  down:                  number | null;
-  distance:              number | null;
-  possession:            string;
-  isClosed:              boolean;
-  gameEndDateTime:       Date;
-  title:                 string | null;
-  homeRotationNumber:    number;
-  awayRotationNumber:    number;
-  channel:               string;
-  neutralVenue:          boolean;
-  awayPointSpreadPayout: number;
-  homePointSpreadPayout: number;
-  overPayout:            number;
-  underPayout:           number;
-  dateTimeUTC:           string;
-  attendance:            number;
-  stadium:               Stadium;
-  periods:               Period[];
+  id: number
+  gameID: number
+  season: number
+  week: number
+  seasonType: string
+  startDate: string
+  startTimeTbd: boolean
+  neutralSite: boolean
+  conferenceGame: boolean
+  attendance: number
+  venueId: number
+  venue: string
+  homeId: number
+  homeTeam: string
+  homeConference: string
+  homePoints: number
+  homeLineScores: number[]
+  homePostWinProb: number
+  homePregameElo: number
+  homePostgameElo: number
+  awayId: number
+  awayTeam: string
+  awayConference: string
+  awayPoints: number
+  awayLineScores: number[]
+  awayPostWinProb: number
+  awayPregameElo: number
+  awayPostgameElo: number
+  excitementIndex: number
+  highlights: any
+  notes: any;
+  pointSpread: number;
   awayTeamAPRanking?:    number;
   homeTeamAPRanking?:    number;
   awayTeamCFPRanking?:   number;

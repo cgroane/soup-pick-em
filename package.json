@@ -16,7 +16,11 @@
     "@types/react-table": "^7.7.17",
     "@types/styled-components": "^5.1.28",
     "axios": "^1.5.1",
+    "body-parser": "^1.20.2",
+    "cfb.js": "^4.3.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.19.2",
     "firebase": "^10.5.0",
     "grommet": "^2.33.2",
     "grommet-icons": "^4.11.0",
@@ -37,7 +41,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "serve": "node server/index.js"
   },
   "eslintConfig": {
     "extends": [

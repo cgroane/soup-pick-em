@@ -13,6 +13,8 @@ import { UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
+import { useSelectedWeek } from '../../hooks/useSelectedWeek';
+import SelectWeek from '../../components/SelectWeek';
  
 
 /**
@@ -57,8 +59,9 @@ const CreateSlate: React.FC = () => {
     user,
     users,
     isSlatePicker
-  } = useGlobalContext()
+  } = useGlobalContext();
 
+  const { selectedWeek, setSelectedWeek } = useSelectedWeek({ week: seasonData?.ApiWeek, year: seasonData?.Season });
   /** hooks */
   const navigate = useNavigate();
 
@@ -71,18 +74,23 @@ const CreateSlate: React.FC = () => {
 
   useEffect(() => {
     Promise.all([
-      fetchSlate({}).then((result) => result),
-    fetchMatchups()
+      fetchSlate({
+        week: selectedWeek?.week,
+        year: selectedWeek?.year
+      }).then((result) => result),
+      fetchMatchups({ 
+        weekNumber: selectedWeek?.week,
+        year: selectedWeek?.year
+       })
     ]).then(() => setStatus(LoadingState.IDLE));
     
-  }, [fetchMatchups, fetchSlate, setStatus]);
+  }, [fetchMatchups, fetchSlate, setStatus, selectedWeek]);
 
   useEffect(() => {
     if (textFilter) {
       setFilteredGames(() => {
         const filtered = games.filter((game) =>
-          Object.values(game).some((val) => typeof val === 'string' && val.toLowerCase().includes(textFilter.toLowerCase())
-        ));
+          JSON.stringify(Object.values(game)).includes(textFilter));
         return filtered;
       })
     } else {
@@ -102,6 +110,15 @@ const CreateSlate: React.FC = () => {
       games: selectedGames,
      }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
   }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
+  const viewingOldData = useMemo(() => {
+    if ((seasonData?.Season as number) > (selectedWeek?.year as number)) {
+      return true;
+    } else if (( seasonData?.ApiWeek as number ) > (selectedWeek?.week as number)) {
+      return true;
+    } else {
+      return false;
+    }
+  }, [selectedWeek, seasonData?.Season, seasonData?.ApiWeek]);
 
   return (
     <>
@@ -109,6 +126,10 @@ const CreateSlate: React.FC = () => {
         <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
+        <SelectWeek
+          heading={<></>}
+          onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))}
+        />
         {
           status === LoadingState.LOADING ? (
             <Loading iterations={3} type='gameCard'/>
@@ -116,16 +137,17 @@ const CreateSlate: React.FC = () => {
             <>
             <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
           {
-            filteredGames?.sort((a, b) => Date.parse(a?.dateTimeUTC) - Date.parse(b?.dateTimeUTC)).map((game) => 
+            filteredGames?.map((game) => 
             <Game
               addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
               disable={disableSelection}
+              hideCheckbox={viewingOldData}
               key={game.gameID}
               game={game}
             />)
           }
         </Box>
-        {(isSlatePicker && canEdit) && 
+        {(isSlatePicker && canEdit && !viewingOldData) && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >

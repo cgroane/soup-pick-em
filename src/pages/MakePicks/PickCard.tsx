@@ -61,7 +61,7 @@ const PickCard: React.FC<PickCardProps> = ({
 
   const [choice, setChoice] = useState({ name: 'PUSH', point: 0, price: 0 });
   const pastDate = useMemo(() => {
-    return !(Date.parse(game?.dateTime) < Date.parse(new Date().toDateString()))
+    return !(Date.parse(game?.startDate) < Date.parse(new Date().toDateString()))
   }, [game])
 
   const getSelected = useCallback((ouctomeIndex: number) => {
@@ -111,7 +111,7 @@ const PickCard: React.FC<PickCardProps> = ({
           >
             <Team pad={'8px'} width={'100%'} height={'100%'} align='center' justify='center'  >
               <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
-              <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
+              <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeam}</Heading>
             </Team>
           </TeamWrapper>
           <Box flex align='center' justify='center' width={'20%'} >
@@ -141,7 +141,7 @@ const PickCard: React.FC<PickCardProps> = ({
           >
             <Team pad={'8px'} width={'100%'} height={'100%'} align='center' justify='center' >
               <TeamLogo src={game?.homeTeamData?.teamLogoUrl} fit='contain' />
-              <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
+              <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeam}</Heading>
             </Team>
           </TeamWrapper>
         </CardBody>

@@ -1,4 +1,4 @@
-import axiosInstance, { theOddsInstance } from "."
+import axiosInstance, { cfbdApi, theOddsInstance } from "."
 import { Matchup, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { getTeams } from "./getTeams";
@@ -62,9 +62,9 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     weekNumber: options?.weekNumber,
     season: options?.season
   }
-  return axiosInstance.get<Matchup[]>(`/stats/json/GamesByWeek/${matchupRequestOptions.season}/${matchupRequestOptions.weekNumber}`, {})
-  .then(async (res) => {
-    const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.dateTime) - Date.parse(b?.dateTime))
+  return cfbdApi.get<Matchup[]>('games', { params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber } })
+    .then(async (res) => {
+    const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
     const weekRange = {
       start: resWithUpdatedPropertyNames[0],
       end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1]
@@ -73,12 +73,12 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     try {
       const spreadsOptions = process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
         ...options,
-        date: buildDateFormat(weekRange?.start?.dateTime)
+        date: buildDateFormat(weekRange?.start?.startDate)
       } : {
         ...options,
-        commenceTimeFrom: buildDateFormat((weekRange.start?.dateTime)),
-        commenceTimeTo: buildDateFormat((weekRange.end?.dateTime)),
-        date: buildDateFormat(weekRange?.start?.dateTime)
+        commenceTimeFrom: buildDateFormat((weekRange.start?.startDate)),
+        commenceTimeTo: buildDateFormat((weekRange.end?.startDate)),
+        date: buildDateFormat(weekRange?.start?.startDate)
       }
       const compoundRequest = await Promise.all([
         await getTeams(),
@@ -89,18 +89,18 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
       const [teamInfo, spreads] = await compoundRequest;
 
       // bottle neck here with map containing an array.find -- REFACTOR
-
       return resWithUpdatedPropertyNames.map((item) => {
-        const away = teamInfo.find((team) => team.teamID === item.awayTeamID);
-        const home = teamInfo.find((team) => team.teamID === item.homeTeamID);
+        const away = teamInfo.find((team) => JSON.stringify(team).includes(item.awayTeam));
+        const home = teamInfo.find((team) => JSON.stringify(team).includes(item.homeTeam));
         return {
           ...item,
           awayTeamData: { ...away },
           homeTeamData: { ...home }
         }
-      }).map((item) => {
-        const strippedHomeTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.homeTeamName).join('')));
-        const strippedAwayTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.awayTeamName).join('')));
+      })
+      .map((item) => {
+        const strippedHomeTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.homeTeamData).join('')));
+        const strippedAwayTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.awayTeamData).join('')));
         
         const gameSpread: TheOddsResult | undefined = spreads?.data?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
@@ -130,13 +130,15 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         }
         return {
           ...item,
+          gameID: item.id,
           pointSpread: remainder ? newPointSpread : item.pointSpread,
         }
       })
+
     } catch (err) {
       console.error(err);
     }
-
+    
   })
   .catch((err) => err);
 };

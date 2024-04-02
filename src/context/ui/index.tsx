@@ -30,6 +30,7 @@ const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDL
 
 /**
  * is there a better way to force historical? 
+ * this gets called twice on app load, maybe 3 times.
  */
 const getSeasonData = useCallback(async () => {
   const data: SeasonDetails = await getCurrentWeek() as SeasonDetails;
@@ -50,10 +51,11 @@ const getSeasonData = useCallback(async () => {
       ...data
     })
   }
-}, [setSeasonData])
+}, [setSeasonData]);
+
 useEffect(() => {
   getSeasonData()
-}, [getSeasonData, status]);
+}, [getSeasonData]);
 const [modalOpen, setModalOpen] = useState(false);
 
 

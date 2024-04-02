@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import styled from 'styled-components'
 import { Matchup } from '../model'
 import {
@@ -8,7 +8,8 @@ import {
   CardHeader,
   CheckBox,
   Heading,
-  Paragraph
+  Paragraph,
+  Text
 } from 'grommet';
 import { useSlateContext } from '../context/slate';
 import { GameCard, TeamLogo } from './Styled';
@@ -26,11 +27,13 @@ interface GameProps {
   game: Matchup;
   disable?: boolean;
   addedToSlate: boolean;
+  hideCheckbox: boolean;
 }
 const Game: React.FC<GameProps> = ({
   game,
   addedToSlate,
-  disable
+  disable,
+  hideCheckbox
 }: GameProps) => {
 
   const {
@@ -46,6 +49,7 @@ const Game: React.FC<GameProps> = ({
     rankings,
     dateTime
   } = useGetTeamData(game);
+  const final = useMemo(() => (game?.homeLineScores.length === 4) || (game?.awayLineScores.length === 4),[game?.homeLineScores, game?.awayLineScores])
 
   return (
     <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
@@ -58,7 +62,8 @@ const Game: React.FC<GameProps> = ({
         <CardBody flex direction='row' align='stretch' >
           <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.awayTeamData?.teamLogoUrl} fit='contain' />
-            <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeamName}</Heading>
+            <Text>{ final && game?.awayPoints }</Text>
+            <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeam}</Heading>
           </Box>
           <Box flex align='center' justify='center' >
             <Paragraph margin={'4px'} size='12px' textAlign='center' >
@@ -71,11 +76,12 @@ const Game: React.FC<GameProps> = ({
           </Box>
           <Box width={'30%'} height={'100%'} align='center' justify='center' >
             <TeamLogo src={game?.homeTeamData?.teamLogoUrl} fit='contain' />
-            <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeamName}</Heading>
+            <Text>{ final && game?.homePoints }</Text>
+            <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeam}</Heading>
           </Box>
         </CardBody>
         {
-          isSlatePicker && (
+          (isSlatePicker && !hideCheckbox) && (
             <CheckboxContainer
               height={'2rem'}
               margin={'4px'}
