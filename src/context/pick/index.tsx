@@ -74,7 +74,7 @@ const Context = ({
     setStatus(LoadingState.LOADING)
     const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : seasonData?.Season as number}`);
     setSlate(results as Slate);
-    setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }))
+    setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }));
     return results;
   }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus]);
   
@@ -92,7 +92,7 @@ const Context = ({
   }, [user?.pickHistory, setPicks, slate?.uniqueWeek]);
 
   useEffect(() => {
-    fetchSlate({ });
+    fetchSlate({ }).then(() => setStatus(LoadingState.IDLE))
   }, [fetchSlate]);
 
   return (

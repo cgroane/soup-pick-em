@@ -1,4 +1,4 @@
-import { Box, Button, Heading } from 'grommet'
+import { Box, Button, Text } from 'grommet'
 import React from 'react'
 import styled from 'styled-components'
 import { useUIContext } from '../context/ui'
@@ -19,7 +19,12 @@ const ModalContent = styled(Box)`
   border-radius: 15px;
   position: relative;
   z-index: 3;
-  display: block;
+  padding: 1rem;
+`;
+
+const ActionButton = styled(Button)`
+  width: 50%;
+  margin: 0 auto;
 `
 // const ModalTitle = styled(Box)`
   
@@ -44,19 +49,18 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <ModalBackdrop direction='column' justify='center' align='center' >
-      <ModalContent>
-        <Box flex direction='row' align='center' justify='between' >
-          <Heading color={'black'} level={1} >MODAL</Heading>
-          <Close color='black' onClick={() => setModalOpen(false)} />
+      <ModalContent direction='column' justify='between' >
+        <Box flex={{ grow: 0, shrink: 0 }} direction='row' align='center' justify='between' >
+          <Close fontWeight={'bold'} color='black' onClick={() => setModalOpen(false)} />
         </Box>
-        <Box style={{ display: 'block'}} >
+        <Box align='center'>
           {children}
         </Box>
         {
           actions?.length && (
             <Box>
               {actions.map(({label, onClick, disable = false}) => (
-                <Button label={label} onClick={() => onClick()} disabled={disable} />
+                <ActionButton primary size='small' label={<Text weight={'bold'} color={'white'} >{label}</Text>} onClick={() => onClick()} disabled={disable} />
               ))}
             </Box>
           )

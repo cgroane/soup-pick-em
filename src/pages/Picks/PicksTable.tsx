@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
-import { Box, Table, TableBody, TableCell, TableHeader, TableRow } from 'grommet';
+import { Box, Table, TableBody, TableCell, TableRow } from 'grommet';
  
 
 /**
@@ -35,10 +35,14 @@ const StyledTable = styled(Table)`
 
 const TableWrapper = styled(Box)`
   width: 100%;
-  min-height: 100%;
-  height: 100%;
+  height: 400px;
   overflow-x: scroll;
 `;
+const TableHead = styled.thead`
+  position: sticky;
+  top: 0;
+  background: ${({ theme }) => theme.colors.blackBackground}
+`
 export interface PickHistory {
   slateId: string;
   name: string;
@@ -74,7 +78,7 @@ const PicksTable: React.FC<PicksTableProps> = ({
     <>
       <TableWrapper className="p-2" pad={'3rem'} >
         <StyledTable>
-          <TableHeader>
+          <TableHead>
             {tableInstance.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
@@ -89,7 +93,7 @@ const PicksTable: React.FC<PicksTableProps> = ({
                 ))}
               </TableRow>
             ))}
-          </TableHeader>
+          </TableHead>
           <TableBody>
             {tableInstance.getRowModel().rows.map(row => (
               <Row key={row.id}>

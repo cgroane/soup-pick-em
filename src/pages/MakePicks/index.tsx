@@ -9,7 +9,7 @@ import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
-import { Checkmark } from 'grommet-icons';
+import { Checkmark, StatusGood } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
 
 /**
@@ -52,10 +52,9 @@ const MakePicks: React.FC = () => {
   const getDataForPage = useCallback(async () => {
     const compoundRequest = Promise.all([
       await fetchSlate({ }),
-      await getUserPicks()
     ]);
-    const [slateResult, picksResult] = await compoundRequest;
-    if (slateResult && picksResult) setStatus(LoadingState.IDLE);
+    const [slateResult] = await compoundRequest;
+    if (slateResult) setStatus(LoadingState.IDLE);
   }, [fetchSlate, getUserPicks, setStatus]);
 
   useEffect(() => {
@@ -74,7 +73,6 @@ const MakePicks: React.FC = () => {
       picks: picks?.picks,
       userId: user?.uid
     }, user?.uid, ['picks', picks.slateId]).then(() => {
-      setStatus(LoadingState.IDLE)
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
     })
   }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
@@ -105,19 +103,19 @@ const MakePicks: React.FC = () => {
       {modalOpen && (
         <Modal actions={[
           {
-            label: 'Return to dashboard',
+            label: 'PROFILE',
             onClick: () => {
-              navigate('/dashboard')
+              navigate('/pick')
               setModalOpen(false)
             }
           }
         ]} >
-          { status === LoadingState.LOADING ? <Spinner /> :  (
-            <Box width={'100%'} >
-              <Text color={'black'} >Done</Text>
-              <Checkmark color='brand' />
+          
+            <Box margin={'0 auto'}>
+              {status === LoadingState.LOADING && <Spinner color={'accent-1'} size='large' />}
+              {status === LoadingState.IDLE && <StatusGood color='accent-1' size='xlarge' />}
             </Box>
-          )}
+          
         </Modal>
       )}
     </>

@@ -2,7 +2,6 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
-import { daysOfTheWeek } from '../../utils/getWeek';
 import { LoadingState, useUIContext } from '../ui';
 import { usePickContext } from '../pick';
 import { useGlobalContext } from '../user';
@@ -16,7 +15,7 @@ export type SlateValueProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
-  fetchMatchups: (weekNumber?: number) => void;
+  fetchMatchups: ({ weekNumber, year }: {weekNumber?: number; year?: number}) => void;
   deletions: number[];
   canEdit: boolean;
 }
@@ -51,7 +50,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
 
   const canEdit = useMemo(() => {
     const today = new Date();
-    const earliestGame = Date.parse(slate?.games?.sort((a, b) => Date.parse(a.dateTime) - Date.parse(b.dateTime))[0].dateTime)
+    const earliestGame = Date.parse(slate?.games?.sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate))[0].startDate)
     const now = Date.parse(today.toDateString())
     const pastDate = now > earliestGame;
     return !!((!pastDate && user?.roles?.includes(UserRoles.SLATE_PICKER)) || user?.roles?.includes(UserRoles.ADMIN))
@@ -59,13 +58,13 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async (weekNumber?: number) => {
+  const fetchMatchups = useCallback(async ({ weekNumber, year }: {weekNumber?: number; year?: number}) => {
     setStatus(LoadingState.LOADING);
     const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
-    const results = await getGames({
+    const results = (await getGames({
       weekNumber: week,
       season: seasonData?.ApiSeason
-    });
+    }))?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
     setGames(results);
     setFilteredGames(results);
     return results;
@@ -92,78 +91,46 @@ export default function CreateSlateContext({ children }: ContextProp) {
 
     } else {
       const newGame = {
-        gameID:                game.gameID ?? 0,
-        season:                game.season ?? 0,
-        seasonType:            game.seasonType ?? 0,
-        week:                  game.week ?? 0,
-        status:                game.status ?? '',
-        day:                   game.day ?? daysOfTheWeek[new Date().getDay()],
-        dateTime:              game.dateTime ?? '',
-        awayTeam:              game.awayTeam ?? '',
-        homeTeam:              game.homeTeam ?? '',
-        awayTeamID:            game.awayTeamID ?? 0,
-        homeTeamID:            game.homeTeamID ?? 0,
-        awayTeamName:          game.awayTeamName ?? '',
-        homeTeamName:          game.homeTeamName ?? '',
-        awayTeamScore:         game.awayTeamScore ?? 0,
-        homeTeamScore:         game.homeTeamScore ?? 0,
-        period:                game.period ?? '',
-        timeRemainingMinutes:  game.timeRemainingMinutes ?? 0,
-        timeRemainingSeconds:  game.timeRemainingSeconds ?? 0,
-        pointSpread:           game.pointSpread ?? 0,
-        overUnder:             game.overUnder ?? 0,
-        awayTeamMoneyLine:     game.awayTeamMoneyLine ?? 0,
-        homeTeamMoneyLine:     game.homeTeamMoneyLine ?? 0,
-        updated:               game.day ?? daysOfTheWeek[new Date().getDay()],
-        created:               game.day ?? daysOfTheWeek[new Date().getDay()],
-        globalGameID:          game.globalGameID ?? 0,
-        globalAwayTeamID:      game.globalAwayTeamID ?? 0,
-        globalHomeTeamID:      game.globalHomeTeamID ?? 0,
-        stadiumID:             game.stadiumID ?? 0,
-        yardLine:              game.yardLine ?? 0,
-        yardLineTerritory:     game.yardLineTerritory ?? '',
-        down:                  game.down ?? 0,
-        distance:              game.distance ?? 0,
-        possession:            game.possession ?? '',
-        isClosed:              false,
-        gameEndDateTime:       game.day ?? daysOfTheWeek[new Date().getDay()],
-        title:                 game.title ?? '',
-        homeRotationNumber:    game.homeRotationNumber ?? 0,
-        awayRotationNumber:    game.awayRotationNumber ?? 0,
-        channel:               game.channel ?? '',
-        neutralVenue:          game.neutralVenue ?? false,
-        awayPointSpreadPayout: game.awayPointSpreadPayout ?? 0,
-        homePointSpreadPayout: game.homePointSpreadPayout ?? 0,
-        overPayout:            game.overPayout ?? 0,
-        underPayout:           game.underPayout ?? 0,
-        dateTimeUTC:           game.dateTimeUTC ?? '',
-        attendance:            game.attendance ?? 0,
-        stadium:               game.stadium ?? { 
-          stadiumID: 0,
-          active:    false,
-          name:      '',
-          dome:      false,
-          city:      '',
-          state:     '',
-          geoLat:    0,
-          geoLong:   0
-         },
-        periods:  game.periods ?? [{
-          periodID:  0,
-          gameID:    0,
-          number:    0,
-          name:       '',
-          awayScore: 0,
-          homeScore: 0,
-        }],
-        awayTeamAPRanking:    game.awayTeamAPRanking ?? 0,
-        homeTeamAPRanking:    game.homeTeamAPRanking ?? 0,
-        awayTeamCFPRanking:   game.awayTeamCFPRanking ?? 0,
-        homeTeamCFPRanking:   game.homeTeamCFPRanking ?? 0,
-        awayTeamData:          game.awayTeamData,
-        homeTeamData:          game.homeTeamData,
-        theOddsId:             game.theOddsId ?? '',
-        outcomes: game.outcomes ?? []
+        id:                     game.id ?? 0,
+        gameID:                 game.gameID ?? 0,
+        season:                 game.season ?? 0,
+        seasonType:             game.seasonType ?? 0,
+        week:                   game.week ?? 0,
+        startDate:              game.startDate ?? '',
+        awayTeam:               game.awayTeam ?? '',
+        homeTeam:               game.homeTeam ?? '',
+        awayPoints:             game.awayPoints ?? 0,
+        homePoints:             game.homePoints ?? 0,        
+        pointSpread:            game.pointSpread ?? 0,
+        attendance:             game.attendance ?? 0,
+        awayTeamAPRanking:      game.awayTeamAPRanking ?? 0,
+        homeTeamAPRanking:      game.homeTeamAPRanking ?? 0,
+        awayTeamCFPRanking:     game.awayTeamCFPRanking ?? 0,
+        homeTeamCFPRanking:     game.homeTeamCFPRanking ?? 0,
+        awayTeamData:           game.awayTeamData,
+        homeTeamData:           game.homeTeamData,
+        theOddsId:              game.theOddsId ?? '',
+        notes:                  game.notes ?? [],
+        startTimeTbd:           game?.startTimeTbd ?? false,
+        venueId:                game?.venueId ?? 0,
+        venue:                  game?.venue ?? '',
+        outcomes:               game.outcomes ?? [],
+        neutralSite:            game.neutralSite ?? false,
+        conferenceGame:         game.neutralSite ?? false,
+        homeId:                 game.homeId ?? 0,
+        homeConference:         game.homeConference ?? '',
+        homeLineScores:         game.homeLineScores ?? [],
+        homePostWinProb:        game.homePostWinProb ?? 0,
+        homePregameElo:         game.homePregameElo ?? 0,
+        homePostgameElo:        game.homePostgameElo ?? 0,
+        awayId:                 game.awayId ?? 0,
+        awayConference:         game.awayConference ?? '',
+        awayLineScores:         game.awayLineScores ?? [],
+        awayPostWinProb:        game.awayPostWinProb ?? 0,
+        awayPregameElo:         game.awayPregameElo ?? 0,
+        awayPostgameElo:        game.awayPostgameElo ?? 0,
+        excitementIndex:        game.excitementIndex ?? 0,
+        highlights:             game.highlights ?? []
       }
       newSelections.push(newGame as Matchup);
     }
