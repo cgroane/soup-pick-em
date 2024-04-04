@@ -181,3 +181,16 @@ export type LeaderBoardData = {
   lName: string;
   uid: string;
 }
+
+export interface Poll {
+  poll: string
+  ranks: Rank[]
+}
+
+export interface Rank {
+  rank: number
+  school: string
+  conference: string
+  firstPlaceVotes: number
+  points: number
+}

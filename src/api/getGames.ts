@@ -1,8 +1,8 @@
 import axiosInstance, { cfbdApi, theOddsInstance } from "."
-import { Matchup, TheOddsResult } from "../model";
+import { Matchup, Poll, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
-import { getTeams } from "./getTeams";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
+import { getRankings, getTeams } from "./getTeams";
 import { SeasonDetails } from "./schema/sportsDataIO";
 export interface SpreadsAPIRequest {
   weekNumber?: string;
@@ -62,8 +62,8 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     weekNumber: options?.weekNumber,
     season: options?.season
   }
-  const test = await cfbdApi.get('rankings', {params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber }});
-  console.log(test);
+  const test = await cfbdApi.get<Poll>('rankings', {params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber }});
+  
   return cfbdApi.get<Matchup[]>('games', { params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber } })
     .then(async (res) => {
     const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
@@ -83,21 +83,30 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         date: buildDateFormat(weekRange?.start?.startDate)
       }
       const compoundRequest = await Promise.all([
+        await getRankings(matchupRequestOptions?.season as string, matchupRequestOptions?.weekNumber as string),
         await getTeams(),
         await getSpreads({
           ...spreadsOptions
         })
       ]);
-      const [teamInfo, spreads] = await compoundRequest;
+      const [rankings, teamInfo, spreads] = await compoundRequest;
 
       // bottle neck here with map containing an array.find -- REFACTOR
       return resWithUpdatedPropertyNames.map((item) => {
-        const away = teamInfo.find((team) => JSON.stringify(team).includes(item.awayTeam));
-        const home = teamInfo.find((team) => JSON.stringify(team).includes(item.homeTeam));
+        const rankPropAccessor = rankings.poll === 'AP Top 25' ? 'apRank' : 'playoffRank';
+        const away = {
+          ...teamInfo.find((team) => JSON.stringify(team).includes(item.awayTeam)),
+          [rankPropAccessor]: rankings.ranks.find((team) => JSON.stringify(team).includes(item.awayTeam))?.rank
+
+        };
+        const home = {
+          ...teamInfo.find((team) => JSON.stringify(team).includes(item.homeTeam)),
+          [rankPropAccessor]: rankings.ranks.find((team) => JSON.stringify(team).includes(item.homeTeam))?.rank
+        };
         return {
           ...item,
-          awayTeamData: { ...away },
-          homeTeamData: { ...home }
+          awayTeamData: { ...away, },
+          homeTeamData: { ...home, }
         }
       })
       .map((item) => {

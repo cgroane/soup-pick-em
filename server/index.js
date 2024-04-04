@@ -23,14 +23,13 @@ app.get('/games', (req, res) => {
 });
 app.get('/rankings', (req, res) => {
   opts = {
-    'week': 12,
-    'year': req.query.year
+    'week': req.query.week,
   };
   rankingsApi.getRankings(req.query.year, opts).then((respn) => {
     if (respn[0].polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
       res.send(respn[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
     } else {
-      res.send(respn[0].polls.find((p) => p.name === 'AP Top 25'));
+      res.send(respn[0].polls.find((p) => p.poll === 'AP Top 25'));
     };
   });
 })
