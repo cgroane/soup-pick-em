@@ -179,4 +179,5 @@ export type LeaderBoardData = {
   pctg: number;
   fName: string;
   lName: string;
+  uid: string;
 }

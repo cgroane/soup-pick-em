@@ -9,6 +9,7 @@ import { usePickContext } from '../../context/pick'
 import Loading from '../../components/Loading'
 import { useSlateContext } from '../../context/slate'
 import { LeaderBoardData } from '../../model'
+import Leaderboard from '../../components/Leaderboard'
 
 /**
  * show record
@@ -50,6 +51,7 @@ const Profile: React.FC<ProfileProps> = () => {
         {
           fName: leader.fName,
           lName: leader.lName,
+          uid: leader?.id,
           winsAndLosses: wins + losses,
           wins,
           losses,
@@ -111,10 +113,7 @@ const Profile: React.FC<ProfileProps> = () => {
           Leaderboard
         </Heading>
         <CardBody>
-          <ol>
-            {/* find user whose id === cur user id, make bold / highlighted somehow */}
-            {leaderBoard?.map((leader, index) => <li key={index} >{leader.fName} {leader.lName} {leader?.wins}-{leader?.losses}</li>)}
-          </ol>
+          <Leaderboard items={leaderBoard} />
           <Link to={'/picks'} >
             <Button label="see more" primary/>
           </Link>

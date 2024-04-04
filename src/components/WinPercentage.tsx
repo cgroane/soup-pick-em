@@ -16,7 +16,7 @@ const WinPercentage = ({
     
   return (
     <>
-        <Box flex direction="row" wrap pad={{ bottom: '1rem' }} >
+        <Box flex direction="column" wrap pad={{ bottom: '1rem' }} align="center" >
             <Heading textAlign="center" style={{ width: '100%'}} size="small" weight={'regular'} >{label}</Heading>
             <Box flex direction="row" align="center" pad="large">
                 <Stack anchor="center" >
@@ -37,12 +37,13 @@ const WinPercentage = ({
                             {val*100}%
                         </Text>
                     </Box>
+                    <Box height={'auto'} margin={{ top: '2.5rem' }} direction="column" justify="center" flex="grow"> 
+                        <Text textAlign="center" >
+                            {wins} - {losses}
+                        </Text>
+                    </Box>
                 </Stack>
-            <Box height={'auto'} margin={{ left: '2rem' }} direction="column" justify="center" flex="grow"> 
-                <Text textAlign="center" >
-                    {wins} - {losses}
-                </Text>
-            </Box>
+            
             </Box>
         </Box>
     </>
