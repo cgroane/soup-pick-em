@@ -9,7 +9,7 @@ export type UserCollectionData = User & {
   isAuthenticated?: boolean;
   roles: UserRoles[];
   pickHistory: PickHistory[];
-  record?: WinLossRecord;
+  record: WinLossRecord[];
   trophyCase?: Trophy[];
 }
 
@@ -29,6 +29,7 @@ export type Score = {
 export type WinLossRecord = {
   wins: number;
   losses: number;
+  year: number;
 }
 
 export type Trophy = {
@@ -169,4 +170,13 @@ export interface Outcome {
   name:  string;
   price: number;
   point: number;
+}
+
+export type LeaderBoardData = {
+  winsAndLosses: number;
+  wins: number;
+  losses: number;
+  pctg: number;
+  fName: string;
+  lName: string;
 }

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
-import { Box, Button, Paragraph, Spinner, Text, Toolbar } from 'grommet';
+import { Box, Button, Paragraph, Spinner, Toolbar } from 'grommet';
 import styled from 'styled-components';
 import { theme } from '../../theme';
 import { UserCollectionData } from '../../model';
@@ -9,7 +9,7 @@ import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
-import { Checkmark, StatusGood } from 'grommet-icons';
+import { StatusGood } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
 
 /**
@@ -33,7 +33,6 @@ const MakePicks: React.FC = () => {
     picks,
     slate,
     fetchSlate,
-    getUserPicks
   } = usePickContext()
   const {
     user,
@@ -55,7 +54,7 @@ const MakePicks: React.FC = () => {
     ]);
     const [slateResult] = await compoundRequest;
     if (slateResult) setStatus(LoadingState.IDLE);
-  }, [fetchSlate, getUserPicks, setStatus]);
+  }, [fetchSlate, setStatus]);
 
   useEffect(() => {
     getDataForPage();

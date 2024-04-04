@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { useGlobalContext } from '../context/user';
 import { UserCollectionData } from '../model';
 import FirebaseUsersClassInstance from '../firebase/user/user';
+import { useUIContext } from '../context/ui';
  
 
 const LoginButton = styled(Button)`
@@ -28,6 +29,9 @@ const LoginAndSignUp: React.FC = () => {
   const {
     setUser
   } = useGlobalContext();
+  const {
+    seasonData
+  } = useUIContext()
   const navigate = useNavigate()
 
   const googleAuth = useCallback(async () => {
@@ -35,13 +39,13 @@ const LoginAndSignUp: React.FC = () => {
      * if signIN -- auth and then getUser
      * if register -- auth then addUserDoc
      */
-    FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
+    FirebaseUsersClassInstance.loginWithGoogle(seasonData?.Season).then((res) => {
       navigate('/profile')
       // if (typeof res === 'object') {
         if (res) setUser(res as UserCollectionData);
       // }
     });
-  }, [setUser, navigate]);
+  }, [setUser, navigate, seasonData?.Season]);
   
   return (
     <>

@@ -14,10 +14,10 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
    * addDoc does not do anything other than add user to the db users collection
    * 
    */
-  registerWithEmailAndPassword = async (name: string, email: string, password: string) => {
+  registerWithEmailAndPassword = async (name: string, email: string, password: string, year?: number) => {
     try {
       const res = await createUserWithEmailAndPassword(this.auth, email, password);
-      const user = this.transformUserData(res.user);
+      const user = this.transformUserData(res.user, year);
       await this.addDocument(user, name);
       return await this.getDocumentInCollection(user.uid);
     } catch (err) {
@@ -40,10 +40,10 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
       console.error(err)
     }
   }
-  loginWithGoogle = async () => {
+  loginWithGoogle = async (year?: number) => {
       try {
         const res = await signInWithPopup(this.auth, this.googleProvider);
-        const user = this.transformUserData(res.user);
+        const user = this.transformUserData(res.user, year);
         const userRef = await this.getDocumentInCollection(user.uid);
         if (!!userRef) {
           return userRef;
@@ -53,7 +53,7 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
         console.error(err)
       }
     };
-    transformUserData = (user: User, name?: string) => {
+    transformUserData = (user: User, year: number = new Date().getFullYear(), name?: string) => {
       return {
         uid: user.uid,
         name: name ? name : user.displayName,
@@ -63,13 +63,15 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
         lName: name ? name : user.displayName?.split(' ')[user.displayName?.split(' ').length - 1],
         id: user.uid,
         roles: [UserRoles.BASIC],
-        record: {
-          wins: 0,
-          losses: 0
-        },
+        record: [
+          {
+            wins: 0,
+            losses: 0
+          }
+        ],
         trophyCase: [],
         isAuthenticated: !!auth.currentUser,
-        pickHistory: []
+        pickHistory: [],
       }
     }
 };

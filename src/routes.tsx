@@ -8,6 +8,7 @@ import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
 import MakePicks from "./pages/MakePicks";
+import Record from "./pages/Record";
 
 /**
  * admin has all routes, but must be logged in.
@@ -97,6 +98,16 @@ const Router = () => {
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+        }
+      />
+      <Route 
+        path="/record" 
+        element={
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
+              <Record />
             </RoleGuardedRoutes>
           </PrivateRoutes>
         }
