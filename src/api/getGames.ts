@@ -62,6 +62,8 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     weekNumber: options?.weekNumber,
     season: options?.season
   }
+  const test = await cfbdApi.get('rankings', {params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber }});
+  console.log(test);
   return cfbdApi.get<Matchup[]>('games', { params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber } })
     .then(async (res) => {
     const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))

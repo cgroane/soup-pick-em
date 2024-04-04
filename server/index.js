@@ -12,13 +12,27 @@ ApiKeyAuth.apiKey = `Bearer ${process.env.REACT_APP_CFBD_API_KEY}`;
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-const api = new cfb.GamesApi()
+const api = new cfb.GamesApi();
+const rankingsApi = new cfb.RankingsApi();
 app.get('/games', (req, res) => {
     opts = {
       'division': 'fbs',
       'week': req.query.week,
     }
     api.getGames(req.query.year, opts).then((resp) => res.send(resp));
+});
+app.get('/rankings', (req, res) => {
+  opts = {
+    'week': 12,
+    'year': req.query.year
+  };
+  rankingsApi.getRankings(req.query.year, opts).then((respn) => {
+    if (respn[0].polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
+      res.send(respn[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
+    } else {
+      res.send(respn[0].polls.find((p) => p.name === 'AP Top 25'));
+    };
+  });
 })
 
 app.listen(3001, () => {
