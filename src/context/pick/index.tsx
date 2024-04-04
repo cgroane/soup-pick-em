@@ -93,7 +93,7 @@ const Context = ({
 
   useEffect(() => {
     fetchSlate({ }).then(() => setStatus(LoadingState.IDLE))
-  }, [fetchSlate]);
+  }, [fetchSlate, setStatus]);
 
   return (
     <PickContext.Provider value={{ slate, setSlate, picks, setPicks, addPick, fetchSlate, getUserPicks, refreshSlatePicksStatus }} >

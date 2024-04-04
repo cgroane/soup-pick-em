@@ -1,4 +1,4 @@
-import { Button, CardBody, Heading } from 'grommet'
+import { Button, CardBody, Carousel, Heading } from 'grommet'
 import React, { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import WinPercentage from '../../components/WinPercentage'
@@ -8,6 +8,8 @@ import { useGlobalContext } from '../../context/user'
 import { usePickContext } from '../../context/pick'
 import Loading from '../../components/Loading'
 import { useSlateContext } from '../../context/slate'
+import { LeaderBoardData } from '../../model'
+import Leaderboard from '../../components/Leaderboard'
 
 /**
  * show record
@@ -20,7 +22,7 @@ interface ProfileProps {}
 const Profile: React.FC<ProfileProps> = () => {
 
   const { seasonData, setStatus, status } = useUIContext();
-  const { user, users, fetchUsers, } = useGlobalContext();
+  const { user, users, fetchUsers, userOverallRecord} = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
 
@@ -36,24 +38,33 @@ const Profile: React.FC<ProfileProps> = () => {
     
     return allValid?.length === 10;
   }, [user?.pickHistory, slate?.uniqueWeek]);
+
   const leaderBoard = useMemo(() => {
 
-    return users?.map((leader) => {
-      const wins = leader?.record?.wins ?? 0;
-      const losses = leader?.record?.losses ?? 0;
-      const pctg = (wins + losses > 0) ? wins / (wins + losses) : 0
-      return {
-        ...leader,
-        winsAndLosses: wins + losses,
-        wins: wins,
-        losses: losses,
-        pctg: pctg
-      }
-    })
+    return users?.reduce<LeaderBoardData[]>((acc, leader) => {
+      const thisSeasonsRecord = leader?.record?.find((r) => r.year === seasonData?.Season);
+      const wins = thisSeasonsRecord?.wins ?? 0;
+      const losses = thisSeasonsRecord?.losses ?? 0;
+      const pctg = (wins + losses > 0) ? wins / (wins + losses) : 0;
+      acc = [
+        ...acc,
+        {
+          fName: leader.fName,
+          lName: leader.lName,
+          uid: leader?.id,
+          winsAndLosses: wins + losses,
+          wins,
+          losses,
+          pctg,
+        }
+      ]
+      return acc;
+    }, [])
     ?.sort((a, b) => {
       return b.pctg - a.pctg
     })
-  }, [users])
+  }, [users, seasonData?.Season]);
+  const carouselFirstChild = useMemo(() => user?.record?.findIndex((r) => r.year === seasonData?.Season), [user?.record, seasonData?.Season])
 
   if (status === LoadingState.LOADING) {
     return <Loading iterations={4} type='profileCard'/>
@@ -79,9 +90,22 @@ const Profile: React.FC<ProfileProps> = () => {
         </CardBody>
       </ProfileCard>
       <ProfileCard background='light-1' >
-        <Heading margin={{ top: '0' }} size='medium' >Win Percentage</Heading>
-        <CardBody direction='row' pad={'small'}>
-          <WinPercentage />
+        <Heading margin={{ top: '0', bottom: '0' }} size='medium' >Win Percentage</Heading>
+        <CardBody direction='row' pad={'small'} wrap>
+          <Carousel
+            wrap
+            fill
+            initialChild={carouselFirstChild as number >= 0 ? carouselFirstChild : 0}
+          >
+            {
+              user?.record.map((r) => <>
+                <WinPercentage key={`r-${r.year}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
+              </>)
+            }
+            {
+              <WinPercentage wins={userOverallRecord.wins} losses={userOverallRecord?.losses} label='Overall' />
+            }
+          </Carousel>
         </CardBody>
       </ProfileCard>
       <ProfileCard background={'light-1'} >
@@ -89,10 +113,7 @@ const Profile: React.FC<ProfileProps> = () => {
           Leaderboard
         </Heading>
         <CardBody>
-          <ol>
-            {/* find user whose id === cur user id, make bold / highlighted somehow */}
-            {leaderBoard?.map((leader, index) => <li key={index} >{leader.fName} {leader.lName} {leader?.record?.wins}-{leader?.record?.losses}</li>)}
-          </ol>
+          <Leaderboard items={leaderBoard} />
           <Link to={'/picks'} >
             <Button label="see more" primary/>
           </Link>

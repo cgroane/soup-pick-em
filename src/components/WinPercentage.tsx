@@ -1,46 +1,50 @@
-import { Box, Meter, Stack, Text } from "grommet";
+import { Box, Heading, Meter, Stack, Text } from "grommet";
 import React, { useMemo } from "react"
-import { useGlobalContext } from "../context/user";
 
-interface WinPercentageProps {}
+interface WinPercentageProps {
+    wins: number;
+    losses: number;
+    label: string;
+}
 const WinPercentage = ({
-  ...props
+    wins = 0, losses = 0, label
 }: WinPercentageProps ) => {
-    const { user } = useGlobalContext();
     const val = useMemo(() => {
-        if (user?.record && (user?.record?.wins !== 0 && user?.record?.losses !== 0)) {
-            return (user?.record?.wins as number / (user?.record?.wins as number + user?.record?.losses) ) as number
-        }
-        return 0;
-    }, [user?.record]);
+        
+        return (!!wins && !!losses) ? ((wins) / (wins + losses)) : 0;
+    }, [wins, losses]);
     
   return (
     <>
-        <Box align="center" pad="large">
-            <Stack anchor="center" >
-                <Meter
-                    type="circle"
-                    background={'light-2'}
-                    max={1}
-                    size="small"
-                    values={[
-                        {
-                            value: val,
-                            label: (val*100).toString() + '%'
-                        }
-                    ]}
-                />
-                <Box direction="row" align="center" pad={{ bottom: 'xsmall' }} >
-                    <Text size="xlarge" weight={'bold'} >
-                        {val*100}%
-                    </Text>
-                </Box>
-            </Stack>
-        </Box>
-        <Box height={'auto'} margin={{ left: '2rem' }} direction="column" justify="center" flex="grow"> 
-            <Text>
-                {user?.record?.wins} - {user?.record?.losses}
-            </Text>
+        <Box flex direction="column" wrap pad={{ bottom: '1rem' }} align="center" >
+            <Heading textAlign="center" style={{ width: '100%'}} size="small" weight={'regular'} >{label}</Heading>
+            <Box flex direction="row" align="center" pad="large">
+                <Stack anchor="center" >
+                    <Meter
+                        type="circle"
+                        background={'light-2'}
+                        max={1}
+                        size="small"
+                        values={[
+                            {
+                                value: val,
+                                label: (val*100).toString() + '%'
+                            }
+                        ]}
+                    />
+                    <Box direction="row" align="center" pad={{ bottom: 'xsmall' }} >
+                        <Text size="xlarge" weight={'bold'} >
+                            {val*100}%
+                        </Text>
+                    </Box>
+                    <Box height={'auto'} margin={{ top: '2.5rem' }} direction="column" justify="center" flex="grow"> 
+                        <Text textAlign="center" >
+                            {wins} - {losses}
+                        </Text>
+                    </Box>
+                </Stack>
+            
+            </Box>
         </Box>
     </>
   )

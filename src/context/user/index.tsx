@@ -15,6 +15,7 @@ export type UserValueProp = {
     fetchUsers: () => Promise<void>;
     isSlatePicker: boolean;
     allPickHistories: PickHistory[];
+    userOverallRecord: {wins: number, losses: number};
 }
 
 export const AppContext = React.createContext({} as UserValueProp); //create the context API
@@ -29,6 +30,15 @@ const {
 const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const [users, setUsers] = useState<UserCollectionData[]>([]);
 const [ usersPicks, setUsersPicks ] = useState<PickHistory[]>([] as PickHistory[]);
+
+const userOverallRecord = useMemo(() => {
+  return user?.record?.reduce<{ wins: number; losses: number }>((acc, cur) => {
+    return {
+      wins: acc.wins + cur.wins,
+      losses: acc.losses + cur.losses
+    }
+  }, { wins: 0, losses: 0 }) ?? { wins: 0, losses: 0 }
+}, [user?.record]);
   
 const fetchUsers = useCallback(async () => {
   setStatus(LoadingState.LOADING);
@@ -79,6 +89,7 @@ useEffect(() => {
       setUsers,
       fetchUsers,
       isSlatePicker,
+      userOverallRecord,
       allPickHistories: usersPicks
     }}>
       {children}
