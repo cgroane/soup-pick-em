@@ -36,7 +36,7 @@ const Profile: React.FC<ProfileProps> = () => {
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
     
-    return allValid?.length === 10;
+    return allValid?.length === 10 && slate?.games?.length;
   }, [user?.pickHistory, slate?.uniqueWeek]);
 
   const leaderBoard = useMemo(() => {
@@ -87,7 +87,7 @@ const Profile: React.FC<ProfileProps> = () => {
         <Heading>{hasPicksThisWeek ? 'Change ' : 'Make '}your picks</Heading>
         <CardBody>
           <Link to={'/pick'}>
-            <Button primary label={'Go to slate'} />
+            { slate?.games?.length ? <Button primary label={'Go to slate'} /> : <Button primary disabled label={`Slate hasn't been chosen yet`}/>}
           </Link>
         </CardBody>
       </ProfileCard>
