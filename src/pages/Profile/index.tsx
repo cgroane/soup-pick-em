@@ -21,7 +21,7 @@ import Leaderboard from '../../components/Leaderboard'
 interface ProfileProps {}
 const Profile: React.FC<ProfileProps> = () => {
 
-  const { seasonData, setStatus, status } = useUIContext();
+  const { seasonData, setStatus, status, usePostSeason } = useUIContext();
   const { user, users, fetchUsers, userOverallRecord} = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
@@ -73,7 +73,9 @@ const Profile: React.FC<ProfileProps> = () => {
     <>
       <ProfileCard background='light-1' >
         <Heading margin={{ top: '0' }} size='medium'>
-          Week {seasonData?.ApiWeek ?? 1}, {seasonData?.Season}
+          {
+            usePostSeason ? 'Bowl Season' : `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`
+          }
           </Heading>
           <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>

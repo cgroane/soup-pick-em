@@ -46,7 +46,7 @@ const getSeasonData = useCallback(async () => {
   /**
    * MOCK
    */
-  const usePostSeason = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
+  const usePost = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
   if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
     setSeasonData({
       ...data,
@@ -54,7 +54,7 @@ const getSeasonData = useCallback(async () => {
       EndYear: data.EndYear - 1,
       ApiWeek: 1,
       Description: (parseInt(data.Description) - 1).toString(),
-      seasonType: usePostSeason ? 'postseason' : 'regular'
+      seasonType: usePost ? 'postseason' : 'regular'
     })
   } else {
     setSeasonData({
