@@ -100,12 +100,12 @@ const Profile: React.FC<ProfileProps> = () => {
             initialChild={carouselFirstChild as number >= 0 ? carouselFirstChild : 0}
           >
             {
-              user?.record.map((r) => <>
-                <WinPercentage key={`r-${r.year}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
+              user?.record.map((r, ind) => <>
+                <WinPercentage key={`r-${r.year}-${ind}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
               </>)
             }
             {
-              <WinPercentage wins={userOverallRecord.wins} losses={userOverallRecord?.losses} label='Overall' />
+              <WinPercentage key={'overall'} wins={userOverallRecord.wins} losses={userOverallRecord?.losses} label='Overall' />
             }
           </Carousel>
         </CardBody>
