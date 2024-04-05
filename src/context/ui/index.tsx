@@ -1,6 +1,6 @@
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getCurrentWeek } from "../../api/getGames";
-import { SeasonDetails } from "../../api/schema/sportsDataIO";
+import { SeasonDetails, SeasonDetailsData } from "../../api/schema/sportsDataIO";
 
 
 export enum LoadingState {
@@ -9,12 +9,20 @@ export enum LoadingState {
   LOADING = 'LOADING',
 };
 
+export enum SeasonTypes {
+  POST = 'POST',
+  REGULAR = 'REGULAR',
+  OFF = 'OFF',
+  PRE = 'PRE'
+}
+
 export type UIValueProp = {
   modalOpen: boolean;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
-  seasonData?: SeasonDetails;
+  seasonData?: SeasonDetailsData;
   status: keyof typeof LoadingState;
   setStatus: Dispatch<SetStateAction<keyof typeof LoadingState>>;
+  usePostSeason: boolean;
 }
 
 type ContextProp = {
@@ -25,7 +33,7 @@ export const UiContext = React.createContext({} as UIValueProp); //create the co
 
 //function body
 export default function Context({ children }: ContextProp) {
-const [seasonData, setSeasonData] = useState<SeasonDetails | undefined>({} as SeasonDetails);
+const [seasonData, setSeasonData] = useState<SeasonDetailsData | undefined>({} as SeasonDetailsData);
 const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
 const [modalOpen, setModalOpen] = useState(false);
 
@@ -34,21 +42,24 @@ const [modalOpen, setModalOpen] = useState(false);
  * this gets called twice on app load, maybe 3 times.
  */
 const getSeasonData = useCallback(async () => {
-  const data: SeasonDetails = await getCurrentWeek() as SeasonDetails;
+  const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
   /**
    * MOCK
    */
+  const usePostSeason = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
   if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
     setSeasonData({
       ...data,
       Season: data.Season - 1,
       EndYear: data.EndYear - 1,
       ApiWeek: 1,
-      Description: (parseInt(data.Description) - 1).toString()
+      Description: (parseInt(data.Description) - 1).toString(),
+      seasonType: usePostSeason ? 'postseason' : 'regular'
     })
   } else {
     setSeasonData({
-      ...data
+      ...data,
+      seasonType: usePostSeason ? 'postseason' : 'regular'
     })
   }
 }, [setSeasonData]);
@@ -57,9 +68,12 @@ useEffect(() => {
   getSeasonData()
 }, [getSeasonData]);
 
+const usePostSeason = useMemo(() => {
+  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
+}, [seasonData?.ApiSeason]);
 
   return (
-    <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus }}>
+    <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason }}>
       {children}
     </UiContext.Provider>
   )

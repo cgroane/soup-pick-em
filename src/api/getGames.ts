@@ -74,7 +74,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     return cfbdApi.get<Matchup[]>('games', { params: {
         year: matchupRequestOptions?.season,
         week: matchupRequestOptions?.weekNumber,
-        seasonType: options?.seasonType
+        seasonType: matchupRequestOptions?.seasonType
       }
     })
     .then(async (res) => {

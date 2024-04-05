@@ -51,7 +51,12 @@ const Picks: React.FC = () => {
   const {
     seasonData
   } = useUIContext();
-  const { selectedWeek, setSelectedWeek } = useSelectedWeek({ week: seasonData?.ApiWeek, year: seasonData?.Season });
+
+  const { selectedWeek, setSelectedWeek } = useSelectedWeek({
+    week: seasonData?.ApiWeek,
+    year: seasonData?.Season,
+    seasonType: seasonData?.seasonType as 'postseason' | 'regular'
+  });
 
   const {
     fetchUsers,
@@ -181,10 +186,11 @@ const Picks: React.FC = () => {
       <Box>
         {thisWeeksPickHistory && <PicksTable data={mockedLongArray as PicksColumnDef[]} columns={columns} />}
         <SelectWeek
+          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
           heading={<Heading style={{ width: '100%' }} >
           View Results from:
         </Heading>}
-          onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))}
+          onChange={setSelectedWeek}
         />
       </Box>
     </>

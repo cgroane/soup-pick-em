@@ -15,7 +15,7 @@ export type SlateValueProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
-  fetchMatchups: ({ weekNumber, year }: {weekNumber?: number; year?: number}) => void;
+  fetchMatchups: ({ weekNumber, year, seasonType }: {weekNumber?: number; year?: number, seasonType: 'postseason' | 'regular'}) => void;
   deletions: number[];
   canEdit: boolean;
 }
@@ -58,13 +58,13 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async ({ weekNumber, year }: {weekNumber?: number; year?: number}) => {
+  const fetchMatchups = useCallback(async ({ weekNumber, year, seasonType }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
     setStatus(LoadingState.LOADING);
     const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = (await getGames({
       weekNumber: week,
       season: seasonData?.Season.toString(),
-      seasonType: (seasonData?.ApiSeason.includes('OFF') || seasonData?.ApiSeason.includes('POST')) ? 'postseason' : 'regular'
+      seasonType
     }))?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
     setGames(results);
     setFilteredGames(results);

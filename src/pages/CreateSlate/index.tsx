@@ -62,7 +62,11 @@ const CreateSlate: React.FC = () => {
     isSlatePicker
   } = useGlobalContext();
 
-  const { selectedWeek, setSelectedWeek } = useSelectedWeek({ week: seasonData?.ApiWeek, year: seasonData?.Season });
+  const { selectedWeek, setSelectedWeek } = useSelectedWeek({
+    week: seasonData?.ApiWeek,
+    year: seasonData?.Season,
+    seasonType: seasonData?.seasonType as 'postseason' | 'regular'
+  });
   /** hooks */
   const navigate = useNavigate();
 
@@ -81,7 +85,8 @@ const CreateSlate: React.FC = () => {
       }).then((result) => result),
       fetchMatchups({ 
         weekNumber: selectedWeek?.week,
-        year: selectedWeek?.year
+        year: selectedWeek?.year,
+        seasonType: selectedWeek?.seasonType
        })
     ]).then(() => setStatus(LoadingState.IDLE));
     
@@ -128,8 +133,9 @@ const CreateSlate: React.FC = () => {
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
         <SelectWeek
+          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
           heading={<></>}
-          onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))}
+          onChange={setSelectedWeek}
         />
         {
           status === LoadingState.LOADING ? (
