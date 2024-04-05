@@ -73,7 +73,7 @@ const Profile: React.FC<ProfileProps> = () => {
     <>
       <ProfileCard background='light-1' >
         <Heading margin={{ top: '0' }} size='medium'>
-          Week {seasonData?.ApiWeek ?? 1}, {seasonData?.ApiSeason}
+          Week {seasonData?.ApiWeek ?? 1}, {seasonData?.Season}
           </Heading>
           <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>

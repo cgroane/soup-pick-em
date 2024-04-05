@@ -18,12 +18,14 @@ app.get('/games', (req, res) => {
     opts = {
       'division': 'fbs',
       'week': req.query.week,
+      'seasonType': req.query.seasonType
     }
     api.getGames(req.query.year, opts).then((resp) => res.send(resp));
 });
 app.get('/rankings', (req, res) => {
   opts = {
     'week': req.query.week,
+    'seasonType': req.query.seasonType
   };
   rankingsApi.getRankings(req.query.year, opts).then((respn) => {
     if (respn[0].polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {

@@ -41,10 +41,9 @@ const getSeasonData = useCallback(async () => {
   if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
     setSeasonData({
       ...data,
-      ApiSeason: (data.Season - 1).toString(),
       Season: data.Season - 1,
       EndYear: data.EndYear - 1,
-      ApiWeek: 9,
+      ApiWeek: 1,
       Description: (parseInt(data.Description) - 1).toString()
     })
   } else {

@@ -1,5 +1,5 @@
 import axiosInstance, { cfbdApi, theOddsInstance } from "."
-import { Matchup, Poll, TheOddsResult } from "../model";
+import { Matchup, Poll, Rank, Team, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
 import { getRankings, getTeams } from "./getTeams";
@@ -13,6 +13,7 @@ export interface SpreadsAPIRequest {
   commenceTimeTo?: string;
   event?: string;
   date?: string;
+  seasonType?: string;
 }
 const buildDateFormat = (date: string) => {
   const convertedToDate = new Date(date);
@@ -53,6 +54,13 @@ export const getCurrentWeek = async () => {
  * This requires transforming the responses to match casing of types, and to match the results from one api to another,
  * and then again to another
  * 
+ * need to know what values to send to week and year parameters
+ * if it's postseason, week may be 1, or null
+ * use getCurrentWeek to get this information
+ * seasonType for cfbd api will be 'postseason' or 'regular'
+ * 
+ * if season is OFF or POST, default week to most recent? 
+ * 
  * refactor perhaps
  * @returns 
  */
@@ -60,16 +68,20 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
   const matchupRequestOptions: SpreadsAPIRequest = {
     ...options,
     weekNumber: options?.weekNumber,
-    season: options?.season
-  }
-  const test = await cfbdApi.get<Poll>('rankings', {params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber }});
+    season: options?.season,
+  };
   
-  return cfbdApi.get<Matchup[]>('games', { params: { year: matchupRequestOptions?.season, week: matchupRequestOptions?.weekNumber } })
+    return cfbdApi.get<Matchup[]>('games', { params: {
+        year: matchupRequestOptions?.season,
+        week: matchupRequestOptions?.weekNumber,
+        seasonType: options?.seasonType
+      }
+    })
     .then(async (res) => {
     const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
     const weekRange = {
       start: resWithUpdatedPropertyNames[0],
-      end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1]
+      end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1],
     };
 
     try {
@@ -83,7 +95,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         date: buildDateFormat(weekRange?.start?.startDate)
       }
       const compoundRequest = await Promise.all([
-        await getRankings(matchupRequestOptions?.season as string, matchupRequestOptions?.weekNumber as string),
+        await getRankings(matchupRequestOptions?.season as string, matchupRequestOptions?.weekNumber as string, matchupRequestOptions?.seasonType as string),
         await getTeams(),
         await getSpreads({
           ...spreadsOptions
@@ -92,16 +104,17 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
       const [rankings, teamInfo, spreads] = await compoundRequest;
 
       // bottle neck here with map containing an array.find -- REFACTOR
-      return resWithUpdatedPropertyNames.map((item) => {
+      const updated = resWithUpdatedPropertyNames.map((item) => {
         const rankPropAccessor = rankings.poll === 'AP Top 25' ? 'apRank' : 'playoffRank';
+        const finder = (team: Team | Rank, valueToSearch: string) => stripAndReplaceSpace(team.school) === stripAndReplaceSpace(valueToSearch);
         const away = {
-          ...teamInfo.find((team) => JSON.stringify(team).includes(item.awayTeam)),
-          [rankPropAccessor]: rankings.ranks.find((team) => JSON.stringify(team).includes(item.awayTeam))?.rank
+          ...teamInfo.find((team) => finder(team, item.awayTeam)),
+          [rankPropAccessor]: rankings.ranks.find((r) => finder(r, item.awayTeam))?.rank
 
         };
         const home = {
-          ...teamInfo.find((team) => JSON.stringify(team).includes(item.homeTeam)),
-          [rankPropAccessor]: rankings.ranks.find((team) => JSON.stringify(team).includes(item.homeTeam))?.rank
+          ...teamInfo.find((team) => finder(team, item.homeTeam)),
+          [rankPropAccessor]: rankings.ranks.find((team) => finder(team, item.homeTeam))?.rank
         };
         return {
           ...item,
@@ -110,19 +123,21 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         }
       })
       .map((item) => {
-        const strippedHomeTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.homeTeamData).join('')));
-        const strippedAwayTeam = stripAndReplaceSpace(JSON.stringify(Object.values(item.awayTeamData).join('')));
+        const strippedHomeTeam = stripAndReplaceSpace(`${item.homeTeamData.school}${item.homeTeamData.name}`);
+        const strippedAwayTeam = stripAndReplaceSpace(`${item.awayTeamData.school}${item.awayTeamData.name}`);
         
         const gameSpread: TheOddsResult | undefined = spreads?.data?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
-          return ((strippedHomeTeam.includes(strippedHome)) &&
-          (strippedAwayTeam.includes(strippedAway)))
+          /**
+           * find odds where hometeam 
+           * */
+          return ((strippedHomeTeam === strippedHome) &&
+          (strippedAwayTeam === strippedAway))
         });
         
       const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
-        const asArray = a.name.split(' ');
-        const stripped = stripAndReplaceSpace(asArray.splice(asArray.length - 1, 1).join(''));
+        const stripped = stripAndReplaceSpace(a.name);
         return !!strippedHomeTeam.includes(stripped) ? -1 : 1
       })
         return {
@@ -131,7 +146,8 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           theOddsId: gameSpread?.id,
           outcomes: orderedOutcomes ?? [],
         }
-      })
+      });
+      const newUpdate = updated
       .filter((item) => item.outcomes.length)
       .map((item) => {
         let newPointSpread: number = item.pointSpread;
@@ -145,6 +161,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           pointSpread: remainder ? newPointSpread : item.pointSpread,
         }
       })
+      return newUpdate;
 
     } catch (err) {
       console.error(err);
