@@ -68,7 +68,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           options={weeks}
           />
         <Select
-          onChange={({ option }) => handlePostSeasonEdge(option, 'year')}
+          onChange={({ option }) => onChange((prev) => ({ ...prev, ['year']: option.value }))}
           style={{ flexGrow: 1 }}
           margin={'1rem auto'}
           placeholder='Select Season'
