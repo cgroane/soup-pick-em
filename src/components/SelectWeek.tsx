@@ -69,14 +69,14 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           options={weeks}
           />
         <Select
-          onChange={({ option }) => onChange((prev) => ({ ...prev, ['year']: option.value }))}
+          onChange={({ option }) => onChange((prev) => ({ ...prev, year: option.value }))}
           style={{ flexGrow: 1 }}
           margin={'1rem auto'}
           placeholder='Select Season'
           defaultValue={{ label: '2023', value: 2023 }}
-          options={[2023, 2024].map((num) => ({
-            label: `${num}`,
-            value: num
+          options={[2023].map(() => ({
+            label: `${seasonData?.Season}`,
+            value: seasonData?.Season
           }))}
         />
       </Box>

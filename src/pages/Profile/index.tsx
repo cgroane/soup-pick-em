@@ -29,15 +29,15 @@ const Profile: React.FC<ProfileProps> = () => {
   useEffect(() => {
     Promise.all([
       fetchUsers().then(() => null),
-      fetchSlate({  }).then(() => null)
+      fetchSlate({ week: seasonData?.ApiWeek, year: !usePostSeason ? seasonData?.Season.toString() : `${seasonData?.Season}POST` }).then(() => null)
     ]).then(() => setStatus(LoadingState.IDLE));
-  }, [fetchSlate, fetchUsers, setStatus])
+  }, [fetchSlate, fetchUsers, setStatus, seasonData?.ApiWeek, seasonData?.Season, usePostSeason])
 
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
     
     return allValid?.length === 10 && slate?.games?.length;
-  }, [user?.pickHistory, slate?.uniqueWeek]);
+  }, [user?.pickHistory, slate?.uniqueWeek, slate?.games?.length]);
 
   const leaderBoard = useMemo(() => {
 

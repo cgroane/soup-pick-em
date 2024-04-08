@@ -92,7 +92,7 @@ export class FirebaseDB<T> {
      * the question is whether to do this here, or in the invocation
     */
     try {
-      await updateDoc(doc(this.db, this.collectionName, docId, ...segments as []), values);
+      await updateDoc(doc(this.db, this.collectionName, docId, ...segments as [] ?? ''), values);
       const updatedDoc = await this.getDocumentInCollection(docId);
       return updatedDoc;
     } catch (error) {

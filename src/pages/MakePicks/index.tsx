@@ -73,6 +73,7 @@ const MakePicks: React.FC = () => {
       userId: user?.uid
     }, user?.uid, ['picks', picks.slateId]).then(() => {
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
+      setStatus(LoadingState.IDLE);
     })
   }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
   

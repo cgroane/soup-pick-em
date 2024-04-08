@@ -50,11 +50,11 @@ export default function CreateSlateContext({ children }: ContextProp) {
 
   const canEdit = useMemo(() => {
     const today = new Date();
-    const earliestGame = Date.parse(slate?.games?.sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate))[0].startDate)
+    const earliestGame = Date.parse(games?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))[0]?.startDate)
     const now = Date.parse(today.toDateString())
     const pastDate = now > earliestGame;
     return !!((!pastDate && user?.roles?.includes(UserRoles.SLATE_PICKER)) || user?.roles?.includes(UserRoles.ADMIN))
-  }, [slate?.games, user?.roles])
+  }, [games, user?.roles])
   /**
    * update fetchMatchups to accept a week param
    */
@@ -69,7 +69,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
     setGames(results);
     setFilteredGames(results);
     return results;
-  }, [setGames, seasonData?.ApiSeason, seasonData?.ApiWeek, setStatus]);
+  }, [setGames, seasonData?.ApiWeek, setStatus, seasonData?.Season]);
   
 
   const addAndRemove = useCallback((game: Matchup) => {
@@ -89,7 +89,6 @@ export default function CreateSlateContext({ children }: ContextProp) {
         dels.push(found);
         setDeletions(dels);
       }
-
     } else {
       const newGame = {
         id:                     game.id ?? 0,
@@ -108,8 +107,18 @@ export default function CreateSlateContext({ children }: ContextProp) {
         homeTeamAPRanking:      game.homeTeamAPRanking ?? 0,
         awayTeamCFPRanking:     game.awayTeamCFPRanking ?? 0,
         homeTeamCFPRanking:     game.homeTeamCFPRanking ?? 0,
-        awayTeamData:           game.awayTeamData,
-        homeTeamData:           game.homeTeamData,
+        awayTeamData:           {
+                                  ...game.awayTeamData,
+                                  playoffRank: game.awayTeamData.playoffRank ?? null,
+                                  apRank: game.awayTeamData.apRank ?? null,
+                                  coachesRank: game.awayTeamData.coachesRank ?? null
+                                },
+        homeTeamData:           {
+                                  ...game.homeTeamData,
+                                  playoffRank: game.homeTeamData.playoffRank ?? null,
+                                  apRank: game.homeTeamData.apRank ?? null,
+                                  coachesRank: game.homeTeamData.coachesRank ?? null
+                                },
         theOddsId:              game.theOddsId ?? '',
         notes:                  game.notes ?? [],
         startTimeTbd:           game?.startTimeTbd ?? false,

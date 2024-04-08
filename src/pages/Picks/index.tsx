@@ -69,7 +69,10 @@ const Picks: React.FC = () => {
   
   useEffect(() => {
     fetchUsers();
-    fetchSlate({ week: selectedWeek.week, year: selectedWeek?.year });
+    fetchSlate({
+      week: selectedWeek.week,
+      year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
+    });
   }, [fetchUsers, fetchSlate, selectedWeek]);
 
   /**

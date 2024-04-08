@@ -46,7 +46,7 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
     const findPreviousUserSlatePickIndex = previous.roles.findIndex((r) => r === UserRoles.SLATE_PICKER);
     const newRolesForPrevPicker = [...previous.roles];
     newRolesForPrevPicker.splice(findPreviousUserSlatePickIndex, 1);
-    await FirebaseUsersClassInstance.updateDocumentInCollection(user.uid, {roles: newRolesForPrevPicker});
+    await FirebaseUsersClassInstance.updateDocumentInCollection(previous.uid, {roles: newRolesForPrevPicker});
     return await fetchUsers();
     
   }, [fetchUsers])
