@@ -55,6 +55,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     weekArray[weekArray.length - 1] = { label: 'Post Season', value: 1 };
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
+  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek), [usePostSeason, seasonData?.ApiWeek, weeks]);
   return (
     <>
       <Box pad={'2rem 1rem'} flex direction='row' margin={'0 auto'} justify='between' content='center' wrap >
@@ -64,7 +65,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           style={{ flexGrow: 1 }}
           onChange={({ option }) => handlePostSeasonEdge(option, 'week')}
           placeholder='Select Week'
-          defaultValue={usePostSeason ? { value: 1, label: 'Post Season' } : { value: seasonData?.ApiWeek as number, label: `Week ${seasonData?.ApiWeek}`}}
+          defaultValue={defaultWeek}
           options={weeks}
           />
         <Select
@@ -72,7 +73,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           style={{ flexGrow: 1 }}
           margin={'1rem auto'}
           placeholder='Select Season'
-          defaultValue={{value: 2023, label: `${2023}`}}
+          defaultValue={{ label: '2023', value: 2023 }}
           options={[2023, 2024].map((num) => ({
             label: `${num}`,
             value: num

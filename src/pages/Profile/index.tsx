@@ -86,9 +86,7 @@ const Profile: React.FC<ProfileProps> = () => {
       <ProfileCard border={ hasPicksThisWeek ? {} : { color: 'status-warning', size: 'medium' }} background={'light-1'} >
         <Heading>{hasPicksThisWeek ? 'Change ' : 'Make '}your picks</Heading>
         <CardBody>
-          <Link to={'/pick'}>
-            { slate?.games?.length ? <Button primary label={'Go to slate'} /> : <Button primary disabled label={`Slate hasn't been chosen yet`}/>}
-          </Link>
+          { slate?.games?.length ? <Link to={'/pick'}><Button primary label={'Go to slate'} /></Link> : <Button primary disabled label={`Slate hasn't been chosen yet`}/>}
         </CardBody>
       </ProfileCard>
       <ProfileCard background='light-1' >

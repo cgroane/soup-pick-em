@@ -14,7 +14,7 @@ app.use(cors());
 app.use(bodyParser.json());
 const api = new cfb.GamesApi();
 const rankingsApi = new cfb.RankingsApi();
-app.get('/games', (req, res) => {
+app.get('/api/games', (req, res) => {
     opts = {
       'division': 'fbs',
       'week': req.query.week,
@@ -22,7 +22,7 @@ app.get('/games', (req, res) => {
     }
     api.getGames(req.query.year, opts).then((resp) => res.send(resp));
 });
-app.get('/rankings', (req, res) => {
+app.get('/api/rankings', (req, res) => {
   opts = {
     'week': req.query.week,
     'seasonType': req.query.seasonType
@@ -37,5 +37,5 @@ app.get('/rankings', (req, res) => {
 })
 
 app.listen(3001, () => {
-  console.log('listening on port: ' + 3000);
+  console.log('listening on port: ' + 3001);
 })

@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc } from "firebase/firestore";
+import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -74,6 +74,15 @@ export class FirebaseDB<T> {
     } catch (error) {
       console.error(error);
       throw new Error('Error getting user data');
+    }
+  }
+  querySubCollection = async ({ week, year }: { week: number; year: number }, segments?: string[]) => {
+    try {
+      const subCollectionRef = collection(this.db, this.collectionName, ...segments as [] ?? '');
+      const q = query(subCollectionRef, where("year", "==", year), where("week", "==", week));
+      return q;
+    } catch (error) {
+      
     }
   }
   /** update */
