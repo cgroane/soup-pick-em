@@ -105,7 +105,7 @@ const MakePicks: React.FC = () => {
           {
             label: 'PROFILE',
             onClick: () => {
-              navigate('/pick')
+              navigate('/profile')
               setModalOpen(false)
             }
           }
