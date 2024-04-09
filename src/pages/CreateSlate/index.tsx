@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
-import { UserCollectionData } from '../../model';
+import { Matchup, UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
@@ -39,19 +39,18 @@ const CreateSlate: React.FC = () => {
    * should use local state
    * submit slate affixed with POST if week is POST
    */
-
+  
   /** contexts */
   const {
     games,
-    selectedGames,
     filteredGames,
     setFilteredGames,
     fetchMatchups,
-    deletions,
-    canEdit
+    canEdit,
   } = useSlateContext()
   const {
-    fetchSlate
+    fetchSlate,
+    slate
   } = usePickContext()
   const { 
     setModalOpen,
@@ -65,7 +64,8 @@ const CreateSlate: React.FC = () => {
     users,
     isSlatePicker
   } = useGlobalContext();
-
+  const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
+  const [deletions, setDeletions] = useState<number[]>([]);
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek,
     year: seasonData?.Season,
@@ -73,6 +73,9 @@ const CreateSlate: React.FC = () => {
   });
   /** hooks */
   const navigate = useNavigate();
+  useEffect(() => {
+    setSelectedGames(slate?.games ?? []);
+  }, [slate, setSelectedGames])
 
   /** stateful operations */
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +108,27 @@ const CreateSlate: React.FC = () => {
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
+
+  const addAndRemove = (game: Matchup) => {
+    const found = selectedGames.findIndex((selectedGame) => game.gameID === selectedGame.gameID);
+    const dels = [...deletions];
+    const newSelections = [...selectedGames];
+    if (found >= 0) {
+      newSelections.splice(found, 1);
+      const deletedItem = slate?.games.find((g) => g.gameID === selectedGames[found].gameID)
+      if (deletedItem) {
+        dels.push(found);
+        setDeletions(dels);
+      }
+    } else {
+      const newGame = Object.assign({}, game);
+      newGame.awayTeamData = Object.assign({}, game.awayTeamData);
+      newGame.homeTeamData = Object.assign({}, game.homeTeamData);
+      newSelections.push(newGame as Matchup);
+      
+    }
+    setSelectedGames(newSelections);
+  }
   
   /** api request */
   const submitSlate = useCallback( async () => {
@@ -141,6 +165,7 @@ const CreateSlate: React.FC = () => {
           {
             filteredGames?.map((game) => 
             <Game
+              addAndRemove={addAndRemove}
               addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
               disable={disableSelection}
               hideCheckbox={!isSlatePicker}

@@ -1,7 +1,21 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
+import {
+  CollectionReference,
+  DocumentData,
+  collection,
+  collectionGroup,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  initializeFirestore,
+  query,
+  setDoc,
+  updateDoc,
+  where
+} from "firebase/firestore";
 import { GoogleAuthProvider, getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -14,7 +28,7 @@ const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG as strin
 export const app = initializeApp(firebaseConfig);
 
 export const analytics = getAnalytics(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
@@ -38,7 +52,7 @@ export class FirebaseDB<T> {
   addDocument = async <V extends {}>(docData: V, docId?: string, segments?: string[]) => {
     try {
       const docPath = !segments?.length ? doc(this.db, this.collectionName, docId ?? '') : doc(this.db, this.collectionName, docId ?? '', ...segments as []);
-      const docRef = await setDoc(docPath, docData)
+      const docRef = await setDoc(docPath, docData, {  })
       return docRef;
     } catch (error) {
       console.error(error);

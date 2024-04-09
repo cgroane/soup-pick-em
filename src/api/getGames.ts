@@ -1,5 +1,5 @@
 import axiosInstance, { cfbdApi, theOddsInstance } from "."
-import { Matchup, Poll, Rank, Team, TheOddsResult } from "../model";
+import { Matchup, Rank, Team, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
 import { getRankings, getTeams } from "./getTeams";

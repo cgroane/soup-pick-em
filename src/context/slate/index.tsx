@@ -1,22 +1,17 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useMemo, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { LoadingState, useUIContext } from '../ui';
-import { usePickContext } from '../pick';
 import { useGlobalContext } from '../user';
 import { UserRoles } from '../../utils/constants';
 
 export type SlateValueProps = {
   games: Matchup[];
-  selectedGames: Matchup[];
   filteredGames: Matchup[];
   setGames: Dispatch<SetStateAction<Matchup[]>>;
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
-  setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
-  addAndRemove: (game: Matchup) => void;
   fetchMatchups: ({ weekNumber, year, seasonType }: {weekNumber?: number; year?: number, seasonType: 'postseason' | 'regular'}) => void;
-  deletions: number[];
   canEdit: boolean;
 }
 
@@ -28,10 +23,6 @@ export const SlateContext = React.createContext({} as SlateValueProps); //create
 
 //function body
 export default function CreateSlateContext({ children }: ContextProp) {
-
-  const {
-    slate
-  } = usePickContext();
   const {
     setStatus
   } = useUIContext();
@@ -40,13 +31,9 @@ export default function CreateSlateContext({ children }: ContextProp) {
   } = useGlobalContext();
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
-  const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
-  const [deletions, setDeletions] = useState<number[]>([])
+  
   const { seasonData } = useUIContext();
 
-  useEffect(() => {
-    setSelectedGames(slate?.games ?? []);
-  }, [slate, setSelectedGames])
 
   const canEdit = useMemo(() => {
     const today = new Date();
@@ -70,82 +57,6 @@ export default function CreateSlateContext({ children }: ContextProp) {
     setFilteredGames(results);
     return results;
   }, [setGames, seasonData?.ApiWeek, setStatus, seasonData?.Season]);
-  
-
-  const addAndRemove = useCallback((game: Matchup) => {
-    /**
-     * this runs either if updating or adding from scratch
-     * need to differentiate between edit and new
-     * on remove, if slate.games includes removed -- edit bc slate.games is the original from the api
-     * otherwise it is new
-     */
-    const found = selectedGames.findIndex((selectedGame) => game.gameID === selectedGame.gameID);
-    const dels = [...deletions];
-    const newSelections = [...selectedGames];
-    if (found >= 0) {
-      newSelections.splice(found, 1);
-      const deletedItem = slate?.games.find((g) => g.gameID === selectedGames[found].gameID)
-      if (deletedItem) {
-        dels.push(found);
-        setDeletions(dels);
-      }
-    } else {
-      const newGame = {
-        id:                     game.id ?? 0,
-        gameID:                 game.gameID ?? 0,
-        season:                 game.season ?? 0,
-        seasonType:             game.seasonType ?? 0,
-        week:                   game.week ?? 0,
-        startDate:              game.startDate ?? '',
-        awayTeam:               game.awayTeam ?? '',
-        homeTeam:               game.homeTeam ?? '',
-        awayPoints:             game.awayPoints ?? 0,
-        homePoints:             game.homePoints ?? 0,        
-        pointSpread:            game.pointSpread ?? 0,
-        attendance:             game.attendance ?? 0,
-        awayTeamAPRanking:      game.awayTeamAPRanking ?? 0,
-        homeTeamAPRanking:      game.homeTeamAPRanking ?? 0,
-        awayTeamCFPRanking:     game.awayTeamCFPRanking ?? 0,
-        homeTeamCFPRanking:     game.homeTeamCFPRanking ?? 0,
-        awayTeamData:           {
-                                  ...game.awayTeamData,
-                                  playoffRank: game.awayTeamData.playoffRank ?? null,
-                                  apRank: game.awayTeamData.apRank ?? null,
-                                  coachesRank: game.awayTeamData.coachesRank ?? null
-                                },
-        homeTeamData:           {
-                                  ...game.homeTeamData,
-                                  playoffRank: game.homeTeamData.playoffRank ?? null,
-                                  apRank: game.homeTeamData.apRank ?? null,
-                                  coachesRank: game.homeTeamData.coachesRank ?? null
-                                },
-        theOddsId:              game.theOddsId ?? '',
-        notes:                  game.notes ?? [],
-        startTimeTbd:           game?.startTimeTbd ?? false,
-        venueId:                game?.venueId ?? 0,
-        venue:                  game?.venue ?? '',
-        outcomes:               game.outcomes ?? [],
-        neutralSite:            game.neutralSite ?? false,
-        conferenceGame:         game.neutralSite ?? false,
-        homeId:                 game.homeId ?? 0,
-        homeConference:         game.homeConference ?? '',
-        homeLineScores:         game.homeLineScores ?? [],
-        homePostWinProb:        game.homePostWinProb ?? 0,
-        homePregameElo:         game.homePregameElo ?? 0,
-        homePostgameElo:        game.homePostgameElo ?? 0,
-        awayId:                 game.awayId ?? 0,
-        awayConference:         game.awayConference ?? '',
-        awayLineScores:         game.awayLineScores ?? [],
-        awayPostWinProb:        game.awayPostWinProb ?? 0,
-        awayPregameElo:         game.awayPregameElo ?? 0,
-        awayPostgameElo:        game.awayPostgameElo ?? 0,
-        excitementIndex:        game.excitementIndex ?? 0,
-        highlights:             game.highlights ?? []
-      }
-      newSelections.push(newGame as Matchup);
-    }
-    setSelectedGames(newSelections);
-  }, [setSelectedGames, selectedGames, deletions, setDeletions, slate?.games]);
 
   return (
     <SlateContext.Provider value={{
@@ -153,11 +64,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
       setGames,
       filteredGames,
       setFilteredGames,
-      selectedGames,
-      setSelectedGames,
-      addAndRemove,
       fetchMatchups,
-      deletions,
       canEdit
     }}>
       {children}

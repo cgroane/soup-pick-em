@@ -17,7 +17,7 @@ export const useGetTeamData = (game: Matchup) => {
       year: converted.getFullYear(),
       month: months[converted.getMonth() - 1]
     }
-  }, [game.startDate, game.awayTeam]);
+  }, [game.startDate]);
 
   const rankings = useMemo(() => {
     return {

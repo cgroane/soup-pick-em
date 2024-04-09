@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { Box, Heading } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
@@ -10,6 +10,7 @@ import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
 import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
+import { stripAndReplaceSpace } from '../../utils/stringMatching';
 
 const HeaderCell = styled.td`
 border-radius: 12px;
@@ -67,25 +68,19 @@ const Picks: React.FC = () => {
     fetchSlate,
   } = usePickContext()
   
+  const getPageData = useCallback(async () => {
+    Promise.all([
+      await fetchUsers(),
+      await fetchSlate({
+        week: selectedWeek.week,
+        year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
+      })
+    ])
+  }, [fetchSlate, fetchUsers]);
+  
   useEffect(() => {
-    fetchUsers();
-    fetchSlate({
-      week: selectedWeek.week,
-      year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
-    });
-  }, [fetchUsers, fetchSlate, selectedWeek]);
-
-  /**
-   * allpickhistoryies -- each obj in array contains user data, and array of games
-   * first column is 
-   * first column is user
-   * 
-   * determining correct pick is not working
-   * selection + its point > score difference between the two
-   * it's different though for favorite vs not favorite
-   * if selection point is positive, the sum of selection score and point should be >= awayscore
-   * if selection is negative (favored), sum of selection score and point should be >= other team
-   */
+    getPageData()
+  }, [getPageData]);
   
   const thisWeeksPickHistory = useMemo(() => {
     return allPickHistories?.filter((pickSet) => pickSet.slateId === slate?.uniqueWeek)?.map((userPicks) => {
@@ -103,7 +98,7 @@ const Picks: React.FC = () => {
                 isCorrect = true;
               }
             } else {
-              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g , '').includes(game?.homeTeam.toLowerCase().replace(/ /g , ''))) ? 'home' : 'away';
+              const homePick = stripAndReplaceSpace(pick?.selection?.name).includes(stripAndReplaceSpace(game?.homeTeam)) ? 'home' : 'away';
               const newScore = game[`${homePick}Points`] + pick.selection?.point;
               if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
                 sumCorrect++; 

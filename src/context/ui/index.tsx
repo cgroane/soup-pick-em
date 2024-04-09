@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getCurrentWeek } from "../../api/getGames";
-import { SeasonDetails, SeasonDetailsData } from "../../api/schema/sportsDataIO";
+import { SeasonDetailsData } from "../../api/schema/sportsDataIO";
 
 
 export enum LoadingState {
@@ -41,6 +41,11 @@ const [modalOpen, setModalOpen] = useState(false);
  * is there a better way to force historical? 
  * this gets called twice on app load, maybe 3 times.
  */
+
+const usePostSeason = useMemo(() => {
+  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
+}, [seasonData?.ApiSeason]);
+
 const getSeasonData = useCallback(async () => {
   const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
   /**
@@ -62,15 +67,11 @@ const getSeasonData = useCallback(async () => {
       seasonType: usePostSeason ? 'postseason' : 'regular'
     })
   }
-}, [setSeasonData]);
+}, [setSeasonData, usePostSeason]);
 
 useEffect(() => {
   getSeasonData()
 }, [getSeasonData]);
-
-const usePostSeason = useMemo(() => {
-  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
-}, [seasonData?.ApiSeason]);
 
   return (
     <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason }}>

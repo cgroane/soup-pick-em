@@ -11,18 +11,11 @@ import { useSlateContext } from '../../context/slate'
 import { LeaderBoardData } from '../../model'
 import Leaderboard from '../../components/Leaderboard'
 
-/**
- * show record
- * show last week results
- * show nth week results
- * 
- */
-
 interface ProfileProps {}
 const Profile: React.FC<ProfileProps> = () => {
 
   const { seasonData, setStatus, status, usePostSeason } = useUIContext();
-  const { user, users, fetchUsers, userOverallRecord} = useGlobalContext();
+  const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
 

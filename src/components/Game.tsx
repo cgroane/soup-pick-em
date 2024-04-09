@@ -28,16 +28,17 @@ interface GameProps {
   disable?: boolean;
   addedToSlate: boolean;
   hideCheckbox: boolean;
+  addAndRemove: (game: Matchup) => void;
 }
 const Game: React.FC<GameProps> = ({
   game,
   addedToSlate,
   disable,
-  hideCheckbox
+  hideCheckbox,
+  addAndRemove
 }: GameProps) => {
 
   const {
-    addAndRemove,
     canEdit
   } = useSlateContext();
   const { 
