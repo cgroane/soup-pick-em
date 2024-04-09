@@ -20,7 +20,9 @@ app.get('/api/games', (req, res) => {
       'week': req.query.week,
       'seasonType': req.query.seasonType
     }
-    api.getGames(req.query.year, opts).then((resp) => res.send(resp));
+    api.getGames(req.query.year, opts)
+      .then((resp) => res.send(resp))
+      .catch((err) => res.status(500).send({ errorMessage: 'Error getting games' }));
 });
 app.get('/api/rankings', (req, res) => {
   opts = {
@@ -33,7 +35,8 @@ app.get('/api/rankings', (req, res) => {
     } else {
       res.send(respn[0].polls.find((p) => p.poll === 'AP Top 25'));
     };
-  });
+  })
+  .catch((err) => res.status(500).send({ errorMessage: 'Error getting games' }));
 })
 
 app.listen(3001, () => {
