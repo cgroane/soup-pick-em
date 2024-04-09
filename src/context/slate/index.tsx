@@ -1,5 +1,5 @@
 
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useReducer, useState } from 'react';
 import { Matchup } from '../../model';
 import { getGames } from '../../api/getGames';
 import { LoadingState, useUIContext } from '../ui';
@@ -37,7 +37,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   } = useUIContext();
   const {
     user
-  } = useGlobalContext()
+  } = useGlobalContext();
   const [games, setGames] = useState<Matchup[]>([]);
   const [filteredGames, setFilteredGames] = useState<Matchup[]>([]);
   const [selectedGames, setSelectedGames] = useState<Matchup[]>([]);
