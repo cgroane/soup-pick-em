@@ -51,7 +51,12 @@ const Picks: React.FC = () => {
   const {
     seasonData
   } = useUIContext();
-  const { selectedWeek, setSelectedWeek } = useSelectedWeek({ week: seasonData?.ApiWeek, year: seasonData?.Season });
+
+  const { selectedWeek, setSelectedWeek } = useSelectedWeek({
+    week: seasonData?.ApiWeek,
+    year: seasonData?.Season,
+    seasonType: seasonData?.seasonType as 'postseason' | 'regular'
+  });
 
   const {
     fetchUsers,
@@ -64,15 +69,24 @@ const Picks: React.FC = () => {
   
   useEffect(() => {
     fetchUsers();
-    fetchSlate({ week: selectedWeek.week, year: selectedWeek?.year });
+    fetchSlate({
+      week: selectedWeek.week,
+      year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
+    });
   }, [fetchUsers, fetchSlate, selectedWeek]);
 
   /**
    * allpickhistoryies -- each obj in array contains user data, and array of games
    * first column is 
    * first column is user
+   * 
+   * determining correct pick is not working
+   * selection + its point > score difference between the two
+   * it's different though for favorite vs not favorite
+   * if selection point is positive, the sum of selection score and point should be >= awayscore
+   * if selection is negative (favored), sum of selection score and point should be >= other team
    */
-
+  
   const thisWeeksPickHistory = useMemo(() => {
     return allPickHistories?.filter((pickSet) => pickSet.slateId === slate?.uniqueWeek)?.map((userPicks) => {
       let sumCorrect = 0;
@@ -83,11 +97,13 @@ const Picks: React.FC = () => {
           const fav = game?.outcomes.find((o) => o.point < 0);
           let isCorrect = !!pick.isCorrect;
           if (game) {
-            if (pick.selection?.name === 'PUSH' && ((fav?.point ?? 0 + game?.pointSpread) === 0)) {
-              sumCorrect++;
-              isCorrect = true;
+            if (pick.selection?.name === 'PUSH') {
+              if (((fav?.point as number + game?.pointSpread) === 0)) {
+                sumCorrect++;
+                isCorrect = true;
+              }
             } else {
-              const homePick = (game?.homeTeam?.toLowerCase().replace(/ /g , '') === pick.selection?.name?.toLowerCase().replace(/ /g , '')) ? 'home' : 'away';
+              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g , '').includes(game?.homeTeam.toLowerCase().replace(/ /g , ''))) ? 'home' : 'away';
               const newScore = game[`${homePick}Points`] + pick.selection?.point;
               if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
                 sumCorrect++; 
@@ -139,6 +155,7 @@ const Picks: React.FC = () => {
                   <p>{game?.awayTeam}</p>
                   <p><span style={{ fontWeight: 600 }} >at</span></p>
                   <p>{game?.homeTeam}</p>
+                  <p>{game?.homeTeamData.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
                 </HeaderCell>,
               minSize: undefined,
               maxSize: undefined,
@@ -175,16 +192,17 @@ const Picks: React.FC = () => {
       return []
     }
   }, [slate?.games])
-  const mockedLongArray = useMemo(() => Array.from(new Array(25).fill(thisWeeksPickHistory[0])), [thisWeeksPickHistory])
+  
   return (
     <>
       <Box>
-        {thisWeeksPickHistory && <PicksTable data={mockedLongArray as PicksColumnDef[]} columns={columns} />}
+        {thisWeeksPickHistory && <PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
         <SelectWeek
+          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
           heading={<Heading style={{ width: '100%' }} >
           View Results from:
         </Heading>}
-          onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))}
+          onChange={setSelectedWeek}
         />
       </Box>
     </>

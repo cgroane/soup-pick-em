@@ -21,7 +21,7 @@ import Leaderboard from '../../components/Leaderboard'
 interface ProfileProps {}
 const Profile: React.FC<ProfileProps> = () => {
 
-  const { seasonData, setStatus, status } = useUIContext();
+  const { seasonData, setStatus, status, usePostSeason } = useUIContext();
   const { user, users, fetchUsers, userOverallRecord} = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
@@ -29,15 +29,15 @@ const Profile: React.FC<ProfileProps> = () => {
   useEffect(() => {
     Promise.all([
       fetchUsers().then(() => null),
-      fetchSlate({  }).then(() => null)
+      fetchSlate({ week: seasonData?.ApiWeek, year: !usePostSeason ? seasonData?.Season.toString() : `${seasonData?.Season}POST` }).then(() => null)
     ]).then(() => setStatus(LoadingState.IDLE));
-  }, [fetchSlate, fetchUsers, setStatus])
+  }, [fetchSlate, fetchUsers, setStatus, seasonData?.ApiWeek, seasonData?.Season, usePostSeason])
 
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
     
-    return allValid?.length === 10;
-  }, [user?.pickHistory, slate?.uniqueWeek]);
+    return allValid?.length === 10 && slate?.games?.length;
+  }, [user?.pickHistory, slate?.uniqueWeek, slate?.games?.length]);
 
   const leaderBoard = useMemo(() => {
 
@@ -73,7 +73,9 @@ const Profile: React.FC<ProfileProps> = () => {
     <>
       <ProfileCard background='light-1' >
         <Heading margin={{ top: '0' }} size='medium'>
-          Week {seasonData?.ApiWeek ?? 1}, {seasonData?.ApiSeason}
+          {
+            usePostSeason ? 'Bowl Season' : `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`
+          }
           </Heading>
           <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>
@@ -84,9 +86,7 @@ const Profile: React.FC<ProfileProps> = () => {
       <ProfileCard border={ hasPicksThisWeek ? {} : { color: 'status-warning', size: 'medium' }} background={'light-1'} >
         <Heading>{hasPicksThisWeek ? 'Change ' : 'Make '}your picks</Heading>
         <CardBody>
-          <Link to={'/pick'}>
-            <Button primary label={'Go to slate'} />
-          </Link>
+          { slate?.games?.length ? <Link to={'/pick'}><Button primary label={'Go to slate'} /></Link> : <Button primary disabled label={`Slate hasn't been chosen yet`}/>}
         </CardBody>
       </ProfileCard>
       <ProfileCard background='light-1' >
@@ -98,12 +98,12 @@ const Profile: React.FC<ProfileProps> = () => {
             initialChild={carouselFirstChild as number >= 0 ? carouselFirstChild : 0}
           >
             {
-              user?.record.map((r) => <>
-                <WinPercentage key={`r-${r.year}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
+              user?.record.map((r, ind) => <>
+                <WinPercentage key={`r-${r.year}-${ind}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
               </>)
             }
             {
-              <WinPercentage wins={userOverallRecord.wins} losses={userOverallRecord?.losses} label='Overall' />
+              <WinPercentage key={'overall'} wins={userOverallRecord.wins} losses={userOverallRecord?.losses} label='Overall' />
             }
           </Carousel>
         </CardBody>

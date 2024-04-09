@@ -35,6 +35,10 @@ const BottomToolbar = styled(Toolbar)`
 
 const CreateSlate: React.FC = () => {
   const [textFilter, setTextFilter] = useState('');
+  /**
+   * should use local state
+   * submit slate affixed with POST if week is POST
+   */
 
   /** contexts */
   const {
@@ -54,7 +58,7 @@ const CreateSlate: React.FC = () => {
     modalOpen,
     seasonData,
     setStatus,
-    status
+    status,
   } = useUIContext()
   const {
     user,
@@ -62,11 +66,13 @@ const CreateSlate: React.FC = () => {
     isSlatePicker
   } = useGlobalContext();
 
-  const { selectedWeek, setSelectedWeek } = useSelectedWeek({ week: seasonData?.ApiWeek, year: seasonData?.Season });
+  const { selectedWeek, setSelectedWeek } = useSelectedWeek({
+    week: seasonData?.ApiWeek,
+    year: seasonData?.Season,
+    seasonType: seasonData?.seasonType as 'postseason' | 'regular'
+  });
   /** hooks */
   const navigate = useNavigate();
-
-  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
 
   /** stateful operations */
   const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,11 +83,12 @@ const CreateSlate: React.FC = () => {
     Promise.all([
       fetchSlate({
         week: selectedWeek?.week,
-        year: selectedWeek?.year
+        year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
       }).then((result) => result),
       fetchMatchups({ 
         weekNumber: selectedWeek?.week,
-        year: selectedWeek?.year
+        year: selectedWeek?.year,
+        seasonType: selectedWeek?.seasonType
        })
     ]).then(() => setStatus(LoadingState.IDLE));
     
@@ -103,23 +110,16 @@ const CreateSlate: React.FC = () => {
   const submitSlate = useCallback( async () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
-    const uniqueId = `w${seasonData?.ApiWeek}-${seasonData?.ApiSeason}`
+    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''}`
     await FBSlateClassInstance.addSlate({ 
-      week: seasonData?.ApiWeek as number,
+      week: selectedWeek?.week as number,
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
       games: selectedGames,
      }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
-  }, [seasonData?.ApiSeason, seasonData?.ApiWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
-  const viewingOldData = useMemo(() => {
-    if ((seasonData?.Season as number) > (selectedWeek?.year as number)) {
-      return true;
-    } else if (( seasonData?.ApiWeek as number ) > (selectedWeek?.week as number)) {
-      return true;
-    } else {
-      return false;
-    }
-  }, [selectedWeek, seasonData?.Season, seasonData?.ApiWeek]);
+  }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
+  
+  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
 
   return (
     <>
@@ -128,8 +128,9 @@ const CreateSlate: React.FC = () => {
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
         <SelectWeek
+          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
           heading={<></>}
-          onChange={(val, name) => setSelectedWeek((prev) => ({ ...prev, [name]: val }))}
+          onChange={setSelectedWeek}
         />
         {
           status === LoadingState.LOADING ? (
@@ -142,13 +143,13 @@ const CreateSlate: React.FC = () => {
             <Game
               addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
               disable={disableSelection}
-              hideCheckbox={viewingOldData}
+              hideCheckbox={!isSlatePicker}
               key={game.gameID}
               game={game}
             />)
           }
         </Box>
-        {(isSlatePicker && canEdit && viewingOldData) && 
+        {(canEdit) && 
         <BottomToolbar style={{
           boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
         }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >

@@ -15,7 +15,7 @@ export type PickValueProp = {
   setSlate: Dispatch<SetStateAction<Slate>>;
   setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
-  fetchSlate: ({ week, year }: { week?: number; year?: number }) => Promise<Slate | undefined>;
+  fetchSlate: ({ week, year }: { week?: number; year?: string }) => Promise<Slate | undefined>;
   getUserPicks: () => PickHistory | undefined;
   refreshSlatePicksStatus: ({ week, year }: { week?: number; year?: number }) => void;
 }
@@ -30,7 +30,7 @@ const Context = ({
   children
 }: ContextProp) => {
   const { user } = useGlobalContext()
-  const { seasonData, setStatus } = useUIContext();
+  const { seasonData, setStatus, usePostSeason } = useUIContext();
   const [slate, setSlate] = useState({} as Slate);
   // const [weeklyResults, setWeeklyResults] = useState()
   const [picks, setPicks] = useState({
@@ -69,14 +69,14 @@ const Context = ({
 
   }, [picks]);
 
-  const fetchSlate = useCallback( async ({ week, year }: { week?: number; year?: number }) => {
+  const fetchSlate = useCallback( async ({ week, year }: { week?: number; year?: string }) => {
     /** update to use seasons data as fallback */
     setStatus(LoadingState.LOADING)
-    const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : seasonData?.Season as number}`);
+    const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : !usePostSeason ? seasonData?.Season as number : `${seasonData?.Season}POST`}`);
     setSlate(results as Slate);
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }));
     return results;
-  }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus]);
+  }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus, usePostSeason]);
   
   const refreshSlatePicksStatus = useCallback(async ({ week, year }: { week?: number; year?: number }) => {
     const updatedSlate = await FBSlateClassInstance.updateSlateScores({ week: week ? week: seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })

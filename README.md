@@ -1,6 +1,6 @@
 # Important Note
 
-Unfortunately, without manually creating required data resembling that which comes from the various API's in use, so we have to use a key in the .env to tell us which odds api endpoint to use. 
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -47,3 +47,9 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+## TODO
+Make CreateSlate.tsx use local state to monitor game selection and comparison.
+Make MakePicks.tsx use local state to monitor pick selection
+Determine best off season structure
+set up node server to serve app, build file, etc
