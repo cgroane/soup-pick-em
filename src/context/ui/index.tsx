@@ -1,6 +1,6 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getCurrentWeek } from "../../api/getGames";
-import { SeasonDetails, SeasonDetailsData } from "../../api/schema/sportsDataIO";
+import { SeasonDetailsData } from "../../api/schema/sportsDataIO";
 
 
 export enum LoadingState {
@@ -37,6 +37,10 @@ const [seasonData, setSeasonData] = useState<SeasonDetailsData | undefined>({} a
 const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
 const [modalOpen, setModalOpen] = useState(false);
 
+const usePostSeason = useMemo(() => {
+  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
+}, [seasonData?.ApiSeason]);
+
 /**
  * is there a better way to force historical? 
  * this gets called twice on app load, maybe 3 times.
@@ -47,6 +51,7 @@ const getSeasonData = useCallback(async () => {
    * MOCK
    */
   const usePost = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
+
   if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
     setSeasonData({
       ...data,
@@ -62,15 +67,13 @@ const getSeasonData = useCallback(async () => {
       seasonType: usePostSeason ? 'postseason' : 'regular'
     })
   }
-}, [setSeasonData]);
+}, [setSeasonData, usePostSeason]);
 
 useEffect(() => {
   getSeasonData()
 }, [getSeasonData]);
 
-const usePostSeason = useMemo(() => {
-  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
-}, [seasonData?.ApiSeason]);
+
 
   return (
     <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason }}>

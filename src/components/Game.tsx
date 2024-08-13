@@ -49,7 +49,7 @@ const Game: React.FC<GameProps> = ({
     rankings,
     dateTime
   } = useGetTeamData(game);
-  const final = useMemo(() => (game?.homeLineScores.length >= 4) || (game?.awayLineScores.length === 4),[game?.homeLineScores, game?.awayLineScores])
+  const final = useMemo(() => (game?.homeLineScores?.length >= 4) || (game?.awayLineScores?.length === 4),[game?.homeLineScores, game?.awayLineScores])
 
   return (
     <GameCard pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >

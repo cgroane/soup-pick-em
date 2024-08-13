@@ -61,7 +61,7 @@ const PickCard: React.FC<PickCardProps> = ({
 
   const [choice, setChoice] = useState({ name: 'PUSH', point: 0, price: 0 });
   const pastDate = useMemo(() => {
-    return !(Date.parse(game?.startDate) < Date.parse(new Date().toDateString()))
+    return (Date.parse(game?.startDate) < Date.parse(new Date().toDateString()))
   }, [game])
 
   const getSelected = useCallback((ouctomeIndex: number) => {

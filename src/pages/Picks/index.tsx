@@ -96,7 +96,9 @@ const Picks: React.FC = () => {
           const game = slate?.games.find((g) => g.gameID === pick.matchup);
           const fav = game?.outcomes.find((o) => o.point < 0);
           let isCorrect = !!pick.isCorrect;
-          if (game) {
+          if (Date.parse(game?.startDate as string) < Date.parse(new Date().toDateString())) {
+            isCorrect = false;
+          } else if (game) {
             if (pick.selection?.name === 'PUSH') {
               if (((fav?.point as number + game?.pointSpread) === 0)) {
                 sumCorrect++;

@@ -1,5 +1,5 @@
 import axiosInstance, { cfbdApi, theOddsInstance } from "."
-import { Matchup, Poll, Rank, Team, TheOddsResult } from "../model";
+import { Matchup, Rank, Team, TheOddsResult } from "../model";
 import { convertKeyNames } from "../utils/convertKeyNames";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
 import { getRankings, getTeams } from "./getTeams";
@@ -126,7 +126,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         const strippedHomeTeam = stripAndReplaceSpace(`${item.homeTeamData.school}${item.homeTeamData.name}`);
         const strippedAwayTeam = stripAndReplaceSpace(`${item.awayTeamData.school}${item.awayTeamData.name}`);
         
-        const gameSpread: TheOddsResult | undefined = spreads?.data?.find((spread: TheOddsResult) => {
+        const gameSpread: TheOddsResult | undefined = spreads?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
           /**
