@@ -8,7 +8,7 @@ const axiosInstance = axios.create({
   },
 });
 export const cfbdApi = axios.create({
-  baseURL: `${process.env.APP_ENV === 'development' ? 'http://localhost:3001/api/' : ''}/api/`,
+  baseURL: `/api/`,
 });
 
 export const theOddsInstance = axios.create({
