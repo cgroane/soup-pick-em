@@ -33,6 +33,7 @@ const MakePicks: React.FC = () => {
     picks,
     slate,
     fetchSlate,
+    getUserPicks,
   } = usePickContext()
   const {
     user,
@@ -51,6 +52,7 @@ const MakePicks: React.FC = () => {
   const getDataForPage = useCallback(async () => {
     const compoundRequest = Promise.all([
       await fetchSlate({ }),
+      await getUserPicks()
     ]);
     const [slateResult] = await compoundRequest;
     if (slateResult) setStatus(LoadingState.IDLE);
@@ -96,7 +98,6 @@ const MakePicks: React.FC = () => {
         >
           <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
-            <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
             <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
           </Box>
         </BottomToolbar>

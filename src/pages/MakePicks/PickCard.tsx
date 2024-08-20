@@ -65,11 +65,7 @@ const PickCard: React.FC<PickCardProps> = ({
   }, [game])
 
   const getSelected = useCallback((ouctomeIndex: number) => {
-    if (typeof choice === 'object') {
-      return choice?.name?.toLowerCase().replace(/ /g, '') === game?.outcomes[ouctomeIndex]?.name?.toLowerCase().replace(/ /g, '');
-    } else {
-      return false;
-    }
+    return typeof choice === 'object' ? choice?.name?.toLowerCase().replace(/ /g, '') === game?.outcomes[ouctomeIndex]?.name?.toLowerCase().replace(/ /g, '') : false
   }, [choice, game?.outcomes]);
   
   useEffect(() => {

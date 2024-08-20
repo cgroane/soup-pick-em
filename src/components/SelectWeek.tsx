@@ -55,7 +55,9 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     weekArray[weekArray.length - 1] = { label: 'Post Season', value: 1 };
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
+
   const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek), [usePostSeason, seasonData?.ApiWeek, weeks]);
+  
   return (
     <>
       <Box pad={'2rem 1rem'} flex direction='row' margin={'0 auto'} justify='between' content='center' wrap >
