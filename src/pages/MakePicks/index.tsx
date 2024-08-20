@@ -56,7 +56,7 @@ const MakePicks: React.FC = () => {
     ]);
     const [slateResult] = await compoundRequest;
     if (slateResult) setStatus(LoadingState.IDLE);
-  }, [fetchSlate, setStatus]);
+  }, [fetchSlate, setStatus, getUserPicks]);
 
   useEffect(() => {
     getDataForPage();
