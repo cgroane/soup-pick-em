@@ -32,12 +32,12 @@ export const useEmailAndPassword = () => {
     e.preventDefault()
     if (newUser) {
       FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password, seasonData?.Season).then((res) => {
-        navigate('/dashboard')
+        navigate('/profile')
         if(res) setUser(res as UserCollectionData);
       });
     } else {
       FirebaseUsersClassInstance.logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then((res) => {
-        navigate('/dashboard')
+        navigate('/profile')
         if(res) setUser(res);
       });
     }
