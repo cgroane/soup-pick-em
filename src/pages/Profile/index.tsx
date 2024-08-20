@@ -29,7 +29,7 @@ const Profile: React.FC<ProfileProps> = () => {
   useEffect(() => {
     Promise.all([
       fetchUsers().then(() => null),
-      fetchSlate({ week: seasonData?.ApiWeek, year: !usePostSeason ? seasonData?.Season.toString() : `${seasonData?.Season}POST` }).then(() => null)
+      fetchSlate({ week: seasonData?.ApiWeek, year: !usePostSeason ? seasonData?.Season?.toString() : `${seasonData?.Season}POST` }).then(() => null)
     ]).then(() => setStatus(LoadingState.IDLE));
   }, [fetchSlate, fetchUsers, setStatus, seasonData?.ApiWeek, seasonData?.Season, usePostSeason])
 
@@ -99,7 +99,7 @@ const Profile: React.FC<ProfileProps> = () => {
           >
             {
               user?.record.map((r, ind) => <>
-                <WinPercentage key={`r-${r.year}-${ind}`} wins={r.wins} losses={r.losses} label={r.year.toString()} />
+                <WinPercentage key={`r-${r.year}-${ind}`} wins={r.wins} losses={r.losses} label={r.year?.toString()} />
               </>)
             }
             {

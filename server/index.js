@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const path = require('path');
 var cfb = require('cfb.js');
 require('dotenv').config({ path: path.resolve('.env') });
+
+const port = process.env.PORT || 3001;
 var defaultClient = cfb.ApiClient.instance;
 
 var ApiKeyAuth = defaultClient.authentications['ApiKeyAuth'];
@@ -34,8 +36,16 @@ app.get('/api/rankings', (req, res) => {
       res.send(respn[0].polls.find((p) => p.poll === 'AP Top 25'));
     };
   });
-})
+});
 
-app.listen(3001, () => {
-  console.log('listening on port: ' + 3001);
-})
+// const root = path.join(__dirname, '../build');
+// app.use(express.static(root));
+// app.use(function(req, res, next) {
+//   if (req.method === 'GET' && req.accepts('html') && !req.is('json') && !req.path.includes('.')) {
+//     res.sendFile('index.html', { root })
+//   } else next()
+// }).use(cors());
+
+app.listen(port, () => {
+  console.log(`Listening on port: ${port}`);
+});
