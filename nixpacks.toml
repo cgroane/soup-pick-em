@@ -1,4 +1,0 @@
-[phases.install]
-cmds = ['npm install --ignore-engines']
-[phases.start]
-cmds = ['npm run serve']
