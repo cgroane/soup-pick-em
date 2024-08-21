@@ -85,13 +85,14 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     };
 
     try {
+      const toDate =  new Date(new Date(weekRange?.end?.startDate).setDate(new Date(weekRange?.end?.startDate).getDate() + 1)).toDateString();
       const spreadsOptions = process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
         ...options,
         date: buildDateFormat(weekRange?.start?.startDate)
       } : {
         ...options,
         commenceTimeFrom: buildDateFormat((weekRange.start?.startDate)),
-        commenceTimeTo: buildDateFormat((weekRange.end?.startDate)),
+        commenceTimeTo: buildDateFormat((toDate)),
         date: buildDateFormat(weekRange?.start?.startDate)
       }
       const compoundRequest = await Promise.all([
