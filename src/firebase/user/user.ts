@@ -14,11 +14,11 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
    * addDoc does not do anything other than add user to the db users collection
    * 
    */
-  registerWithEmailAndPassword = async (name: string, email: string, password: string, year?: number) => {
+  registerWithEmailAndPassword = async (name: string, fName:string, lName: string, email: string, password: string, year?: number) => {
     try {
       const res = await createUserWithEmailAndPassword(this.auth, email, password);
-      const user = this.transformUserData(res.user, year);
-      await this.addDocument(user, name);
+      const user = this.transformUserData(res.user, year, name, fName, lName);
+      await this.addDocument(user, user.uid);
       return await this.getDocumentInCollection(user.uid);
     } catch (err) {
       console.error(err);
@@ -53,14 +53,14 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
         console.error(err)
       }
     };
-    transformUserData = (user: User, year: number = new Date().getFullYear(), name?: string) => {
+    transformUserData = (user: User, year: number = new Date().getFullYear(), name?: string, fName?: string, lName?: string) => {
       return {
         uid: user.uid,
         name: name ? name : user.displayName,
         authProvider: "local",
         email: user.email,
-        fName: name ? name : user?.displayName?.split(' ')[0],
-        lName: name ? name : user.displayName?.split(' ')[user.displayName?.split(' ').length - 1],
+        fName: fName ? fName : name ? name : user?.displayName?.split(' ')[0],
+        lName: lName ? lName : name ? name : user.displayName?.split(' ')[user.displayName?.split(' ').length - 1],
         id: user.uid,
         roles: [UserRoles.BASIC],
         record: [

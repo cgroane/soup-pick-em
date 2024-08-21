@@ -38,6 +38,7 @@ export class FirebaseDB<T> {
   addDocument = async <V extends {}>(docData: V, docId?: string, segments?: string[]) => {
     try {
       const docPath = !segments?.length ? doc(this.db, this.collectionName, docId ?? '') : doc(this.db, this.collectionName, docId ?? '', ...segments as []);
+      console.log(docData)
       const docRef = await setDoc(docPath, docData)
       return docRef;
     } catch (error) {

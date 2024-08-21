@@ -29,9 +29,10 @@ export const useEmailAndPassword = () => {
   }, [setLoginInfo]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
+    console.log(loginInfo);
     e.preventDefault()
     if (newUser) {
-      FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.email, loginInfo.password, seasonData?.Season).then((res) => {
+      FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.fName, loginInfo.lName, loginInfo.email, loginInfo.password, seasonData?.Season).then((res) => {
         navigate('/profile')
         if(res) setUser(res as UserCollectionData);
       });
