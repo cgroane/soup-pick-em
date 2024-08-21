@@ -106,17 +106,24 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
 
       // bottle neck here with map containing an array.find -- REFACTOR
       const updated = resWithUpdatedPropertyNames.map((item) => {
+        // if (item.awayTeam === 'USC' || item.homeTeam === 'USC') {
+        //   console.log('item', item.awayTeam)
+        //   console.log('item', item.homeTeam)
+        // }
         const rankPropAccessor = rankings.poll === 'AP Top 25' ? 'apRank' : 'playoffRank';
         const finder = (team: Team | Rank, valueToSearch: string) => stripAndReplaceSpace(team.school) === stripAndReplaceSpace(valueToSearch);
         const away = {
           ...teamInfo.find((team) => finder(team, item.awayTeam)),
           [rankPropAccessor]: rankings.ranks.find((r) => finder(r, item.awayTeam))?.rank
-
         };
         const home = {
           ...teamInfo.find((team) => finder(team, item.homeTeam)),
           [rankPropAccessor]: rankings.ranks.find((team) => finder(team, item.homeTeam))?.rank
         };
+        // if (away.school === 'USC') {
+        //   console.log('away', away)
+        //   console.log('home', home)
+        // }
         return {
           ...item,
           awayTeamData: { ...away, },
@@ -130,11 +137,20 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         const gameSpread: TheOddsResult | undefined = spreads?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
+          if (spread.home_team === 'Kansas Jayhawks') {
+            console.log(spread)
+            console.log(strippedAway, strippedAwayTeam);
+            console.log(strippedHome, strippedHomeTeam);
+          }
           /**
            * find odds where hometeam 
            * */
-          return ((strippedHomeTeam === strippedHome) &&
-          (strippedAwayTeam === strippedAway))
+          if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedAwayTeam))) {
+            return ((strippedHomeTeam === strippedAway) && (strippedAwayTeam === strippedHome));
+          } else {
+            return ((strippedHomeTeam === strippedHome) &&
+            (strippedAwayTeam === strippedAway))
+          }
         });
         
       const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
@@ -151,6 +167,9 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
       const newUpdate = updated
       .filter((item) => item.outcomes.length)
       .map((item) => {
+        if (item.homeTeam === 'Northwestern' ) {
+          console.log('item', item);
+        }
         let newPointSpread: number = item.pointSpread;
         const remainder = item.pointSpread % .5;
         if (remainder) {

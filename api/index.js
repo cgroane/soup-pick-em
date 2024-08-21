@@ -38,13 +38,13 @@ app.get('/api/rankings', (req, res) => {
   });
 });
 
-const root = path.join(__dirname, '../build');
-app.use(express.static(root));
-app.use(function(req, res, next) {
-  if (req.method === 'GET' && req.accepts('html') && !req.is('json') && !req.path.includes('.')) {
-    res.sendFile('index.html', { root })
-  } else next()
-}).use(cors());
+// const root = path.join(__dirname, '../build');
+// app.use(express.static(root));
+// app.use(function(req, res, next) {
+//   if (req.method === 'GET' && req.accepts('html') && !req.is('json') && !req.path.includes('.')) {
+//     res.sendFile('index.html', { root })
+//   } else next()
+// }).use(cors());
 
 app.listen(port, () => {
   console.log(`Listening on port: ${port}`);
