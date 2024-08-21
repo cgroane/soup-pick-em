@@ -15,7 +15,7 @@ export const useGetTeamData = (game: Matchup) => {
       amPm: converted.getHours() > 12 ? 'P.M.' : 'A.M.',
       dayOfTheMonth: converted.getDate(),
       year: converted.getFullYear(),
-      month: months[converted.getMonth() - 1]
+      month: months[converted.getMonth()]
     }
   }, [game.startDate]);
 
