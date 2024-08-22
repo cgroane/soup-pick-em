@@ -11,7 +11,7 @@ export enum LoadingState {
 
 export enum SeasonTypes {
   POST = 'POST',
-  REGULAR = 'REGULAR',
+  REGULAR = 'REG',
   OFF = 'OFF',
   PRE = 'PRE'
 }
@@ -32,13 +32,13 @@ type ContextProp = {
 export const UiContext = React.createContext({} as UIValueProp); //create the context API
 
 //function body
-export default function Context({ children }: ContextProp) {
+export default function UIContextWrapper({ children }: ContextProp) {
 const [seasonData, setSeasonData] = useState<SeasonDetailsData | undefined>({} as SeasonDetailsData);
 const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
 const [modalOpen, setModalOpen] = useState(false);
 
 const usePostSeason = useMemo(() => {
-  return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
+  return !(seasonData?.ApiSeason?.includes(SeasonTypes.REGULAR));
 }, [seasonData?.ApiSeason]);
 
 /**
@@ -50,23 +50,17 @@ const getSeasonData = useCallback(async () => {
   /**
    * MOCK
    */
-  const usePost = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
-
-  if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
-    setSeasonData({
-      ...data,
+  setSeasonData((_) => ( process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
+    ...data,
       Season: data.Season - 1,
       EndYear: data.EndYear - 1,
       ApiWeek: 1,
       Description: (parseInt(data.Description) - 1).toString(),
-      seasonType: usePost ? 'postseason' : 'regular'
-    })
-  } else {
-    setSeasonData({
-      ...data,
       seasonType: usePostSeason ? 'postseason' : 'regular'
-    })
-  }
+  } : {
+    ...data,
+    seasonType: usePostSeason ? 'postseason' : 'regular'
+  }));
 }, [setSeasonData, usePostSeason]);
 
 useEffect(() => {

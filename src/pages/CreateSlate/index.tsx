@@ -14,7 +14,6 @@ import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
-import SelectWeek from '../../components/SelectWeek';
 import { StatusGood } from 'grommet-icons';
  
 
@@ -66,7 +65,7 @@ const CreateSlate: React.FC = () => {
     isSlatePicker
   } = useGlobalContext();
 
-  const { selectedWeek, setSelectedWeek } = useSelectedWeek({
+  const { selectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek,
     year: seasonData?.Season,
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
@@ -127,11 +126,6 @@ const CreateSlate: React.FC = () => {
         <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
-        <SelectWeek
-          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
-          heading={<></>}
-          onChange={setSelectedWeek}
-        />
         {
           status === LoadingState.LOADING ? (
             <Loading iterations={3} type='gameCard'/>

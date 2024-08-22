@@ -29,7 +29,6 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
    * 
    */
   const handlePostSeasonEdge = (val: { label: string; value: number }, propName: string) => {
-
     if (val.label === 'Post Season') {
       onChange((prev) => {
 
@@ -48,16 +47,24 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     }
   }
   const weeks = useMemo(() => {
-    const maxWeeks = vals.year < new Date().getFullYear() ? 14 : seasonData?.ApiWeek;
+    /**
+     * if selected year is less than current year, show all weeks + postseason option. 
+     * onchange needs to make request without asking for rankings
+     */
+    const maxWeeks = vals.year > new Date().getFullYear() ? 14 : seasonData?.ApiWeek as number;
     const weekArray = Array.from(Array(14).keys())
       .map((num) => ({label: `Week ${num + 1}`, value: num + 1 }))
       .filter((num) => num.value <= (maxWeeks as number));
-    weekArray[weekArray.length - 1] = { label: 'Post Season', value: 1 };
+      if (weekArray.find((w) => w.label === 'Post Season')) {
+        weekArray[weekArray.length - 1] = { label: 'Post Season', value: 1 };
+      }
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
 
-  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek), [usePostSeason, seasonData?.ApiWeek, weeks]);
-  
+  const defaultWeek = useMemo(() => {
+    return weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek)
+  }, [usePostSeason, seasonData?.ApiWeek, weeks]);
+   
   return (
     <>
       <Box pad={'2rem 1rem'} flex direction='row' margin={'0 auto'} justify='between' content='center' wrap >
@@ -67,19 +74,21 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           style={{ flexGrow: 1 }}
           onChange={({ option }) => handlePostSeasonEdge(option, 'week')}
           placeholder='Select Week'
-          defaultValue={defaultWeek}
+          defaultValue={defaultWeek?.value}
           options={weeks}
+          value={{label: `Week ${vals.week}`, value: vals.week}}
           />
         <Select
           onChange={({ option }) => onChange((prev) => ({ ...prev, year: option.value }))}
           style={{ flexGrow: 1 }}
           margin={'1rem auto'}
           placeholder='Select Season'
-          defaultValue={{ label: '2023', value: 2023 }}
-          options={[2023].map(() => ({
-            label: `${seasonData?.Season}`,
-            value: seasonData?.Season
+          defaultValue={{ label: seasonData?.Season, value: seasonData?.Season }}
+          options={[2023, 2024].map((y) => ({
+            label: `${y}`,
+            value: y
           }))}
+          value={{ label: `${vals.year}`, value: vals.year }}
         />
       </Box>
     </>
