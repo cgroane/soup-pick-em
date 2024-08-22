@@ -137,22 +137,18 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         const gameSpread: TheOddsResult | undefined = spreads?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
-          if (spread.home_team === 'Kansas Jayhawks') {
-            console.log(spread)
-            console.log(strippedAway, strippedAwayTeam);
-            console.log(strippedHome, strippedHomeTeam);
-          }
+ 
           /**
            * find odds where hometeam 
            * */
-          if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedAwayTeam))) {
+          if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedHomeTeam))) {
+            console.log('inverted', strippedHome, strippedAwayTeam);
             return ((strippedHomeTeam === strippedAway) && (strippedAwayTeam === strippedHome));
           } else {
             return ((strippedHomeTeam === strippedHome) &&
             (strippedAwayTeam === strippedAway))
           }
         });
-        
       const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
         const stripped = stripAndReplaceSpace(a.name);
         return !!strippedHomeTeam.includes(stripped) ? -1 : 1
