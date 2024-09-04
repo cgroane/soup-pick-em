@@ -9,6 +9,7 @@ import { getGames } from "../../api/getGames";
 
 export class FirebaseSlatesClass extends FirebaseDB<Slate> {
   constructor(collectionName: string = 'slates') { super(collectionName) }
+
   addSlate = async (data: Slate, users: UserCollectionData[], deletions?: number[]) => {
     try {
       const existingSlate = await this.getDocumentInCollection(data.uniqueWeek);

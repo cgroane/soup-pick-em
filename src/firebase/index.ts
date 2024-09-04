@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where } from "firebase/firestore";
-import { GoogleAuthProvider, getAuth } from "firebase/auth";
+import { CollectionReference, DocumentData, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, getFirestore, query, setDoc, updateDoc, where, connectFirestoreEmulator } from "firebase/firestore";
+import { GoogleAuthProvider, getAuth, connectAuthEmulator } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -19,6 +19,8 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
+connectFirestoreEmulator(db, "127.0.0.1", 8080);
+connectAuthEmulator(auth, "http://127.0.0.1:9099");
 /**
  * parent class for firebase basic functions for each collection
  * each data type (user, slate, pick) should have CRUD ops.
