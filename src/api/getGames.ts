@@ -106,10 +106,6 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
 
       // bottle neck here with map containing an array.find -- REFACTOR
       const updated = resWithUpdatedPropertyNames.map((item) => {
-        // if (item.awayTeam === 'USC' || item.homeTeam === 'USC') {
-        //   console.log('item', item.awayTeam)
-        //   console.log('item', item.homeTeam)
-        // }
         const rankPropAccessor = rankings.poll === 'AP Top 25' ? 'apRank' : 'playoffRank';
         const finder = (team: Team | Rank, valueToSearch: string) => stripAndReplaceSpace(team.school) === stripAndReplaceSpace(valueToSearch);
         const away = {
@@ -120,10 +116,6 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           ...teamInfo.find((team) => finder(team, item.homeTeam)),
           [rankPropAccessor]: rankings.ranks.find((team) => finder(team, item.homeTeam))?.rank
         };
-        // if (away.school === 'USC') {
-        //   console.log('away', away)
-        //   console.log('home', home)
-        // }
         return {
           ...item,
           awayTeamData: { ...away, },
@@ -142,7 +134,6 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
            * find odds where hometeam 
            * */
           if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedHomeTeam))) {
-            console.log('inverted', strippedHome, strippedAwayTeam);
             return ((strippedHomeTeam === strippedAway) && (strippedAwayTeam === strippedHome));
           } else {
             return ((strippedHomeTeam === strippedHome) &&
