@@ -129,15 +129,14 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
         const gameSpread: TheOddsResult | undefined = spreads?.find((spread: TheOddsResult) => {
           const strippedAway = stripAndReplaceSpace(spread.away_team);
           const strippedHome = stripAndReplaceSpace(spread.home_team);
- 
           /**
            * find odds where hometeam 
            * */
           if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedHomeTeam))) {
             return ((strippedHomeTeam === strippedAway) && (strippedAwayTeam === strippedHome));
           } else {
-            return ((strippedHomeTeam === strippedHome) &&
-            (strippedAwayTeam === strippedAway))
+            return (((strippedHomeTeam === strippedHome) || (strippedHome.includes(stripAndReplaceSpace(item.homeTeamData.school as string)))) &&
+            ((strippedAwayTeam === strippedAway) || (strippedAway.includes(stripAndReplaceSpace(item.awayTeamData.school as string)))));
           }
         });
       const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
