@@ -94,14 +94,14 @@ const Picks: React.FC = () => {
       return {
         user: { name: userPicks?.name, id: userPicks?.userId },
         ...userPicks?.picks.reduce((acc, pick) => {
-          const game = slate?.games.find((g) => g.gameID === pick.matchup);
-          const fav = game?.outcomes.find((o) => o.point < 0);
+          const game = slate?.games?.find((g) => g.gameID === pick.matchup);
+          const fav = game?.outcomes?.find((o) => o.point < 0);
           let isCorrect = !!pick.isCorrect;
           if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
             isCorrect = false;
           } else if (game) {
             const teams = [stripAndReplaceSpace(`${game?.awayTeamData.school} ${game?.awayTeamData.name}`), stripAndReplaceSpace(`${game?.homeTeamData.school} ${game?.homeTeamData.name}`)];
-            const favPoints = teams.findIndex((t) => t === fav?.name);
+            const favPoints = teams?.findIndex((t) => t === fav?.name);
             const favScore = game[favPoints === 0 ? 'awayPoints' : 'homePoints'];
             const underDogScore = game[favPoints === 0 ? 'homePoints' : 'awayPoints'];
             
@@ -112,7 +112,7 @@ const Picks: React.FC = () => {
               }
             } else {
               const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g , '').includes(game?.homeTeam.toLowerCase().replace(/ /g , ''))) ? 'home' : 'away';
-              const newScore = game[`${homePick}Points`] + pick.selection?.point; 
+              const newScore = game[`${homePick}Points`] + pick.selection?.point;
               if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
                 sumCorrect++; 
                 isCorrect = true
@@ -163,7 +163,7 @@ const Picks: React.FC = () => {
                   <p>{game?.awayTeam}</p>
                   <p><span style={{ fontWeight: 600 }} >at</span></p>
                   <p>{game?.homeTeam}</p>
-                  <p>{game?.homeTeamData.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
+                  <p>{game?.homeTeamData?.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
                 </HeaderCell>,
               minSize: undefined,
               maxSize: undefined,
