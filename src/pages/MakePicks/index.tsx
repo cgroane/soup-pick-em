@@ -97,11 +97,11 @@ const MakePicks: React.FC = () => {
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
       setStatus(LoadingState.IDLE);
     })
-  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
+  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week, ifMissingGames]);
   
   const disableSelection = useMemo(() => {
     return user?.roles?.includes(UserRoles.GOOD_SOUP);
-  }, [user?.roles, picks?.picks])
+  }, [user?.roles])
 
   return (
     <>
