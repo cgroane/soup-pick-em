@@ -4,7 +4,7 @@ import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Toolbar } from 'grommet';
 import styled from 'styled-components';
 import { theme } from '../../theme';
-import { UserCollectionData } from '../../model';
+import { Picks, UserCollectionData } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
@@ -63,6 +63,25 @@ const MakePicks: React.FC = () => {
     getDataForPage();
   }, [getDataForPage]);
 
+  const ifMissingGames = (picksToCheck: Picks[]) => {
+    if (picks?.picks.length < 10) {
+      const missingGames = slate?.games?.filter((game) => !picksToCheck.find((pick) => pick.matchup === game.gameID));
+      return Array.from([...picksToCheck, ...missingGames?.map((game) => ({
+          matchup: game.gameID,
+          isCorrect: false,
+          userId: user?.uid,
+          selection: {
+            name: null,
+            point: null,
+            price: null,
+          },
+          week: seasonData?.ApiWeek
+        }))
+      ])
+    }
+    else return picksToCheck;
+  }
+
   const submitPicks = useCallback( async () => {
     if (!user) navigate('/');
     setStatus(LoadingState.LOADING)
@@ -72,7 +91,7 @@ const MakePicks: React.FC = () => {
       slateId: picks?.slateId,
       week: slate?.week,
       year: seasonData?.Season,
-      picks: picks?.picks,
+      picks: ifMissingGames(picks?.picks),
       userId: user?.uid
     }, user?.uid, ['picks', picks.slateId]).then(() => {
       FirebaseUsersClassInstance.getDocumentInCollection(user?.uid as string).then((resp) => setUser(resp as UserCollectionData))
