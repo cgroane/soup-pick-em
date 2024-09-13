@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Toolbar } from 'grommet';
@@ -11,6 +11,7 @@ import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { StatusGood } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
+import { UserRoles } from '../../utils/constants';
 
 /**
  * TODO
@@ -79,6 +80,9 @@ const MakePicks: React.FC = () => {
     })
   }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week]);
   
+  const disableSelection = useMemo(() => {
+    return user?.roles?.includes(UserRoles.GOOD_SOUP);
+  }, [user?.roles, picks?.picks])
 
   return (
     <>
@@ -98,7 +102,7 @@ const MakePicks: React.FC = () => {
         >
           <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
-            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
+            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={disableSelection} />
           </Box>
         </BottomToolbar>
       {modalOpen && (
