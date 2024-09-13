@@ -63,8 +63,8 @@ const MakePicks: React.FC = () => {
     getDataForPage();
   }, [getDataForPage]);
 
-  const ifMissingGames = (picksToCheck: Picks[]) => {
-    if (picks?.picks.length < 10) {
+  const ifMissingGames = useCallback((picksToCheck: Picks[]) => {
+    if (picksToCheck.length < 10) {
       const missingGames = slate?.games?.filter((game) => !picksToCheck.find((pick) => pick.matchup === game.gameID));
       return Array.from([...picksToCheck, ...missingGames?.map((game) => ({
           matchup: game.gameID,
@@ -80,7 +80,7 @@ const MakePicks: React.FC = () => {
       ])
     }
     else return picksToCheck;
-  }
+  }, [slate?.games, seasonData?.ApiWeek, user?.uid]);
 
   const submitPicks = useCallback( async () => {
     if (!user) navigate('/');
