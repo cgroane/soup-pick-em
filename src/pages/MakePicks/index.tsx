@@ -71,9 +71,9 @@ const MakePicks: React.FC = () => {
           isCorrect: false,
           userId: user?.uid,
           selection: {
-            name: null,
-            point: null,
-            price: null,
+            name: 'PUSH',
+            point: 0,
+            price: 0,
           },
           week: seasonData?.ApiWeek
         }))
