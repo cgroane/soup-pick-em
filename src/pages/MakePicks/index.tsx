@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Box, Button, Paragraph, Spinner, Toolbar } from 'grommet';
