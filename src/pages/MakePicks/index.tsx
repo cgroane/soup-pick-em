@@ -11,7 +11,6 @@ import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { StatusGood } from 'grommet-icons';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
-import { UserRoles } from '../../utils/constants';
 
 /**
  * TODO
@@ -98,10 +97,6 @@ const MakePicks: React.FC = () => {
       setStatus(LoadingState.IDLE);
     })
   }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week, ifMissingGames]);
-  
-  const disableSelection = useMemo(() => {
-    return user?.roles?.includes(UserRoles.GOOD_SOUP);
-  }, [user?.roles])
 
   return (
     <>
@@ -121,7 +116,7 @@ const MakePicks: React.FC = () => {
         >
           <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
           <Box width={'100%'} flex direction='row' justify='center' align='center'>
-            <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={disableSelection} />
+          <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
           </Box>
         </BottomToolbar>
       {modalOpen && (
