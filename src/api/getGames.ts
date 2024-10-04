@@ -4,6 +4,7 @@ import { convertKeyNames } from "../utils/convertKeyNames";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
 import { getRankings, getTeams } from "./getTeams";
 import { SeasonDetails } from "./schema/sportsDataIO";
+import { add } from 'date-fns';
 export interface SpreadsAPIRequest {
   weekNumber?: string;
   season?: string;
@@ -85,14 +86,15 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     };
 
     try {
-      const toDate =  new Date(new Date(weekRange?.end?.startDate).setDate(new Date(weekRange?.end?.startDate).getDate() + 1)).toDateString();
+      const endDate = add(new Date(new Date(weekRange?.end?.startDate)), { days: 1 });
+      // const toDate =  new Date(new Date(weekRange?.end?.startDate).setDate(new Date(weekRange?.end?.startDate).getDate() + 1)).toDateString();
       const spreadsOptions = process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
         ...options,
         date: buildDateFormat(weekRange?.start?.startDate)
       } : {
         ...options,
         commenceTimeFrom: buildDateFormat((weekRange.start?.startDate)),
-        commenceTimeTo: buildDateFormat((toDate)),
+        commenceTimeTo: buildDateFormat((endDate).toISOString()),
         date: buildDateFormat(weekRange?.start?.startDate)
       }
       const compoundRequest = await Promise.all([
