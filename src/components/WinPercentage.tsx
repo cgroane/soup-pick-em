@@ -28,13 +28,13 @@ const WinPercentage = ({
                         values={[
                             {
                                 value: val,
-                                label: (val*100).toString() + '%'
+                                label: (val*100) + '%'
                             }
                         ]}
                     />
                     <Box direction="row" align="center" pad={{ bottom: 'xsmall' }} >
                         <Text size="xlarge" weight={'bold'} >
-                            {val*100}%
+                            {(val*100).toFixed(2)}%
                         </Text>
                     </Box>
                     <Box height={'auto'} margin={{ top: '2.5rem' }} direction="column" justify="center" flex="grow"> 
