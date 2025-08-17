@@ -17,8 +17,7 @@ interface CFBDRequestQuery {
 
 dotenv.config({ path: path.resolve('.env') });
 
-const port = 3001;
-// const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3001;
 
 cfbd.client.setConfig({
   headers: {
