@@ -5,38 +5,41 @@
   "proxy": "http://localhost:3001",
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.7",
-    "@tanstack/react-table": "^8.10.7",
+    "@tanstack/react-table": "^8.21.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/express": "^4.17.23",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.57",
+    "@types/node": "^16.18.126",
     "@types/react": "^18.2.25",
     "@types/react-dom": "^18.2.10",
     "@types/react-redux": "^7.1.27",
-    "@types/react-table": "^7.7.17",
     "@types/styled-components": "^5.1.28",
     "axios": "^1.5.1",
     "body-parser": "^1.20.2",
     "cfb.js": "^4.3.2",
+    "cfbd": "^5.9.4",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.3.1",
-    "express": "^4.19.2",
+    "eslint": "^8.57.1",
+    "express": "^5.1.0",
     "firebase": "^10.5.0",
     "grommet": "^2.33.2",
     "grommet-icons": "^4.11.0",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
-    "nodemon": "^3.1.4",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.1.3",
     "react-router-dom": "^6.16.0",
     "react-scripts": "5.0.1",
-    "react-table": "^7.8.0",
     "sort-by": "^1.2.0",
     "styled-components": "^5.3.11",
+    "ts-node": "^10.9.2",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -45,7 +48,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "serve": "nodemon api/index.js"
+    "serve": "nodemon --exec ts-node api/index.ts"
   },
   "eslintConfig": {
     "extends": [
@@ -67,6 +70,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/cors": "^2.8.19",
     "@types/react-router-dom": "^5.3.3"
   }
 }

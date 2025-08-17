@@ -1,3 +1,4 @@
+import React from "react";
 import {  Route, Routes } from "react-router-dom"
 import Profile from "./pages/Profile";
 import Picks from "./pages/Picks";import Login from "./pages/Login";

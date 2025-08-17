@@ -45,6 +45,7 @@ export const getCurrentWeek = async () => {
     return response.data
   } catch (err) {
     console.error(err)
+    return err;
   }
 }
 
@@ -83,7 +84,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     const weekRange = {
       start: resWithUpdatedPropertyNames[0],
       end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1],
-    };
+    }
 
     try {
       const endDate = add(new Date(new Date(weekRange?.end?.startDate)), { days: 1 });
@@ -142,7 +143,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
             (strippedAwayTeam === strippedAway))
           }
         });
-      const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, b) => {
+      const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, _) => {
         const stripped = stripAndReplaceSpace(a.name);
         return !!strippedHomeTeam.includes(stripped) ? -1 : 1
       })
@@ -174,8 +175,11 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
 
     } catch (err) {
       console.error(err);
+      return;
     }
     
   })
-  .catch((err) => err);
+  .catch((err) => {
+    console.error(err)
+    return err});
 };

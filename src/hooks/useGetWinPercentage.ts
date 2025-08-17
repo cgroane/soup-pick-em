@@ -5,5 +5,6 @@ export const useGetWinPercentage = (user: UserCollectionData) => {
     
     const winPercentage = useMemo(() => {
 
-    }, [])
+    }, []);
+    return {user, winPercentage};
 }

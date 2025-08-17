@@ -31,7 +31,7 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
       await this.addDocument(data, data?.uniqueWeek);
       const batch = writeBatch(this.db);
       
-      users.forEach((userData, _, array) => {
+      users.forEach((userData) => {
           /**
           * find pick history that needs to be updated using slateid 
           * keep old picks that weren't deleted
@@ -94,6 +94,7 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
       return slate;
     } catch (err) {
       console.error(err);
+      return;
     }
   }
 }

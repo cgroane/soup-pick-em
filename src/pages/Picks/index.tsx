@@ -3,7 +3,7 @@ import { Box, Heading } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable, { StyledCell } from './PicksTable';
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper, ColumnDef } from "@tanstack/react-table";
 import { Matchup, Outcome } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
@@ -176,6 +176,7 @@ const Picks: React.FC = () => {
                   { selection?.selection?.name }
                 </GameCell>
                 }
+                return;
               }
             }),
           })

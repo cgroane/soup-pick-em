@@ -58,7 +58,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async ({ weekNumber, year, seasonType }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
+  const fetchMatchups = useCallback(async ({ weekNumber, seasonType }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
     setStatus(LoadingState.LOADING);
     const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = (await getGames({

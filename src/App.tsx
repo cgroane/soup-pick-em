@@ -5,6 +5,7 @@ import store from './store';
 import Navigation from './components/Navigation';
 import { Page } from 'grommet';
 import styled from 'styled-components';
+import React from "react";
 
 const PageWrapper = styled(Page)`
   /* position: relative;

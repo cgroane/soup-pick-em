@@ -14,14 +14,15 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
    * addDoc does not do anything other than add user to the db users collection
    * 
    */
-  registerWithEmailAndPassword = async (name: string, fName:string, lName: string, email: string, password: string, year?: number) => {
+  registerWithEmailAndPassword = async (name: string, fName:string, lName: string, email: string, password: string) => {
     try {
       const res = await createUserWithEmailAndPassword(this.auth, email, password);
-      const user = this.transformUserData(res.user, year, name, fName, lName);
+      const user = this.transformUserData(res.user, name, fName, lName);
       await this.addDocument(user, user.uid);
       return await this.getDocumentInCollection(user.uid);
     } catch (err) {
       console.error(err);
+      return;
     }
   };
   logInWithEmailAndPassword = async (email: string, password: string) => {
@@ -31,6 +32,7 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
       return await this.getDocumentInCollection(user.uid);
     } catch (err) {
       console.error(err);
+      return;
     }
   };
   logout = async () => {
@@ -38,12 +40,13 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
       signOut(auth).then(() => this.auth.updateCurrentUser(null))
     } catch (err) {
       console.error(err)
+      return;
     }
   }
-  loginWithGoogle = async (year?: number) => {
+  loginWithGoogle = async () => {
       try {
         const res = await signInWithPopup(this.auth, this.googleProvider);
-        const user = this.transformUserData(res.user, year);
+        const user = this.transformUserData(res.user);
         const userRef = await this.getDocumentInCollection(user.uid);
         if (!!userRef) {
           return userRef;
@@ -53,7 +56,7 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
         console.error(err)
       }
     };
-    transformUserData = (user: User, year: number = new Date().getFullYear(), name?: string, fName?: string, lName?: string) => {
+    transformUserData = (user: User, name?: string, fName?: string, lName?: string) => {
       return {
         uid: user.uid,
         name: name ? name : user.displayName,

@@ -77,6 +77,7 @@ export class FirebaseDB<T> {
       return results;
     } catch (error) {
       console.error(error);
+      return;
     }
   }
   getDocumentInCollection = async (docId: string) => {
@@ -86,6 +87,7 @@ export class FirebaseDB<T> {
       return docData;
     } catch (err) {
       console.error(err);
+      return;
     }
   }
   getSubCollection = async <V extends{}>(subColName: string) => {
@@ -106,7 +108,7 @@ export class FirebaseDB<T> {
       const q = query(subCollectionRef, where("year", "==", year), where("week", "==", week));
       return q;
     } catch (error) {
-      
+      return error;
     }
   }
   /** update */
@@ -121,6 +123,7 @@ export class FirebaseDB<T> {
       return updatedDoc;
     } catch (error) {
       console.error(error);
+      return;
     }
   }
   /** delete */

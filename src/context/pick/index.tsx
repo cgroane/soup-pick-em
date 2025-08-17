@@ -4,6 +4,7 @@ import { useGlobalContext } from "../user";
 import FBSlateClassInstance from "../../firebase/slate/slate";
 import { LoadingState, useUIContext } from "../ui";
 import { PickHistory } from "../../pages/Picks/PicksTable";
+import React from "react";
 
 /**
  * TODO
