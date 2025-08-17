@@ -48,7 +48,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "serve": "nodemon --exec ts-node api/index.ts"
+    "serve": "ts-node api/index.ts"
   },
   "eslintConfig": {
     "extends": [
