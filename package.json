@@ -19,7 +19,7 @@
     "axios": "^1.5.1",
     "body-parser": "^1.20.2",
     "cfb.js": "^4.3.2",
-    "cfbd": "^5.9.4",
+    "cfbd": "^5.9.5",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "dotenv": "^16.3.1",
@@ -48,8 +48,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "serve": "ts-node api/index.ts",
-    "serve:prod": "node dist/server/index.js"
+    "serve": "tsx api/index.ts"
   },
   "eslintConfig": {
     "extends": [
@@ -72,7 +71,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/cors": "^2.8.19",
-    "@types/react-router-dom": "^5.3.3"
-  },
-  "type": "module"
+    "@types/react-router-dom": "^5.3.3",
+    "tsx": "^4.20.4"
+  }
 }

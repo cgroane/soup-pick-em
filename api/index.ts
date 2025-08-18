@@ -3,7 +3,7 @@ import express  from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
-import cfbd from 'cfbd';
+import { client, SeasonType, getGames, getRankings } from 'cfbd';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,14 +12,14 @@ const __dirname = dirname(__filename);
 interface CFBDRequestQuery {
   year: string;
   week: string;
-  seasonType: cfbd.SeasonType;
+  seasonType: SeasonType;
 }
 
 dotenv.config({ path: path.resolve('.env') });
 
 const port = process.env.PORT || 3001;
 
-cfbd.client.setConfig({
+client.setConfig({
   headers: {
     "Authorization": `Bearer ${process.env.REACT_APP_CFBD_API_KEY}`
   }
@@ -36,7 +36,7 @@ app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuer
       'week': parseInt(req.query.week),
       'seasonType': req.query.seasonType
     }
-    const games = await cfbd.getGames({
+    const games = await getGames({
       query: {
         year: parseInt(req.query.year),
         ...opts
@@ -55,7 +55,7 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
       'week': parseInt(req.query.week),
       'seasonType': req.query.seasonType
     };
-    const rankings = await cfbd.getRankings({
+    const rankings = await getRankings({
       query: {
         year: parseInt(req.query.year),
         ...opts
