@@ -67,8 +67,8 @@ const CreateSlate: React.FC = () => {
   } = useGlobalContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
-    week: seasonData?.ApiWeek,
-    year: seasonData?.Season,
+    week: seasonData?.ApiWeek.toString(),
+    year: seasonData?.Season.toString(),
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
   });
   /** hooks */
@@ -82,12 +82,12 @@ const CreateSlate: React.FC = () => {
   useEffect(() => {
     Promise.all([
       fetchSlate({
-        week: selectedWeek?.week,
-        year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
+        week: parseInt(selectedWeek?.week as string),
+        year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year + 'POST' : selectedWeek?.year
       }).then((result) => result),
       fetchMatchups({ 
-        weekNumber: selectedWeek?.week,
-        year: selectedWeek?.year,
+        weekNumber: selectedWeek.seasonType === "postseason" ? 1 : parseInt(selectedWeek?.week as string),
+        year: parseInt(selectedWeek?.year as string),
         seasonType: selectedWeek?.seasonType
        })
     ]).then(() => setStatus(LoadingState.IDLE));
@@ -112,7 +112,7 @@ const CreateSlate: React.FC = () => {
     setModalOpen(true);
     const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''}`
     await FBSlateClassInstance.addSlate({ 
-      week: selectedWeek?.week as number,
+      week: parseInt(selectedWeek?.week as string),
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
       games: selectedGames,
@@ -128,7 +128,7 @@ const CreateSlate: React.FC = () => {
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
         <SelectWeek
-          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
+          vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<></>}
           onChange={setSelectedWeek}
         />

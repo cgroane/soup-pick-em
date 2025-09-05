@@ -1,10 +1,10 @@
 import { Box, Select } from 'grommet'
-import React, { Dispatch, SetStateAction, useMemo } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react'
 import { useUIContext } from '../context/ui';
  
 interface SelectWeekProps {
-  onChange: Dispatch<SetStateAction<{ week?: number; year?: number; seasonType: 'regular' | 'postseason' }>>;
-  vals: { week: number; year: number }
+  onChange: Dispatch<SetStateAction<{ week?: string; year?: string; seasonType: 'regular' | 'postseason' }>>;
+  vals: { week: string; year: string }
   heading: React.ReactNode;
 }
 const SelectWeek: React.FC<SelectWeekProps> = ({
@@ -29,7 +29,6 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
    * 
    */
   const handlePostSeasonEdge = (val: { label: string; value: number }, propName: string) => {
-
     if (val.label === 'Post Season') {
       onChange((prev) => {
 
@@ -48,15 +47,41 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     }
   }
   const weeks = useMemo(() => {
-    const maxWeeks = vals.year < new Date().getFullYear() ? 14 : seasonData?.ApiWeek;
+    const maxWeeks = parseInt(vals.year) < new Date().getFullYear() ? 14 : seasonData?.ApiWeek;
     const weekArray = Array.from(Array(14).keys())
-      .map((num) => ({label: `Week ${num + 1}`, value: num + 1 }))
-      .filter((num) => num.value <= (maxWeeks as number));
-    weekArray[weekArray.length - 1] = { label: 'Post Season', value: 1 };
+      .map((num) => ({label: `Week ${num + 1}`, value: (num + 1).toString() }))
+      .filter((num) => parseInt(num.value) <= (maxWeeks as number));
+    weekArray.push({ label: 'Post Season', value: 'postseason-1' });
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
 
-  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek), [usePostSeason, seasonData?.ApiWeek, weeks]);
+  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek.toString()), [usePostSeason, seasonData?.ApiWeek, weeks]);
+  const defaultYear = useMemo(() => ({
+    label: seasonData?.Season.toString(),
+    value: seasonData?.Season
+  }), [seasonData?.Season]);
+
+  /**
+   * when i change a year, should reset the week
+   */
+
+  useEffect(() => {
+    if (parseInt(vals.week) > weeks.length) {
+      onChange((prev) => ({ ...prev, week: weeks[weeks.length - 2].value }))
+    }
+  }, [weeks, onChange, vals?.week]);
+
+  const toDate = useMemo(() => {
+    const now = new Date();
+    const year = seasonData?.Season || now.getFullYear();
+    
+    let yearsOptions = [];
+    for (let initYear = 2024; initYear <= year; initYear++) {
+      yearsOptions.push({ label: initYear.toString(), value: initYear.toString() })
+    };
+    return yearsOptions;
+  }, [seasonData?.Season]);
+
   
   return (
     <>
@@ -68,6 +93,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           onChange={({ option }) => handlePostSeasonEdge(option, 'week')}
           placeholder='Select Week'
           defaultValue={defaultWeek}
+          value={weeks.find((w) => vals.week === w.value)}
           options={weeks}
           />
         <Select
@@ -75,11 +101,9 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           style={{ flexGrow: 1 }}
           margin={'1rem auto'}
           placeholder='Select Season'
-          defaultValue={{ label: '2023', value: 2023 }}
-          options={[2023].map(() => ({
-            label: `${seasonData?.Season}`,
-            value: seasonData?.Season
-          }))}
+          defaultValue={defaultYear}
+          value={toDate.find((y) => y.value === vals.year)}
+          options={toDate}
         />
       </Box>
     </>

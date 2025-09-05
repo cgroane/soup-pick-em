@@ -54,8 +54,8 @@ const Picks: React.FC = () => {
   } = useUIContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
-    week: seasonData?.ApiWeek,
-    year: seasonData?.Season,
+    week: seasonData?.ApiWeek.toString(),
+    year: seasonData?.Season.toString(),
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
   });
 
@@ -71,8 +71,8 @@ const Picks: React.FC = () => {
   useEffect(() => {
     fetchUsers();
     fetchSlate({
-      week: selectedWeek.week,
-      year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year?.toString() + 'POST' : selectedWeek?.year?.toString()
+      week: parseInt(selectedWeek?.seasonType === "postseason" ? '1' : selectedWeek.week as string),
+      year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year + 'POST' : selectedWeek?.year
     });
   }, [fetchUsers, fetchSlate, selectedWeek]);
 
@@ -207,7 +207,7 @@ const Picks: React.FC = () => {
       <Box>
         {thisWeeksPickHistory && <PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
         <SelectWeek
-          vals={{ week: selectedWeek.week as number, year: selectedWeek.year as number }}
+          vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<Heading style={{ width: '100%' }} >
           View Results from:
         </Heading>}

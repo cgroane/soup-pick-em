@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const useSelectedWeek = (initalVals: { week?: number; year?: number; seasonType: 'regular' | 'postseason' }) => {
+export const useSelectedWeek = (initalVals: { week?: string; year?: string; seasonType: 'regular' | 'postseason' }) => {
     const [selectedWeek, setSelectedWeek] = useState({
         ...initalVals
     });
