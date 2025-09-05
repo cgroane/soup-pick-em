@@ -12,7 +12,7 @@ export const cfbdApi = axios.create({
 });
 
 export const theOddsInstance = axios.create({
-  baseURL: `https://api.the-odds-api.com/v4${process.env.REACT_APP_SEASON_KEY === 'offseason' ? `/historical` : ''}/sports/`,
+  baseURL: `https://api.the-odds-api.com/v4/`,
   params: {
     apiKey: process.env.REACT_APP_THE_ODDS_API_KEY
   }

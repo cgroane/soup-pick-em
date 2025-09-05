@@ -45,7 +45,7 @@ app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuer
     res.send(games.data);
     return;
   } catch (err) {
-    res.send(err)
+    res.send(err).status(500)
   }
 });
 
@@ -61,15 +61,15 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
         ...opts
       }
     });
-  
-    if (rankings?.data?.[0].polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
+    if (rankings?.data?.[0]?.polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
         res.send(rankings?.data?.[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
       } else {
-        res.send(rankings?.data?.[0].polls.find((p) => p.poll === 'AP Top 25'));
+        res.send(rankings?.data?.[0]?.polls.find((p) => p.poll === 'AP Top 25'));
       };
       return;
   } catch (err) {
     console.error(err)
+    res.send(err).status(500)
   }
 });
 

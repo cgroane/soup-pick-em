@@ -58,13 +58,14 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async ({ weekNumber, seasonType }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
+  const fetchMatchups = useCallback(async ({ weekNumber, seasonType, year }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
     setStatus(LoadingState.LOADING);
     const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = (await getGames({
       weekNumber: week,
-      season: seasonData?.Season.toString(),
-      seasonType
+      season: year?.toString(),
+      seasonType,
+      historical: !!((year as number) < (seasonData?.Season as number)) || !!((parseInt(week) as number) < (seasonData?.ApiWeek as number)) || false
     }))?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
     setGames(results);
     setFilteredGames(results);

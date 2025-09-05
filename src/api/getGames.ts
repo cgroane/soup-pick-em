@@ -15,6 +15,7 @@ export interface SpreadsAPIRequest {
   event?: string;
   date?: string;
   seasonType?: string;
+  historical?: boolean;
 }
 const buildDateFormat = (date: string) => {
   const convertedToDate = new Date(date);
@@ -28,14 +29,14 @@ const buildDateFormat = (date: string) => {
 }
 
 export const getSpreads = async (options: SpreadsAPIRequest) => {
-  return theOddsInstance.get(`americanfootball_ncaaf/odds`, {
+  return theOddsInstance.get(`${options.historical || process.env.REACT_APP_SEASON_KEY === "offseason" ? 'historical/' : ''}sports/americanfootball_ncaaf/odds`, {
     params: {
       ...options,
       regions: 'us',
       markets: options.markets ?? 'spreads',
     }
   }).then((response) => {
-    return response.data
+    return options?.historical ? response.data.data : response.data
   }).catch((err) => console.error(err));
 }
 
@@ -80,7 +81,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
       }
     })
     .then(async (res) => {
-    const resWithUpdatedPropertyNames = convertKeyNames(res.data).sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
+    const resWithUpdatedPropertyNames = convertKeyNames(res.data)?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
     const weekRange = {
       start: resWithUpdatedPropertyNames[0],
       end: resWithUpdatedPropertyNames[resWithUpdatedPropertyNames.length - 1],
@@ -143,7 +144,7 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
             (strippedAwayTeam === strippedAway))
           }
         });
-      const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes.sort((a, _) => {
+      const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes?.sort((a, _) => {
         const stripped = stripAndReplaceSpace(a.name);
         return !!strippedHomeTeam.includes(stripped) ? -1 : 1
       })
@@ -154,8 +155,10 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           outcomes: orderedOutcomes ?? [],
         }
       });
-      const newUpdate = updated
-      .filter((item) => item.outcomes.length)
+      let newUpdate = updated
+      .filter((item) => item.outcomes.length);
+      if (options?.season)
+      newUpdate = newUpdate
       .map((item) => {
         if (item.homeTeam === 'Northwestern' ) {
           console.log('item', item);
