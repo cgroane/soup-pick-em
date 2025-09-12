@@ -5,9 +5,11 @@ import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
 import { client, SeasonType, getGames, getRankings } from 'cfbd';
 import { fileURLToPath } from 'url';
+import { theOddsInstance } from '@/api';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 
 interface CFBDRequestQuery {
   year: string;
@@ -72,6 +74,32 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
     res.send(err).status(500)
   }
 });
+
+app.get(`/api/odds`, async (req: express.Request<{}, {}, {
+    weekNumber?: string;
+    season?: string;
+    bookmakers?: string;
+    markets?: string;
+    commenceTimeFrom?: string
+    commenceTimeTo?: string;
+    event?: string;
+    date?: string;
+    seasonType?: string;
+    historical?: string;
+  }>, res: express.Response) => {
+  try {
+    const odds = await theOddsInstance.get(`${req.query.historical || process.env.REACT_APP_SEASON_KEY === "offseason" ? 'historical/' : ''}sports/americanfootball_ncaaf/odds`, {
+    params: {
+      ...req.query,
+      regions: 'us',
+      markets: req.query.markets ?? 'spreads',
+    }
+  });
+  res.send(req.query.historical === "true" ? odds.data.data : odds.data).status(200);
+  } catch (err) {
+    res.send(err).status(500)
+  }
+})
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));
