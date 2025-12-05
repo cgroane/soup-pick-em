@@ -5,6 +5,19 @@ import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
 import { client, SeasonType, getGames, getRankings } from 'cfbd';
 import { fileURLToPath } from 'url';
+/**
+ * 
+import admin from "firebase-admin";
+import fbCert from '../soup-pick-em-firebase-adminsdk-unk23-e3465f8a0a.json';
+
+const fbApp = admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: fbCert.project_id,
+    clientEmail: fbCert.client_email,
+    privateKey: fbCert.private_key.replace(/\\n/g, '\n'),
+  })
+});
+ */
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -72,6 +85,19 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
     console.error(err)
   }
 });
+/**
+ * 
+  app.get('/api/impersonate', async (req: express.Request, res: express.Response) => {
+    try {
+      const userId = req.query.userId as string;
+      const customToken = await fbApp.auth().createCustomToken(userId);
+      res.json({ customToken });
+    }
+    catch (err) {
+      res.status(500).send('Server error');
+    }
+  });
+ */
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));
