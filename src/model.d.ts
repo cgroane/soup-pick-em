@@ -46,6 +46,7 @@ export type Slate = {
   games: Matchup[];
   providedBy: UserCollectionData;
   uniqueWeek: string;
+  processed?: boolean;
 }
 
 export type Matchup = {
@@ -81,68 +82,68 @@ export type Matchup = {
   highlights: any
   notes: any;
   pointSpread: number;
-  awayTeamAPRanking?:    number;
-  homeTeamAPRanking?:    number;
-  awayTeamCFPRanking?:   number;
-  homeTeamCFPRanking?:   number;
-  awayTeamData:          Team;
-  homeTeamData:          Team;
-  theOddsId:             string;
-  outcomes:    Outcome[];
+  awayTeamAPRanking?: number;
+  homeTeamAPRanking?: number;
+  awayTeamCFPRanking?: number;
+  homeTeamCFPRanking?: number;
+  awayTeamData: Team;
+  homeTeamData: Team;
+  theOddsId: string;
+  outcomes: Outcome[];
 }
 
 export interface Period {
-  periodID:  number;
-  gameID:    number;
-  number:    number;
-  name:      string;
+  periodID: number;
+  gameID: number;
+  number: number;
+  name: string;
   awayScore: number;
   homeScore: number;
 }
 
 export interface Stadium {
   stadiumID: number;
-  active:    boolean;
-  name:      string;
-  dome:      boolean;
-  city:      string;
-  state:     string;
-  geoLat:    number;
-  geoLong:   number;
+  active: boolean;
+  name: string;
+  dome: boolean;
+  city: string;
+  state: string;
+  geoLat: number;
+  geoLong: number;
 }
 
 export type Team = {
-  teamID:           number;
-  key:              string;
-  active:           boolean;
-  school:           string;
-  name:             string;
-  stadiumID:        number;
-  apRank:           null;
-  wins:             number;
-  losses:           number;
-  conferenceWins:   number;
+  teamID: number;
+  key: string;
+  active: boolean;
+  school: string;
+  name: string;
+  stadiumID: number;
+  apRank: null;
+  wins: number;
+  losses: number;
+  conferenceWins: number;
   conferenceLosses: number;
-  globalTeamID:     number;
-  coachesRank:      null;
-  playoffRank:      null;
-  teamLogoUrl:      string;
-  conferenceID:     number;
-  conference:       string;
+  globalTeamID: number;
+  coachesRank: null;
+  playoffRank: null;
+  teamLogoUrl: string;
+  conferenceID: number;
+  conference: string;
   shortDisplayName: string;
-  rankWeek:         null;
-  rankSeason:       null;
-  rankSeasonType:   null;
+  rankWeek: null;
+  rankSeason: null;
+  rankSeasonType: null;
 }
 
 export interface TheOddsResult {
-  id:            string;
-  sport_key:     string;
-  sport_title:   string;
+  id: string;
+  sport_key: string;
+  sport_title: string;
   commence_time: Date;
-  home_team:     string;
-  away_team:     string;
-  bookmakers:    Bookmaker[];
+  home_team: string;
+  away_team: string;
+  bookmakers: Bookmaker[];
 }
 
 export interface TheOddsMatchup {
@@ -150,16 +151,16 @@ export interface TheOddsMatchup {
 }
 
 export interface Bookmaker {
-  key:         string;
-  title:       string;
+  key: string;
+  title: string;
   last_update: Date;
-  markets:     Market[];
+  markets: Market[];
 }
 
 export interface Market {
-  key:         MarketKey;
+  key: MarketKey;
   last_update: Date;
-  outcomes:    Outcome[];
+  outcomes: Outcome[];
 }
 
 export enum MarketKey {
@@ -167,7 +168,7 @@ export enum MarketKey {
 }
 
 export interface Outcome {
-  name:  string;
+  name: string;
   price: number;
   point: number;
 }

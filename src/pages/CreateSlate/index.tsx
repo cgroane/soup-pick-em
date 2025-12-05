@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, Button, Paragraph, Spinner, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
-import {  Search } from 'grommet-icons';
+import { Search } from 'grommet-icons';
 import { theme } from '../../theme';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import SelectWeek from '../../components/SelectWeek';
 import { StatusGood } from 'grommet-icons';
- 
+
 
 /**
  * TODO
@@ -30,7 +30,7 @@ const BottomToolbar = styled(Toolbar)`
   left: 0;
   width: 100%;
   height: 8rem;
-  background-color: ${({theme}) => theme.colors.darkBlue};
+  background-color: ${({ theme }) => theme.colors.darkBlue};
 `
 
 const CreateSlate: React.FC = () => {
@@ -53,7 +53,7 @@ const CreateSlate: React.FC = () => {
   const {
     fetchSlate
   } = usePickContext()
-  const { 
+  const {
     setModalOpen,
     modalOpen,
     seasonData,
@@ -67,8 +67,8 @@ const CreateSlate: React.FC = () => {
   } = useGlobalContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
-    week: seasonData?.ApiWeek.toString(),
-    year: seasonData?.Season.toString(),
+    week: seasonData?.ApiWeek?.toString(),
+    year: seasonData?.Season?.toString(),
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
   });
   /** hooks */
@@ -85,19 +85,19 @@ const CreateSlate: React.FC = () => {
         week: parseInt(selectedWeek?.week as string),
         year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year + 'POST' : selectedWeek?.year
       }).then((result) => result),
-      fetchMatchups({ 
+      fetchMatchups({
         weekNumber: selectedWeek.seasonType === "postseason" ? 1 : parseInt(selectedWeek?.week as string),
         year: parseInt(selectedWeek?.year as string),
         seasonType: selectedWeek?.seasonType
-       })
+      })
     ]).then(() => setStatus(LoadingState.IDLE));
-    
+
   }, [fetchMatchups, fetchSlate, setStatus, selectedWeek]);
 
   useEffect(() => {
     if (textFilter) {
       setFilteredGames(() => {
-        const filtered = games.filter((game) => 
+        const filtered = games.filter((game) =>
           JSON.stringify(Object.values(game)).toLowerCase().includes(textFilter.toLowerCase()));
         return filtered;
       })
@@ -105,26 +105,27 @@ const CreateSlate: React.FC = () => {
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
-  
+
   /** api request */
-  const submitSlate = useCallback( async () => {
+  const submitSlate = useCallback(async () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
     const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''}`
-    await FBSlateClassInstance.addSlate({ 
+    await FBSlateClassInstance.addSlate({
       week: parseInt(selectedWeek?.week as string),
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
+      processed: false,
       games: selectedGames,
-     }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
+    }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
   }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
-  
-  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
+
+  const disableSelection = useMemo(() => selectedGames?.length >= 9 || !canEdit, [selectedGames, canEdit]);
 
   return (
     <>
       <Box>
-        <Toolbar margin={ { top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
+        <Toolbar margin={{ top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
         <SelectWeek
@@ -134,35 +135,35 @@ const CreateSlate: React.FC = () => {
         />
         {
           status === LoadingState.LOADING ? (
-            <Loading iterations={3} type='gameCard'/>
+            <Loading iterations={3} type='gameCard' />
           ) : (
             <>
-            <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
-          {
-            filteredGames?.map((game) => 
-            <Game
-              addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
-              disable={disableSelection}
-              hideCheckbox={!isSlatePicker}
-              key={game.gameID}
-              game={game}
-            />)
-          }
-        </Box>
-        {(canEdit) && 
-        <BottomToolbar style={{
-          boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
-        }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
-            <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
-          <Box width={'100%'} flex direction='row' justify='center' align='center'>
-            <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate"/>
-            <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
-          </Box>
-        </BottomToolbar>}
+              <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
+                {
+                  filteredGames?.map((game) =>
+                    <Game
+                      addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
+                      disable={disableSelection}
+                      hideCheckbox={!isSlatePicker}
+                      key={game.gameID}
+                      game={game}
+                    />)
+                }
+              </Box>
+              {(canEdit) &&
+                <BottomToolbar style={{
+                  boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
+                }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
+                  <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/9</Paragraph>
+                  <Box width={'100%'} flex direction='row' justify='center' align='center'>
+                    <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate" />
+                    <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 9} />
+                  </Box>
+                </BottomToolbar>}
             </>
           )
         }
-        
+
       </Box>
       {modalOpen && (
         <Modal actions={[
@@ -174,18 +175,18 @@ const CreateSlate: React.FC = () => {
             }
           }
         ]} >
-          
-            <Box margin={'0 auto'}>
-              {status === LoadingState.LOADING && <Spinner color={'accent-1'} size='large' />}
-              {status === LoadingState.IDLE && <StatusGood color='accent-1' size='xlarge' />}
-            </Box>
-          
+
+          <Box margin={'0 auto'}>
+            {status === LoadingState.LOADING && <Spinner color={'accent-1'} size='large' />}
+            {status === LoadingState.IDLE && <StatusGood color='accent-1' size='xlarge' />}
+          </Box>
+
         </Modal>
       )}
     </>
   )
 }
- 
+
 export default CreateSlate
- 
+
 CreateSlate.displayName = "CreateSlate"

@@ -4,7 +4,7 @@ import { Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
 import { Box, Table, TableBody, TableCell, TableRow } from 'grommet';
- 
+
 
 /**
  * COLUMNS
@@ -50,6 +50,10 @@ export interface PickHistory {
   week: number;
   year: number;
   picks: Picks[];
+  processed?: boolean;
+  processedAt?: string;
+  correctCount?: number;
+  incorrectCount?: number;
 }
 interface PicksTableProps {
   data: PicksColumnDef[];
@@ -87,8 +91,8 @@ const PicksTable: React.FC<PicksTableProps> = ({
                     width: `${header.getSize()}px`,
                   }} scope='col' key={header.id}>
                     {header.id === 'user' ?
-                    flexRender(header.column.columnDef.header, header.getContext()) :
-                    flexRender(header.column.columnDef.header, header.getContext())}
+                      flexRender(header.column.columnDef.header, header.getContext()) :
+                      flexRender(header.column.columnDef.header, header.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
@@ -98,22 +102,22 @@ const PicksTable: React.FC<PicksTableProps> = ({
             {tableInstance.getRowModel().rows.map(row => (
               <Row key={row.id}>
                 {row.getVisibleCells().map(cell => {
-                    return (<>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </>
-                    )
-                  })
+                  return (<>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </>
+                  )
+                })
                 }
               </Row>
             ))}
           </TableBody>
         </StyledTable>
-      <div className="h-4" />
-    </TableWrapper>
+        <div className="h-4" />
+      </TableWrapper>
     </>
   )
 }
- 
+
 export default PicksTable
- 
+
 PicksTable.displayName = "PicksTable"

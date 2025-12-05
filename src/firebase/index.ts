@@ -1,7 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { CollectionReference,
+import {
+  CollectionReference,
   DocumentData,
   collection,
   collectionGroup,
@@ -16,9 +17,9 @@ import { CollectionReference,
   where,
   // connectFirestoreEmulator
 } from "firebase/firestore";
-import { 
-  GoogleAuthProvider, 
-  getAuth, 
+import {
+  GoogleAuthProvider,
+  getAuth,
   // connectAuthEmulator 
 } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -37,7 +38,7 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-if (process.env.NODE_ENV === 'development') {  
+if (process.env.NODE_ENV === 'development') {
   // connectFirestoreEmulator(db, "127.0.0.1", 8080);
   // connectAuthEmulator(auth, "http://127.0.0.1:9099");
 }
@@ -51,7 +52,7 @@ export class FirebaseDB<T> {
   collectionName: string;
   collectionRef: CollectionReference<DocumentData, DocumentData>;
 
-  constructor(collectionName: string) { 
+  constructor(collectionName: string) {
     this.collectionName = collectionName;
     this.collectionRef = collection(this.db, collectionName);
   }
@@ -90,7 +91,7 @@ export class FirebaseDB<T> {
       return;
     }
   }
-  getSubCollection = async <V extends{}>(subColName: string) => {
+  getSubCollection = async <V extends {}>(subColName: string) => {
     try {
       const subCollectionRef = query(collectionGroup(this.db, subColName));
       const querySnapshot = await getDocs(subCollectionRef);
