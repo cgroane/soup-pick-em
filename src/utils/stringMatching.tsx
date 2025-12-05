@@ -1,3 +1,4 @@
 export const stripAndReplaceSpace = (value: string) => {
-  return value.toLowerCase().replace(/ /g, '');
+  value = value?.replace(/[^a-zA-Z0-9]/g, '');
+  return value?.toLowerCase();
 }
