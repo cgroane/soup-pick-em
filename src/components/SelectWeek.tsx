@@ -1,7 +1,7 @@
 import { Box, Select } from 'grommet'
 import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react'
 import { useUIContext } from '../context/ui';
- 
+
 interface SelectWeekProps {
   onChange: Dispatch<SetStateAction<{ week?: string; year?: string; seasonType: 'regular' | 'postseason' }>>;
   vals: { week: string; year: string }
@@ -49,15 +49,15 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
   const weeks = useMemo(() => {
     const maxWeeks = parseInt(vals.year) < new Date().getFullYear() ? 14 : seasonData?.ApiWeek;
     const weekArray = Array.from(Array(14).keys())
-      .map((num) => ({label: `Week ${num + 1}`, value: (num + 1).toString() }))
+      .map((num) => ({ label: `Week ${num + 1}`, value: (num + 1)?.toString() }))
       .filter((num) => parseInt(num.value) <= (maxWeeks as number));
     weekArray.push({ label: 'Post Season', value: 'postseason-1' });
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
 
-  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek.toString()), [usePostSeason, seasonData?.ApiWeek, weeks]);
+  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek?.toString()), [usePostSeason, seasonData?.ApiWeek, weeks]);
   const defaultYear = useMemo(() => ({
-    label: seasonData?.Season.toString(),
+    label: seasonData?.Season?.toString(),
     value: seasonData?.Season
   }), [seasonData?.Season]);
 
@@ -74,15 +74,15 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
   const toDate = useMemo(() => {
     const now = new Date();
     const year = seasonData?.Season || now.getFullYear();
-    
+
     let yearsOptions = [];
     for (let initYear = 2024; initYear <= year; initYear++) {
-      yearsOptions.push({ label: initYear.toString(), value: initYear.toString() })
+      yearsOptions.push({ label: initYear?.toString(), value: initYear?.toString() })
     };
     return yearsOptions;
   }, [seasonData?.Season]);
 
-  
+
   return (
     <>
       <Box pad={'2rem 1rem'} flex direction='row' margin={'0 auto'} justify='between' content='center' wrap >
@@ -95,7 +95,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
           defaultValue={defaultWeek}
           value={weeks.find((w) => vals.week === w.value)}
           options={weeks}
-          />
+        />
         <Select
           onChange={({ option }) => onChange((prev) => ({ ...prev, year: option.value }))}
           style={{ flexGrow: 1 }}
@@ -109,7 +109,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     </>
   )
 }
- 
+
 export default SelectWeek
- 
+
 SelectWeek.displayName = "SelectWeek"

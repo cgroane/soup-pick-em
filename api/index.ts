@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import express  from 'express';
+import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
@@ -31,6 +31,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuery>, res: express.Response) => {
   try {
     const opts = {
@@ -44,10 +45,10 @@ app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuer
         ...opts
       }
     });
-    res.send(games.data);
-    return;
+    res.status(200).json(games.data);
+    return
   } catch (err) {
-    res.send(err).status(500)
+    res.status(500).json(err)
   }
 });
 
@@ -64,46 +65,47 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
       }
     });
     if (rankings?.data?.[0]?.polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
-        res.send(rankings?.data?.[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
-      } else {
-        res.send(rankings?.data?.[0]?.polls.find((p) => p.poll === 'AP Top 25'));
-      };
-      return;
+      res.status(200).json(rankings?.data?.[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
+    } else {
+      res.status(200).json(rankings?.data?.[0]?.polls.find((p) => p.poll === 'AP Top 25'));
+    };
+    return;
   } catch (err) {
     console.error(err)
-    res.send(err).status(500)
+    res.status(500).send(err)
   }
 });
 
 app.get(`/api/odds`, async (req: express.Request<{}, {}, {
-    weekNumber?: string;
-    season?: string;
-    bookmakers?: string;
-    markets?: string;
-    commenceTimeFrom?: string
-    commenceTimeTo?: string;
-    event?: string;
-    date?: string;
-    seasonType?: string;
-    historical?: string;
-  }>, res: express.Response) => {
+  weekNumber?: string;
+  season?: string;
+  bookmakers?: string;
+  markets?: string;
+  commenceTimeFrom?: string
+  commenceTimeTo?: string;
+  event?: string;
+  date?: string;
+  seasonType?: string;
+  historical?: string;
+}>, res: express.Response) => {
   try {
     const odds = await theOddsInstance.get(`${req.query.historical || process.env.REACT_APP_SEASON_KEY === "offseason" ? 'historical/' : ''}sports/americanfootball_ncaaf/odds`, {
-    params: {
-      ...req.query,
-      regions: 'us',
-      markets: req.query.markets ?? 'spreads',
-    }
-  });
-  res.send(req.query.historical === "true" ? odds.data.data : odds.data).status(200);
+      params: {
+        ...req.query,
+        apiKey: process.env.REACT_APP_THE_ODDS_API_KEY,
+        regions: 'us',
+        markets: req.query.markets ?? 'spreads',
+      }
+    });
+    res.status(200).json(odds.data.data);
   } catch (err) {
-    res.send(err).status(500)
+    res.status(500).send(err)
   }
 })
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));
-app.use(function(req: express.Request, res: express.Response, next: express.NextFunction) {
+app.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
   if (req.method === 'GET' && req.accepts('html') && !req.is('json') && !req.path.includes('.')) {
     res.sendFile('index.html', { root })
   } else next()

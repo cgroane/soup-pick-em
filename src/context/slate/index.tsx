@@ -15,7 +15,7 @@ export type SlateValueProps = {
   setFilteredGames: Dispatch<SetStateAction<Matchup[]>>;
   setSelectedGames: Dispatch<SetStateAction<Matchup[]>>;
   addAndRemove: (game: Matchup) => void;
-  fetchMatchups: ({ weekNumber, year, seasonType }: {weekNumber?: number; year?: number, seasonType: 'postseason' | 'regular'}) => void;
+  fetchMatchups: ({ weekNumber, year, seasonType }: { weekNumber?: number; year?: number, seasonType: 'postseason' | 'regular' }) => void;
   deletions: number[];
   canEdit: boolean;
 }
@@ -58,9 +58,9 @@ export default function CreateSlateContext({ children }: ContextProp) {
   /**
    * update fetchMatchups to accept a week param
    */
-  const fetchMatchups = useCallback(async ({ weekNumber, seasonType, year }: {weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular'}) => {
+  const fetchMatchups = useCallback(async ({ weekNumber, seasonType, year }: { weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular' }) => {
     setStatus(LoadingState.LOADING);
-    const week = weekNumber ? weekNumber.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
+    const week = weekNumber ? weekNumber?.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
     const results = (await getGames({
       weekNumber: week,
       season: year?.toString(),
@@ -71,7 +71,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
     setFilteredGames(results);
     return results;
   }, [setGames, seasonData?.ApiWeek, setStatus, seasonData?.Season]);
-  
+
 
   const addAndRemove = useCallback((game: Matchup) => {
     /**
@@ -92,56 +92,56 @@ export default function CreateSlateContext({ children }: ContextProp) {
       }
     } else {
       const newGame = {
-        id:                     game.id ?? 0,
-        gameID:                 game.gameID ?? 0,
-        season:                 game.season ?? 0,
-        seasonType:             game.seasonType ?? 0,
-        week:                   game.week ?? 0,
-        startDate:              game.startDate ?? '',
-        awayTeam:               game.awayTeam ?? '',
-        homeTeam:               game.homeTeam ?? '',
-        awayPoints:             game.awayPoints ?? 0,
-        homePoints:             game.homePoints ?? 0,        
-        pointSpread:            game.pointSpread ?? 0,
-        attendance:             game.attendance ?? 0,
-        awayTeamAPRanking:      game.awayTeamAPRanking ?? 0,
-        homeTeamAPRanking:      game.homeTeamAPRanking ?? 0,
-        awayTeamCFPRanking:     game.awayTeamCFPRanking ?? 0,
-        homeTeamCFPRanking:     game.homeTeamCFPRanking ?? 0,
-        awayTeamData:           {
-                                  ...game.awayTeamData,
-                                  playoffRank: game.awayTeamData.playoffRank ?? null,
-                                  apRank: game.awayTeamData.apRank ?? null,
-                                  coachesRank: game.awayTeamData.coachesRank ?? null
-                                },
-        homeTeamData:           {
-                                  ...game.homeTeamData,
-                                  playoffRank: game.homeTeamData.playoffRank ?? null,
-                                  apRank: game.homeTeamData.apRank ?? null,
-                                  coachesRank: game.homeTeamData.coachesRank ?? null
-                                },
-        theOddsId:              game.theOddsId ?? '',
-        notes:                  game.notes ?? [],
-        startTimeTbd:           game?.startTimeTbd ?? false,
-        venueId:                game?.venueId ?? 0,
-        venue:                  game?.venue ?? '',
-        outcomes:               game.outcomes ?? [],
-        neutralSite:            game.neutralSite ?? false,
-        conferenceGame:         game.neutralSite ?? false,
-        homeId:                 game.homeId ?? 0,
-        homeConference:         game.homeConference ?? '',
-        homeLineScores:         game.homeLineScores ?? [],
-        homePostWinProb:        game.homePostWinProb ?? 0,
-        homePregameElo:         game.homePregameElo ?? 0,
-        homePostgameElo:        game.homePostgameElo ?? 0,
-        awayId:                 game.awayId ?? 0,
-        awayConference:         game.awayConference ?? '',
-        awayLineScores:         game.awayLineScores ?? [],
-        awayPostWinProb:        game.awayPostWinProb ?? 0,
-        awayPregameElo:         game.awayPregameElo ?? 0,
-        awayPostgameElo:        game.awayPostgameElo ?? 0,
-        excitementIndex:        game.excitementIndex ?? 0,
-        highlights:             game.highlights ?? []
+        id: game.id ?? 0,
+        gameID: game.gameID ?? 0,
+        season: game.season ?? 0,
+        seasonType: game.seasonType ?? 0,
+        week: game.week ?? 0,
+        startDate: game.startDate ?? '',
+        awayTeam: game.awayTeam ?? '',
+        homeTeam: game.homeTeam ?? '',
+        awayPoints: game.awayPoints ?? 0,
+        homePoints: game.homePoints ?? 0,
+        pointSpread: game.pointSpread ?? 0,
+        attendance: game.attendance ?? 0,
+        awayTeamAPRanking: game.awayTeamAPRanking ?? 0,
+        homeTeamAPRanking: game.homeTeamAPRanking ?? 0,
+        awayTeamCFPRanking: game.awayTeamCFPRanking ?? 0,
+        homeTeamCFPRanking: game.homeTeamCFPRanking ?? 0,
+        awayTeamData: {
+          ...game.awayTeamData,
+          playoffRank: game.awayTeamData.playoffRank ?? null,
+          apRank: game.awayTeamData.apRank ?? null,
+          coachesRank: game.awayTeamData.coachesRank ?? null
+        },
+        homeTeamData: {
+          ...game.homeTeamData,
+          playoffRank: game.homeTeamData.playoffRank ?? null,
+          apRank: game.homeTeamData.apRank ?? null,
+          coachesRank: game.homeTeamData.coachesRank ?? null
+        },
+        theOddsId: game.theOddsId ?? '',
+        notes: game.notes ?? [],
+        startTimeTbd: game?.startTimeTbd ?? false,
+        venueId: game?.venueId ?? 0,
+        venue: game?.venue ?? '',
+        outcomes: game.outcomes ?? [],
+        neutralSite: game.neutralSite ?? false,
+        conferenceGame: game.neutralSite ?? false,
+        homeId: game.homeId ?? 0,
+        homeConference: game.homeConference ?? '',
+        homeLineScores: game.homeLineScores ?? [],
+        homePostWinProb: game.homePostWinProb ?? 0,
+        homePregameElo: game.homePregameElo ?? 0,
+        homePostgameElo: game.homePostgameElo ?? 0,
+        awayId: game.awayId ?? 0,
+        awayConference: game.awayConference ?? '',
+        awayLineScores: game.awayLineScores ?? [],
+        awayPostWinProb: game.awayPostWinProb ?? 0,
+        awayPregameElo: game.awayPregameElo ?? 0,
+        awayPostgameElo: game.awayPostgameElo ?? 0,
+        excitementIndex: game.excitementIndex ?? 0,
+        highlights: game.highlights ?? []
       }
       newSelections.push(newGame as Matchup);
     }
@@ -166,6 +166,6 @@ export default function CreateSlateContext({ children }: ContextProp) {
   )
 }
 
-export const useSlateContext = ():SlateValueProps => {
+export const useSlateContext = (): SlateValueProps => {
   return useContext(SlateContext);
 }

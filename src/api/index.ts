@@ -9,6 +9,9 @@ const axiosInstance = axios.create({
 });
 export const cfbdApi = axios.create({
   baseURL: `/api/`,
+  headers: {
+    "Content-Type": "application/json",
+  }
 });
 
 export const theOddsInstance = axios.create({

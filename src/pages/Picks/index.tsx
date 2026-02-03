@@ -44,7 +44,7 @@ export interface PicksColumnDef {
   user: { name: string; id: string };
   game: Matchup & { isCorrect: boolean };
   numberCorrect: number;
-  [key: string]: Outcome | Matchup & { isCorrect: boolean} | { name: string; id: string } | string | number;
+  [key: string]: Outcome | Matchup & { isCorrect: boolean } | { name: string; id: string } | string | number;
 };
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
@@ -54,8 +54,8 @@ const Picks: React.FC = () => {
   } = useUIContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
-    week: seasonData?.ApiWeek.toString(),
-    year: seasonData?.Season.toString(),
+    week: seasonData?.ApiWeek?.toString(),
+    year: seasonData?.Season?.toString(),
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
   });
 
@@ -67,7 +67,7 @@ const Picks: React.FC = () => {
     slate,
     fetchSlate,
   } = usePickContext()
-  
+
   useEffect(() => {
     fetchUsers();
     fetchSlate({
@@ -87,7 +87,7 @@ const Picks: React.FC = () => {
    * if selection point is positive, the sum of selection score and point should be >= awayscore
    * if selection is negative (favored), sum of selection score and point should be >= other team
    */
-  
+
   const thisWeeksPickHistory = useMemo(() => {
     return allPickHistories?.filter((pickSet) => pickSet.slateId === slate?.uniqueWeek)?.map((userPicks) => {
       let sumCorrect = 0;
@@ -104,31 +104,31 @@ const Picks: React.FC = () => {
             const favPoints = teams?.findIndex((t) => t === fav?.name);
             const favScore = game[favPoints === 0 ? 'awayPoints' : 'homePoints'];
             const underDogScore = game[favPoints === 0 ? 'homePoints' : 'awayPoints'];
-            
+
             if (pick.selection?.name === 'PUSH') {
               if (favScore + (fav?.point as number) === underDogScore) {
                 sumCorrect++;
                 isCorrect = true;
               }
             } else {
-              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g , '').includes(game?.homeTeam.toLowerCase().replace(/ /g , ''))) ? 'home' : 'away';
+              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g, '').includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))) ? 'home' : 'away';
               const newScore = game[`${homePick}Points`] + pick.selection?.point;
               if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
-                sumCorrect++; 
+                sumCorrect++;
                 isCorrect = true
               }
             }
           }
-          
+
           return {
             ...acc,
-            [pick.matchup]: { selection: pick.selection, isCorrect,...game as Matchup },
+            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as Matchup },
             numberCorrect: sumCorrect
           };
         }, {})
       }
     }) as PicksColumnDef[]
-    ;
+      ;
   }, [slate, allPickHistories]);
   /**
    * picks column def needs to just be id, name, 
@@ -137,49 +137,50 @@ const Picks: React.FC = () => {
 
     if (slate?.games) {
       const cols = [
-        {...columnHelper.accessor('user', {
-          cell: info => {
-            return (
-              <StyledCell
-                key={info?.cell?.id}
-                style={{ textAlign: 'center' }}
-                border={'horizontal'}
-                background={'white'}
-              >
-                {info?.row?.original?.user?.name}
-              </StyledCell>
-            )
-          },
-          
-          header: 'Soup',
-          size: 100,
-          enablePinning: true
-          
-        }),
-      },
-          ...slate?.games?.map((game) => ({
-              ...columnHelper.accessor(`${game?.gameID}`, {
-              header: () => <HeaderCell >
-                  <p>{game?.awayTeam}</p>
-                  <p><span style={{ fontWeight: 600 }} >at</span></p>
-                  <p>{game?.homeTeam}</p>
-                  <p>{game?.homeTeamData?.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
-                </HeaderCell>,
-              minSize: undefined,
-              maxSize: undefined,
-              size: 250,
-              cell: (props) => {
-                // get row
-                if (props?.row.original) {
-                const selection = props?.row?.original[props?.column?.id] as Matchup & {isCorrect: boolean; selection: Outcome };
-                return <GameCell scope='row' game={selection as Matchup & {isCorrect: boolean}} >
-                  { selection?.selection?.name }
+        {
+          ...columnHelper.accessor('user', {
+            cell: info => {
+              return (
+                <StyledCell
+                  key={info?.cell?.id}
+                  style={{ textAlign: 'center' }}
+                  border={'horizontal'}
+                  background={'white'}
+                >
+                  {info?.row?.original?.user?.name}
+                </StyledCell>
+              )
+            },
+
+            header: 'Soup',
+            size: 100,
+            enablePinning: true
+
+          }),
+        },
+        ...slate?.games?.map((game) => ({
+          ...columnHelper.accessor(`${game?.gameID}`, {
+            header: () => <HeaderCell >
+              <p>{game?.awayTeam}</p>
+              <p><span style={{ fontWeight: 600 }} >at</span></p>
+              <p>{game?.homeTeam}</p>
+              <p>{game?.homeTeamData?.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
+            </HeaderCell>,
+            minSize: undefined,
+            maxSize: undefined,
+            size: 250,
+            cell: (props) => {
+              // get row
+              if (props?.row.original) {
+                const selection = props?.row?.original[props?.column?.id] as Matchup & { isCorrect: boolean; selection: Outcome };
+                return <GameCell scope='row' game={selection as Matchup & { isCorrect: boolean }} >
+                  {selection?.selection?.name}
                 </GameCell>
-                }
-                return;
               }
-            }),
-          })
+              return;
+            }
+          }),
+        })
         ),
         {
           ...columnHelper.accessor('numberCorrect', {
@@ -187,7 +188,7 @@ const Picks: React.FC = () => {
             cell: info => {
               const incorrect = Math.abs((info?.row?.original?.numberCorrect) - 10)
               return <StyledGameCell >
-                { info?.row?.original?.numberCorrect } - { incorrect }
+                {info?.row?.original?.numberCorrect} - {incorrect}
               </StyledGameCell>
             },
             size: 100,
@@ -201,7 +202,7 @@ const Picks: React.FC = () => {
       return []
     }
   }, [slate?.games])
-  
+
   return (
     <>
       <Box>
@@ -209,15 +210,15 @@ const Picks: React.FC = () => {
         <SelectWeek
           vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<Heading style={{ width: '100%' }} >
-          View Results from:
-        </Heading>}
+            View Results from:
+          </Heading>}
           onChange={setSelectedWeek}
         />
       </Box>
     </>
   )
 }
- 
+
 export default Picks
- 
+
 Picks.displayName = "Picks"

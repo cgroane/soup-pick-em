@@ -1,0 +1,247 @@
+{
+  "timestamp": "2025-12-13T08:55:37Z",
+  "previous_timestamp": "2025-12-13T08:50:38Z",
+  "next_timestamp": "2025-12-13T09:00:37Z",
+  "data": [
+    {
+      "id": "86b2f11373631509f973bd3e72f5732d",
+      "sport_key": "americanfootball_ncaaf",
+      "sport_title": "NCAAF",
+      "commence_time": "2025-12-13T20:00:00Z",
+      "home_team": "Navy Midshipmen",
+      "away_team": "Army Black Knights",
+      "bookmakers": [
+        {
+          "key": "draftkings",
+          "title": "DraftKings",
+          "last_update": "2025-12-13T08:55:12Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:12Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "lowvig",
+          "title": "LowVig.ag",
+          "last_update": "2025-12-13T08:55:23Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:23Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.99,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.9,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betonlineag",
+          "title": "BetOnline.ag",
+          "last_update": "2025-12-13T08:55:26Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:25Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "fanduel",
+          "title": "FanDuel",
+          "last_update": "2025-12-13T08:55:24Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:23Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.94,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.88,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betrivers",
+          "title": "BetRivers",
+          "last_update": "2025-12-13T08:54:47Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:54:47Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.94,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.83,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "mybookieag",
+          "title": "MyBookie.ag",
+          "last_update": "2025-12-13T08:54:58Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:54:58Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betus",
+          "title": "BetUS",
+          "last_update": "2025-12-13T08:55:11Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:11Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "bovada",
+          "title": "Bovada",
+          "last_update": "2025-12-13T08:55:24Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:24Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "betmgm",
+          "title": "BetMGM",
+          "last_update": "2025-12-13T08:55:35Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:55:35Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.91,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.91,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "williamhill_us",
+          "title": "Caesars",
+          "last_update": "2025-12-13T08:54:27Z",
+          "markets": [
+            {
+              "key": "spreads",
+              "last_update": "2025-12-13T08:54:27Z",
+              "outcomes": [
+                {
+                  "name": "Army Black Knights",
+                  "price": 1.95,
+                  "point": 6.5
+                },
+                {
+                  "name": "Navy Midshipmen",
+                  "price": 1.87,
+                  "point": -6.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
