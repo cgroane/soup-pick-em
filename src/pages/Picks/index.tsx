@@ -4,7 +4,7 @@ import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable, { StyledCell } from './PicksTable';
 import { createColumnHelper, ColumnDef } from "@tanstack/react-table";
-import { Matchup, Outcome } from '../../model';
+import { GamesAPIResponseOutcome, GamesAPIResult } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
@@ -42,9 +42,9 @@ p {
 
 export interface PicksColumnDef {
   user: { name: string; id: string };
-  game: Matchup & { isCorrect: boolean };
+  game: GamesAPIResult & { isCorrect: boolean };
   numberCorrect: number;
-  [key: string]: Outcome | Matchup & { isCorrect: boolean } | { name: string; id: string } | string | number;
+  [key: string]: GamesAPIResponseOutcome | GamesAPIResult & { isCorrect: boolean } | { name: string; id: string } | string | number;
 };
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
@@ -94,7 +94,7 @@ const Picks: React.FC = () => {
       return {
         user: { name: userPicks?.name, id: userPicks?.userId },
         ...userPicks?.picks.reduce((acc, pick) => {
-          const game = slate?.games?.find((g) => g.gameID === pick.matchup);
+          const game = slate?.games?.find((g) => g.id === pick.matchup);
           const fav = game?.outcomes?.find((o) => o.point < 0);
           let isCorrect = !!pick.isCorrect;
           if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
@@ -122,7 +122,7 @@ const Picks: React.FC = () => {
 
           return {
             ...acc,
-            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as Matchup },
+            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as GamesAPIResult },
             numberCorrect: sumCorrect
           };
         }, {})
@@ -159,7 +159,7 @@ const Picks: React.FC = () => {
           }),
         },
         ...slate?.games?.map((game) => ({
-          ...columnHelper.accessor(`${game?.gameID}`, {
+          ...columnHelper.accessor(`${game?.id}`, {
             header: () => <HeaderCell >
               <p>{game?.awayTeam}</p>
               <p><span style={{ fontWeight: 600 }} >at</span></p>
@@ -172,8 +172,8 @@ const Picks: React.FC = () => {
             cell: (props) => {
               // get row
               if (props?.row.original) {
-                const selection = props?.row?.original[props?.column?.id] as Matchup & { isCorrect: boolean; selection: Outcome };
-                return <GameCell scope='row' game={selection as Matchup & { isCorrect: boolean }} >
+                const selection = props?.row?.original[props?.column?.id] as GamesAPIResult & { isCorrect: boolean; selection: GamesAPIResponseOutcome };
+                return <GameCell scope='row' game={selection as GamesAPIResult & { isCorrect: boolean }} >
                   {selection?.selection?.name}
                 </GameCell>
               }

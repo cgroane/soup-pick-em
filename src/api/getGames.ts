@@ -1,9 +1,10 @@
+import { BettingGame, GetGamesResponse, GetLinesResponse, Team } from "cfbd";
 import axiosInstance, { cfbdApi } from "."
-import { Matchup, Rank, Team, TheOddsResult } from "../model";
+import { GamesAPIResult, Rank } from "../model";
 import { stripAndReplaceSpace } from "../utils/stringMatching";
 import { getRankings, getTeams } from "./getTeams";
 import { SeasonDetails } from "./schema/sportsDataIO";
-import { add } from 'date-fns';
+
 export interface SpreadsAPIRequest {
   weekNumber?: string;
   season?: string;
@@ -15,31 +16,24 @@ export interface SpreadsAPIRequest {
   date?: string;
   seasonType?: string;
   historical?: boolean;
-}
-const buildDateFormat = (date: string) => {
-  const convertedToDate = new Date(date);
-  return `${convertedToDate.toISOString().split('T')[0]}T${convertedToDate.getHours().toLocaleString('en-us', {
-    minimumIntegerDigits: 2
-  })}:${convertedToDate.getMinutes().toLocaleString('en-us', {
-    minimumIntegerDigits: 2
-  })}:${convertedToDate.getSeconds().toLocaleString('en-us', {
-    minimumIntegerDigits: 2
-  })}Z`;
-}
+};
 
-export const getSpreads = async (options: SpreadsAPIRequest) => {
-  console.log(options);
+const getSpreads = async (options: {
+  week?: string;
+  year?: string;
+  seasonType?: string;
+}): Promise<GetLinesResponse> => {
   return cfbdApi.get(`/odds`, {
     params: {
-      ...options,
-      historical: options.historical || process.env.REACT_APP_SEASON_KEY === "offseason",
-      regions: 'us',
-      markets: options.markets ?? 'spreads',
+      week: options.week,
+      year: options.year,
+      seasonType: options.seasonType,
     }
   }).then((response) => {
-    return options?.historical ? response.data.data : response.data
+
+    return response.data
   }).catch((err) => console.error(err));
-}
+};
 
 export const getCurrentWeek = async () => {
   try {
@@ -68,7 +62,7 @@ export const getCurrentWeek = async () => {
  * refactor perhaps
  * @returns 
  */
-export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> => {
+export const getGames = async (options?: SpreadsAPIRequest): Promise<GamesAPIResult[]> => {
   const matchupRequestOptions: SpreadsAPIRequest = {
     ...options,
     weekNumber: options?.weekNumber,
@@ -83,33 +77,20 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
     }
   })
     .then(async (resp) => {
-      const resSorted = resp?.data?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))
-      const weekRange = {
-        start: resSorted[0],
-        end: resSorted[resSorted.length - 1],
-      }
+      const resSorted: GetGamesResponse = resp?.data?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate));
 
       try {
-        const endDate = add(new Date(new Date(weekRange?.end?.startDate)), { days: 1 });
-        // const toDate =  new Date(new Date(weekRange?.end?.startDate).setDate(new Date(weekRange?.end?.startDate).getDate() + 1)).toDateString();
-        const spreadsOptions = process.env.REACT_APP_SEASON_KEY === 'offseason' ? {
-          ...options,
-          date: buildDateFormat(weekRange?.start?.startDate)
-        } : {
-          ...options,
-          commenceTimeFrom: buildDateFormat((weekRange.start?.startDate)),
-          commenceTimeTo: buildDateFormat((endDate).toISOString()),
-          date: buildDateFormat(weekRange?.start?.startDate)
-        }
         const compoundRequest = await Promise.all([
           await getRankings(matchupRequestOptions?.season as string, matchupRequestOptions?.weekNumber as string, matchupRequestOptions?.seasonType as string),
           await getTeams(),
           await getSpreads({
-            ...spreadsOptions
-          })
+            week: matchupRequestOptions?.weekNumber,
+            year: matchupRequestOptions?.season,
+            seasonType: matchupRequestOptions?.seasonType,
+          }),
         ]);
         const [rankings, teamInfo, spreads] = await compoundRequest;
-
+        console.log(teamInfo);
         // bottle neck here with map containing an array.find -- REFACTOR
         /**
          * find teams via cfbd, sportsdataio, or own db? migrate teams from cfbd?
@@ -118,11 +99,11 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
           const rankPropAccessor = rankings.poll === 'AP Top 25' ? 'apRank' : 'playoffRank';
           const finder = (team: Team | Rank, valueToSearch: string) => stripAndReplaceSpace(team.school) === stripAndReplaceSpace(valueToSearch);
           const away = {
-            ...teamInfo.find((team) => finder(team, item.awayTeam)),
+            ...teamInfo.find((t) => t.id === item.awayId),
             [rankPropAccessor]: rankings.ranks.find((r) => finder(r, item.awayTeam))?.rank
           };
           const home = {
-            ...teamInfo.find((team) => finder(team, item.homeTeam)),
+            ...teamInfo.find((t) => t.id === item.homeId),
             [rankPropAccessor]: rankings.ranks.find((team) => finder(team, item.homeTeam))?.rank
           };
           return {
@@ -130,55 +111,35 @@ export const getGames = async (options?: SpreadsAPIRequest): Promise<Matchup[]> 
             awayTeamData: { ...away, },
             homeTeamData: { ...home, }
           }
-        })
-          .map((item) => {
-            const strippedHomeTeam = stripAndReplaceSpace(`${item.homeTeamData.school}${item.homeTeamData.name}`);
-            const strippedAwayTeam = stripAndReplaceSpace(`${item.awayTeamData.school}${item.awayTeamData.name}`);
-
-            const gameSpread: TheOddsResult | undefined = spreads?.find((spread: TheOddsResult) => {
-              const strippedAway = stripAndReplaceSpace(spread.away_team);
-              const strippedHome = stripAndReplaceSpace(spread.home_team);
-
-              /**
-               * find odds where hometeam 
-               * */
-              if (!!item.neutralSite && ((strippedHome === strippedAwayTeam && strippedAway === strippedHomeTeam))) {
-                return ((strippedHomeTeam === strippedAway) && (strippedAwayTeam === strippedHome));
-              } else {
-                return ((strippedHomeTeam === strippedHome) &&
-                  (strippedAwayTeam === strippedAway))
-              }
-            });
-            const orderedOutcomes = gameSpread?.bookmakers[0]?.markets[0]?.outcomes?.sort((a, _) => {
-              const stripped = stripAndReplaceSpace(a.name);
-              return !!strippedHomeTeam.includes(stripped) ? -1 : 1
-            })
-            return {
-              ...item,
-              pointSpread: gameSpread?.bookmakers[0]?.markets[0]?.outcomes[0]?.point ?? item.pointSpread,
-              theOddsId: gameSpread?.id,
-              outcomes: orderedOutcomes ?? [],
-            }
+        }).map((item) => {
+          const gameSpread: BettingGame | undefined = spreads?.find((spread: BettingGame) => {
+            return spread.awayTeamId === item.awayTeamData.id && spread.homeTeamId === item.homeTeamData.id;
           });
+          const pointSpread = gameSpread?.lines?.filter(l => l.provider === "DraftKings")?.[0]?.spread || 0;
+          if (!!gameSpread) {
+            console.log(item, gameSpread)
+          }
+          return {
+            ...item,
+            pointSpread: pointSpread,
+            outcomes: gameSpread ? ({
+              home: {
+                name: item.homeTeamData.school,
+                point: pointSpread > 0 ? `+${pointSpread}` : `${pointSpread}`, /** string representation +x for positive point spreads, -x for negative */
+                pointValue: pointSpread, /** string representation +x for positive point spreads, -x for negative */
+                id: 1
+              },
+              away: {
+                name: item.awayTeamData.school,
+                point: -1 * pointSpread > 0 ? `+${-1 * pointSpread}` : `${-1 * pointSpread}`, /** string representation +x for positive point spreads, -x for negative */
+                pointValue: -1 * pointSpread,
+                id: 2
+              }
+            }) : undefined
+          }
+        });
         let newUpdate = updated
-          .filter((item) => item.outcomes.length);
-        if (options?.season)
-          newUpdate = newUpdate
-            .map((item) => {
-              if (item.homeTeam === 'Northwestern') {
-                console.log('item', item);
-              }
-              let newPointSpread: number = item.pointSpread;
-              const remainder = item.pointSpread % .5;
-              if (remainder) {
-                newPointSpread = item.pointSpread < 0 ? item.pointSpread - remainder : item.pointSpread + remainder;
-              }
-              return {
-                ...item,
-                gameID: item.id,
-                pointSpread: remainder ? newPointSpread : item.pointSpread,
-              }
-            })
+          .filter((item) => !!item?.outcomes);
         return newUpdate;
 
       } catch (err) {

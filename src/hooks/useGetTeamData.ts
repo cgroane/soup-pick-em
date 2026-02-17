@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import { Matchup } from "../model";
 import { daysOfTheWeek, months } from "../utils/getWeek";
+import { GamesAPIResult } from "@/model";
 
 
-export const useGetTeamData = (game: Matchup) => {
+export const useGetTeamData = (game: GamesAPIResult) => {
   const dateTime = useMemo(() => {
     const converted = new Date(game.startDate)
     return {

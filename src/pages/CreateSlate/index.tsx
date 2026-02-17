@@ -141,10 +141,10 @@ const CreateSlate: React.FC = () => {
                 {
                   filteredGames?.map((game) =>
                     <Game
-                      addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
+                      addedToSlate={!!selectedGames?.find((selectedGame) => game.id === selectedGame.id)}
                       disable={disableSelection}
                       hideCheckbox={!isSlatePicker}
-                      key={game.gameID}
+                      key={game.id}
                       game={game}
                     />)
                 }
