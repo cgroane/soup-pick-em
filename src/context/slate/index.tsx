@@ -76,7 +76,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
       console.error(err);
       return;
     }
-  }, [setGames, seasonData?.ApiWeek, setStatus, seasonData?.Season]);
+  }, [setGames, seasonData?.ApiWeek, setStatus]);
 
 
   const addAndRemove = useCallback((game: GamesAPIResult) => {
