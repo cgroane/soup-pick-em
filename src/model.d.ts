@@ -49,6 +49,7 @@ export type Slate = {
   uniqueWeek: string;
 }
 
+/** @deprecated Use GamesAPIResult instead */
 export type Matchup = {
   id: number
   gameID: number
@@ -92,6 +93,7 @@ export type Matchup = {
   outcomes: Outcome[];
 }
 
+/** @deprecated */
 export interface Period {
   periodID: number;
   gameID: number;
@@ -101,6 +103,7 @@ export interface Period {
   homeScore: number;
 }
 
+/** @deprecated */
 export interface Stadium {
   stadiumID: number;
   active: boolean;
@@ -112,6 +115,7 @@ export interface Stadium {
   geoLong: number;
 }
 
+/** @deprecated Use CFBDTeam instead */
 export type Team = {
   teamID: number;
   key: string;
@@ -136,6 +140,7 @@ export type Team = {
   rankSeasonType: null;
 }
 
+/** @deprecated */
 export interface TheOddsResult {
   id: string;
   sport_key: string;
@@ -146,10 +151,12 @@ export interface TheOddsResult {
   bookmakers: Bookmaker[];
 }
 
+/** @deprecated */
 export interface TheOddsMatchup {
   data: TheOddsResult[]
 }
 
+/** @deprecated */
 export interface Bookmaker {
   key: string;
   title: string;
@@ -157,16 +164,19 @@ export interface Bookmaker {
   markets: Market[];
 }
 
+/** @deprecated */
 export interface Market {
   key: MarketKey;
   last_update: Date;
   outcomes: Outcome[];
 }
 
+/** @deprecated */
 export enum MarketKey {
   Spreads = "spreads",
 }
 
+/** @deprecated Use GamesAPIResponseOutcome instead */
 export interface Outcome {
   name: string;
   price: number;
@@ -198,12 +208,15 @@ export interface Rank {
 
 export type GamesAPIResponseOutcome = {
   name: string;
-  point: number;
-  pointValue: number;
+  point: string; // formatted spread string e.g. "+3.5" or "-3.5"
+  pointValue: number | undefined;
   id: number;
   isCorrect?: boolean;
 }
 
+
+/** Response type for GET /api/matchups */
+export type MatchupsAPIResponse = GamesAPIResult[];
 
 export type GamesAPIResult = GetGamesResponse[0] & {
   awayTeamAPRanking?: number;

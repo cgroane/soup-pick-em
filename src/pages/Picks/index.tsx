@@ -10,7 +10,7 @@ import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
 import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
-import { stripAndReplaceSpace } from '../../utils/stringMatching';
+
 
 const HeaderCell = styled.td`
 border-radius: 12px;
@@ -95,25 +95,27 @@ const Picks: React.FC = () => {
         user: { name: userPicks?.name, id: userPicks?.userId },
         ...userPicks?.picks.reduce((acc, pick) => {
           const game = slate?.games?.find((g) => g.id === pick.matchup);
-          const fav = game?.outcomes?.find((o) => o.point < 0);
+          const favIsHome = game?.outcomes
+            ? game?.outcomes?.home?.pointValue as number < 0
+            : undefined;
+          const favPointSpread = favIsHome !== undefined
+            ? (favIsHome ? game?.outcomes?.home.pointValue : game?.outcomes?.away.pointValue)
+            : undefined;
+          const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
+          const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
           let isCorrect = !!pick.isCorrect;
           if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
             isCorrect = false;
           } else if (game) {
-            const teams = [stripAndReplaceSpace(`${game?.awayTeamData.school} ${game?.awayTeamData.name}`), stripAndReplaceSpace(`${game?.homeTeamData.school} ${game?.homeTeamData.name}`)];
-            const favPoints = teams?.findIndex((t) => t === fav?.name);
-            const favScore = game[favPoints === 0 ? 'awayPoints' : 'homePoints'];
-            const underDogScore = game[favPoints === 0 ? 'homePoints' : 'awayPoints'];
-
             if (pick.selection?.name === 'PUSH') {
-              if (favScore + (fav?.point as number) === underDogScore) {
+              if ((favScore ?? 0) + (favPointSpread as number) === underDogScore) {
                 sumCorrect++;
                 isCorrect = true;
               }
             } else {
               const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g, '').includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))) ? 'home' : 'away';
-              const newScore = game[`${homePick}Points`] + pick.selection?.point;
-              if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
+              const newScore = (game[`${homePick}Points`] ?? 0) + (pick.selection?.pointValue ?? 0);
+              if (newScore > (game[`${homePick === 'home' ? 'away' : 'home'}Points`] ?? 0)) {
                 sumCorrect++;
                 isCorrect = true
               }
@@ -164,7 +166,7 @@ const Picks: React.FC = () => {
               <p>{game?.awayTeam}</p>
               <p><span style={{ fontWeight: 600 }} >at</span></p>
               <p>{game?.homeTeam}</p>
-              <p>{game?.homeTeamData?.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
+              <p>{game?.homeTeamData?.abbreviation} {(game?.pointSpread ?? 0) > 0 ? '+' : ''}{game?.pointSpread}</p>
             </HeaderCell>,
             minSize: undefined,
             maxSize: undefined,

@@ -1,5 +1,5 @@
 import { GetTeamsResponse } from "cfbd";
-import { cfbdApi } from "."
+import cfbdApi from "."
 import { Poll } from "../model";
 
 export const getRankings = async (year: string, week: string, seasonType: string): Promise<Poll> => {

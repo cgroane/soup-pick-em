@@ -59,7 +59,7 @@ const PickCard: React.FC<PickCardProps> = ({
     seasonData
   } = useUIContext();
 
-  const [choice, setChoice] = useState<GamesAPIResponseOutcome>({ name: 'PUSH', point: 0, pointValue: 0, id: 0 });
+  const [choice, setChoice] = useState<GamesAPIResponseOutcome>({ name: 'PUSH', point: '0', pointValue: 0, id: 0 });
   const pastDate = useMemo(() => {
     return (Date.parse(game?.startDate) < Date.parse(new Date().toDateString()))
   }, [game])
@@ -123,7 +123,7 @@ const PickCard: React.FC<PickCardProps> = ({
                 <Push
                   margin={{ top: '4px' }}
                   label="PUSH"
-                  onClick={!pastDate ? () => makeSelection({ name: "PUSH", point: 0, pointValue: 0, id: 0 }) : undefined}
+                  onClick={!pastDate ? () => makeSelection({ name: "PUSH", point: '0', pointValue: 0, id: 0 }) : undefined}
                   selected={choice?.name === "PUSH"}
                 />
               }
