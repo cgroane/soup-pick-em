@@ -63,10 +63,10 @@ const MakePicks: React.FC = () => {
   }, [getDataForPage]);
 
   const ifMissingGames = useCallback((picksToCheck: Picks[]) => {
-    if (picksToCheck.length < slate?.games?.length!) {
-      const missingGames = slate?.games?.filter((game) => !picksToCheck.find((pick) => pick.matchup === game.gameID));
+    if (picksToCheck.length < 10) {
+      const missingGames = slate?.games?.filter((game) => !picksToCheck.find((pick) => pick.matchup === game.id));
       return Array.from([...picksToCheck, ...missingGames?.map((game) => ({
-        matchup: game.gameID,
+        matchup: game.id,
         isCorrect: false,
         userId: user?.uid,
         selection: {
@@ -101,7 +101,7 @@ const MakePicks: React.FC = () => {
   return (
     <>
       <Box height={'calc(100% - 6rem)'} margin={{ bottom: '8rem' }} pad={'medium'} align='center'>
-        {slate?.games?.map((game) => <PickCard key={game.gameID} game={game} />)}
+        {slate?.games?.map((game) => <PickCard key={game.id} game={game} />)}
       </Box>
       <BottomToolbar
         style={{
@@ -114,9 +114,9 @@ const MakePicks: React.FC = () => {
         align='center'
         width={'100%'}
       >
-        <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/{slate?.games?.length}</Paragraph>
+        <Paragraph color={theme.colors.lightBlue} >Picks: {picks.picks.filter((p) => !!p.selection).length}/10</Paragraph>
         <Box width={'100%'} flex direction='row' justify='center' align='center'>
-          <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 9} />
+          <Button onClick={() => submitPicks()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={picks.picks.filter(p => !!p.selection).length < 10} />
         </Box>
       </BottomToolbar>
       {modalOpen && (

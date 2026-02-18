@@ -120,7 +120,7 @@ const CreateSlate: React.FC = () => {
     }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
   }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
 
-  const disableSelection = useMemo(() => selectedGames?.length >= 9 || !canEdit, [selectedGames, canEdit]);
+  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
 
   return (
     <>
@@ -142,10 +142,10 @@ const CreateSlate: React.FC = () => {
                 {
                   filteredGames?.map((game) =>
                     <Game
-                      addedToSlate={!!selectedGames?.find((selectedGame) => game.gameID === selectedGame.gameID)}
+                      addedToSlate={!!selectedGames?.find((selectedGame) => game.id === selectedGame.id)}
                       disable={disableSelection}
                       hideCheckbox={!isSlatePicker}
-                      key={game.gameID}
+                      key={game.id}
                       game={game}
                     />)
                 }
@@ -154,10 +154,10 @@ const CreateSlate: React.FC = () => {
                 <BottomToolbar style={{
                   boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
                 }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
-                  <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/9</Paragraph>
+                  <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
                   <Box width={'100%'} flex direction='row' justify='center' align='center'>
                     <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate" />
-                    <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 9} />
+                    <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
                   </Box>
                 </BottomToolbar>}
             </>

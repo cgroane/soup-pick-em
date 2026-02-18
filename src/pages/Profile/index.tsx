@@ -64,7 +64,6 @@ const Profile: React.FC<ProfileProps> = () => {
         return b.pctg - a.pctg
       })
   }, [users, seasonData?.Season]);
-  const carouselFirstChild = useMemo(() => user?.record?.findIndex((r) => r.year === seasonData?.Season), [user?.record, seasonData?.Season])
 
   if (status === LoadingState.LOADING) {
     return <Loading iterations={4} type='profileCard' />
@@ -95,10 +94,9 @@ const Profile: React.FC<ProfileProps> = () => {
           <Carousel
             wrap
             fill
-            initialChild={carouselFirstChild as number >= 0 ? carouselFirstChild : 0}
           >
             {
-              user?.record.map((r, ind) => <>
+              user?.record?.filter((r) => !!r.year)?.sort((a, b) => b.year - a.year).map((r, ind) => <>
                 <WinPercentage key={`r-${r.year}-${ind}`} wins={r.wins} losses={r.losses} label={r.year?.toString()} />
               </>)
             }

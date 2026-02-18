@@ -6,6 +6,7 @@ import {
   DocumentData,
   collection,
   collectionGroup,
+  // connectFirestoreEmulator,
   deleteDoc,
   doc,
   getDoc,
@@ -19,6 +20,7 @@ import {
 } from "firebase/firestore";
 import {
   GoogleAuthProvider,
+  // connectAuthEmulator,
   getAuth,
   // connectAuthEmulator 
 } from "firebase/auth";

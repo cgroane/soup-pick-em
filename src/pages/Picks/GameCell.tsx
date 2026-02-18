@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Matchup } from '../../model'
+import { GamesAPIResult } from '../../model'
 import { Box, TableCell, TableCellProps } from 'grommet';
 
 export const StyledGameCell = styled(TableCell)`
@@ -20,7 +20,7 @@ const TextContainer = styled(Box)<{ correct?: boolean }>`
 `
  
 interface GameCellProps extends TableCellProps, React.PropsWithChildren {
-  game: Matchup & { isCorrect: boolean };
+  game: GamesAPIResult & { isCorrect: boolean };
 }
 
 const GameCell: React.FC<GameCellProps> = ({

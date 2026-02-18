@@ -4,13 +4,13 @@ import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable, { StyledCell } from './PicksTable';
 import { createColumnHelper, ColumnDef } from "@tanstack/react-table";
-import { Matchup, Outcome } from '../../model';
+import { GamesAPIResponseOutcome, GamesAPIResult } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
 import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
-import { stripAndReplaceSpace } from '../../utils/stringMatching';
+
 
 const HeaderCell = styled.td`
 border-radius: 12px;
@@ -42,9 +42,9 @@ p {
 
 export interface PicksColumnDef {
   user: { name: string; id: string };
-  game: Matchup & { isCorrect: boolean };
+  game: GamesAPIResult & { isCorrect: boolean };
   numberCorrect: number;
-  [key: string]: Outcome | Matchup & { isCorrect: boolean } | { name: string; id: string } | string | number;
+  [key: string]: GamesAPIResponseOutcome | GamesAPIResult & { isCorrect: boolean } | { name: string; id: string } | string | number;
 };
 
 const columnHelper = createColumnHelper<PicksColumnDef>();
@@ -54,8 +54,8 @@ const Picks: React.FC = () => {
   } = useUIContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
-    week: seasonData?.ApiWeek.toString(),
-    year: seasonData?.Season.toString(),
+    week: seasonData?.ApiWeek?.toString(),
+    year: seasonData?.Season?.toString(),
     seasonType: seasonData?.seasonType as 'postseason' | 'regular'
   });
 
@@ -94,31 +94,29 @@ const Picks: React.FC = () => {
       return {
         user: { name: userPicks?.name, id: userPicks?.userId },
         ...userPicks?.picks.reduce((acc, pick) => {
-          const game = slate?.games?.find((g) => g.gameID === pick.matchup);
-          const fav = game?.outcomes?.find((o) => o.point < 0);
+          const game = slate?.games?.find((g) => g.id === pick.matchup);
+          const favIsHome = game?.outcomes
+            ? game?.outcomes?.home?.pointValue as number < 0
+            : undefined;
+          const favPointSpread = favIsHome !== undefined
+            ? (favIsHome ? game?.outcomes?.home.pointValue : game?.outcomes?.away.pointValue)
+            : undefined;
+          const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
+          const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
           let isCorrect = !!pick.isCorrect;
           /** check game is past */
           if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
             isCorrect = false;
           } else if (game) {
-            const teams = [stripAndReplaceSpace(`${game?.awayTeamData.school} ${game?.awayTeamData.name}`), stripAndReplaceSpace(`${game?.homeTeamData.school} ${game?.homeTeamData.name}`)];
-            const favPoints = teams?.findIndex((t) => t === stripAndReplaceSpace(fav?.name as string));
-            const favScore = game[favPoints === 0 ? 'awayPoints' : 'homePoints'];
-            const underDogScore = game[favPoints === 0 ? 'homePoints' : 'awayPoints'];
-
             if (pick.selection?.name === 'PUSH') {
-              if (favScore + (fav?.point as number) === underDogScore) {
+              if ((favScore ?? 0) + (favPointSpread as number) === underDogScore) {
                 sumCorrect++;
                 isCorrect = true;
               }
             } else {
-
-              // need to find selected team from game.homeTeam.data.school + game.hometeam.data.name cleaned;
-              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g, '').includes((`${game?.homeTeamData.school.toLowerCase()}${game?.homeTeamData.name.toLowerCase()}`).replace(/ /g, ''))) ? 'home' : 'away';
-
-              const newScore = game[`${homePick}Points`] + pick.selection?.point;
-
-              if (newScore > game[`${homePick === 'home' ? 'away' : 'home'}Points`]) {
+              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g, '').includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))) ? 'home' : 'away';
+              const newScore = (game[`${homePick}Points`] ?? 0) + (pick.selection?.pointValue ?? 0);
+              if (newScore > (game[`${homePick === 'home' ? 'away' : 'home'}Points`] ?? 0)) {
                 sumCorrect++;
                 isCorrect = true
               }
@@ -127,7 +125,7 @@ const Picks: React.FC = () => {
 
           return {
             ...acc,
-            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as Matchup },
+            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as GamesAPIResult },
             numberCorrect: sumCorrect
           };
         }, {})
@@ -164,12 +162,12 @@ const Picks: React.FC = () => {
           }),
         },
         ...slate?.games?.map((game) => ({
-          ...columnHelper.accessor(`${game?.gameID}`, {
+          ...columnHelper.accessor(`${game?.id}`, {
             header: () => <HeaderCell >
               <p>{game?.awayTeam}</p>
               <p><span style={{ fontWeight: 600 }} >at</span></p>
               <p>{game?.homeTeam}</p>
-              <p>{game?.homeTeamData?.shortDisplayName} {game?.pointSpread > 0 ? '+' : ''}{game?.pointSpread}</p>
+              <p>{game?.homeTeamData?.abbreviation} {(game?.pointSpread ?? 0) > 0 ? '+' : ''}{game?.pointSpread}</p>
             </HeaderCell>,
             minSize: undefined,
             maxSize: undefined,
@@ -177,8 +175,8 @@ const Picks: React.FC = () => {
             cell: (props) => {
               // get row
               if (props?.row.original) {
-                const selection = props?.row?.original[props?.column?.id] as Matchup & { isCorrect: boolean; selection: Outcome };
-                return <GameCell scope='row' game={selection as Matchup & { isCorrect: boolean }} >
+                const selection = props?.row?.original[props?.column?.id] as GamesAPIResult & { isCorrect: boolean; selection: GamesAPIResponseOutcome };
+                return <GameCell scope='row' game={selection as GamesAPIResult & { isCorrect: boolean }} >
                   {selection?.selection?.name}
                 </GameCell>
               }
