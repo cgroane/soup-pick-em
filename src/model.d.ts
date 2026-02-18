@@ -47,6 +47,7 @@ export type Slate = {
   games: GamesAPIResult[];
   providedBy: UserCollectionData;
   uniqueWeek: string;
+  processed?: boolean;
 }
 
 /** @deprecated Use GamesAPIResult instead */

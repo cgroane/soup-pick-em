@@ -104,6 +104,7 @@ const Picks: React.FC = () => {
           const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
           const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
           let isCorrect = !!pick.isCorrect;
+          /** check game is past */
           if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
             isCorrect = false;
           } else if (game) {
@@ -188,7 +189,7 @@ const Picks: React.FC = () => {
           ...columnHelper.accessor('numberCorrect', {
             header: `Record`,
             cell: info => {
-              const incorrect = Math.abs((info?.row?.original?.numberCorrect) - 10)
+              const incorrect = Math.abs((info?.row?.original?.numberCorrect) - slate.games.length);
               return <StyledGameCell >
                 {info?.row?.original?.numberCorrect} - {incorrect}
               </StyledGameCell>

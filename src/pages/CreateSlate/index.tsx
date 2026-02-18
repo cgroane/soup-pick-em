@@ -115,6 +115,7 @@ const CreateSlate: React.FC = () => {
       week: parseInt(selectedWeek?.week as string),
       uniqueWeek: uniqueId,
       providedBy: user as UserCollectionData,
+      processed: false,
       games: selectedGames,
     }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
   }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);

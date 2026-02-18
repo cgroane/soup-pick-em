@@ -24,5 +24,4 @@ yarn-debug.log*
 yarn-error.log*
 .vercel
 .env
-
-.vscode
+soup-pick-em-firebase-adminsdk-unk23-e3465f8a0a.json

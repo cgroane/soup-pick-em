@@ -18,11 +18,11 @@ import Leaderboard from '../../components/Leaderboard'
  * 
  */
 
-interface ProfileProps {}
+interface ProfileProps { }
 const Profile: React.FC<ProfileProps> = () => {
 
   const { seasonData, setStatus, status, usePostSeason } = useUIContext();
-  const { user, users, fetchUsers, userOverallRecord} = useGlobalContext();
+  const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
 
@@ -35,8 +35,8 @@ const Profile: React.FC<ProfileProps> = () => {
 
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory?.find((h) => h.slateId === slate?.uniqueWeek)?.picks.filter((pick) => !!pick.selection);
-    
-    return allValid?.length === 10 && slate?.games?.length;
+
+    return allValid?.length === slate?.games?.length && slate?.games?.length;
   }, [user?.pickHistory, slate?.uniqueWeek, slate?.games?.length]);
 
   const leaderBoard = useMemo(() => {
@@ -60,13 +60,13 @@ const Profile: React.FC<ProfileProps> = () => {
       ]
       return acc;
     }, [])
-    ?.sort((a, b) => {
-      return b.pctg - a.pctg
-    })
+      ?.sort((a, b) => {
+        return b.pctg - a.pctg
+      })
   }, [users, seasonData?.Season]);
 
   if (status === LoadingState.LOADING) {
-    return <Loading iterations={4} type='profileCard'/>
+    return <Loading iterations={4} type='profileCard' />
   }
   return (
     <>
@@ -75,17 +75,17 @@ const Profile: React.FC<ProfileProps> = () => {
           {
             usePostSeason ? 'Bowl Season' : `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`
           }
-          </Heading>
-          <CardBody>
+        </Heading>
+        <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>
-            <Button primary label={canEdit ? `Pick Slate` : `View Games`}/>  
+            <Button primary label={canEdit ? `Pick Slate` : `View Games`} />
           </Link>
-          </CardBody>
-        </ProfileCard>
-      <ProfileCard border={ hasPicksThisWeek ? {} : { color: 'status-warning', size: 'medium' }} background={'light-1'} >
+        </CardBody>
+      </ProfileCard>
+      <ProfileCard border={hasPicksThisWeek ? {} : { color: 'status-warning', size: 'medium' }} background={'light-1'} >
         <Heading>{hasPicksThisWeek ? 'Change ' : 'Make '}your picks</Heading>
         <CardBody>
-          { slate?.games?.length ? <Link to={'/pick'}><Button primary label={'Go to slate'} /></Link> : <Button primary disabled label={`Slate hasn't been chosen yet`}/>}
+          {slate?.games?.length ? <Link to={'/pick'}><Button primary label={'Go to slate'} /></Link> : <Button primary disabled label={`Slate hasn't been chosen yet`} />}
         </CardBody>
       </ProfileCard>
       <ProfileCard background='light-1' >
@@ -113,14 +113,14 @@ const Profile: React.FC<ProfileProps> = () => {
         <CardBody>
           <Leaderboard items={leaderBoard} />
           <Link to={'/picks'} >
-            <Button label="see more" primary/>
+            <Button label="see more" primary />
           </Link>
         </CardBody>
       </ProfileCard>
     </>
   )
 }
- 
+
 export default Profile
- 
+
 Profile.displayName = "Profile"
