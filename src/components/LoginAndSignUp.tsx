@@ -4,22 +4,23 @@ import { useEmailAndPassword } from '../hooks/useEmailAndPassword'
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useGlobalContext } from '../context/user';
-import { UserCollectionData } from '../model';
-import FirebaseUsersClassInstance from '../firebase/user/user';
+// import { UserCollectionData } from '../model';
+// import FirebaseUsersClassInstance from '../firebase/user/user';
+import { getAuth, signInWithCustomToken } from 'firebase/auth';
 /** import { getAuth, signInWithCustomToken } from 'firebase/auth'; */
- 
+
 
 const LoginButton = styled(Button)`
   height: 1.5rem;
   margin: 4px;
-  background: ${({theme}) => theme.colors.darkBlue};
-  color: ${({theme}) => theme.colors.white};
-  border-color: ${({theme}) => theme.colors.white};
+  background: ${({ theme }) => theme.colors.darkBlue};
+  color: ${({ theme }) => theme.colors.white};
+  border-color: ${({ theme }) => theme.colors.white};
   
 `;
 
 const LoginAndSignUp: React.FC = () => {
-  const { 
+  const {
     handleChange,
     handleSubmit,
     newUser,
@@ -30,88 +31,90 @@ const LoginAndSignUp: React.FC = () => {
   } = useGlobalContext();
   const navigate = useNavigate()
 
-  const googleAuth = useCallback(async () => {
-    /**
-     * if signIN -- auth and then getUser
-     * if register -- auth then addUserDoc
-     */
-    FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
-      navigate('/profile')
-      // if (typeof res === 'object') {
-        if (res) setUser(res as UserCollectionData);
-      // }
-    });
-  }, [setUser, navigate]);
+  // const googleAuth = useCallback(async () => {
+  //   /**
+  //    * if signIN -- auth and then getUser
+  //    * if register -- auth then addUserDoc
+  //    */
+  //   FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
+  //     navigate('/profile')
+  //     // if (typeof res === 'object') {
+  //     if (res) setUser(res as UserCollectionData);
+  //     // }
+  //   });
+  // }, [setUser, navigate]);
 
   /**
    * 
    * @param userId 
-    const impersonateAuth = async (userId: string) => {
-      try {
-        const response = await fetch(`/api/impersonate?userId=${userId}`);
-        const data = await response.json();
-        if (data.customToken) {
-          await signInWithCustomToken(getAuth(), data.customToken);
-          navigate('/profile');
-        }
-      } catch (error) {
-        console.error('Impersonation failed', error);
-      }
-    }
+   *
    */
-  
+  const impersonateAuth = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/impersonate?userId=${userId}`);
+      const data = await response.json();
+      if (data.customToken) {
+        await signInWithCustomToken(getAuth(), data.customToken);
+        navigate('/profile');
+      }
+    } catch (error) {
+      console.error('Impersonation failed', error);
+    }
+  }
+
+
   return (
     <>
       <Box align='center' pad={'xlarge'} gap='medium'>
-      <Box
-        align="center"
-        pad='medium' 
-        width="medium"
-        height="medium"
-      >
-      <Form onSubmit={handleSubmit}>
-        {newUser && (
-          <>
+        <Box
+          align="center"
+          pad='medium'
+          width="medium"
+          height="medium"
+        >
+          <Form onSubmit={handleSubmit}>
+            {newUser && (
+              <>
+                <FormField>
+                  <TextInput onChange={handleChange} name='fName' placeholder='First Name' />
+                </FormField>
+                <FormField>
+                  <TextInput onChange={handleChange} name='lName' placeholder='Last Name' />
+                </FormField>
+              </>
+            )}
             <FormField>
-              <TextInput onChange={handleChange} name='fName' placeholder='First Name' />
+              <TextInput onChange={handleChange} name='email' placeholder='Email' />
             </FormField>
             <FormField>
-              <TextInput onChange={handleChange} name='lName' placeholder='Last Name' />
+              <TextInput onChange={handleChange} name='password' placeholder='Password' type='password' />
             </FormField>
-          </>
-        )}
-        <FormField>
-          <TextInput onChange={handleChange} name='email' placeholder='Email' />
-        </FormField>
-        <FormField>
-          <TextInput onChange={handleChange} name='password' placeholder='Password' type='password' />
-        </FormField>
-        <Box margin={{ top: "medium" }} >
-          <LoginButton
-            pad={'medium'}
-            type='submit'
-            label={newUser ? 'Register' : 'Login'}
-            justify='center'
-            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
-          />
-          <LoginButton
-            pad={'medium'}
-            label={newUser ? 'Register with Google' : 'Sign In with Google'}
-            onClick={() => googleAuth()}
-            justify='center'
-            style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
-          />
-        </Box>
-        </Form>
-        <Box style={{ cursor: 'pointer' }} onClick={() => setNewUser(!newUser)}>
-          <Paragraph>{newUser ? 'Already have an account? Sign In' : 'New User? Sign up'}</Paragraph>
-        </Box>
+            <Box margin={{ top: "medium" }} >
+              <LoginButton
+                pad={'medium'}
+                type='submit'
+                label={newUser ? 'Register' : 'Login'}
+                justify='center'
+                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
+              />
+              <LoginButton
+                pad={'medium'}
+                label={newUser ? 'Register with Google' : 'Sign In with Google'}
+                onClick={() => impersonateAuth("EGxzt9Tsb7QCEOxWCWTX5uVFoLd2")}
+                justify='center'
+                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
+              />
+            </Box>
+          </Form>
+          <Box style={{ cursor: 'pointer' }} onClick={() => setNewUser(!newUser)}>
+            <Paragraph>{newUser ? 'Already have an account? Sign In' : 'New User? Sign up'}</Paragraph>
+          </Box>
         </Box>
       </Box>
     </>
   )
 }
- 
+
 export default LoginAndSignUp
- 
+
 LoginAndSignUp.displayName = "LoginAndSignUp"
