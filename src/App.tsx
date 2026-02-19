@@ -10,7 +10,6 @@ import React from "react";
 const PageWrapper = styled(Page)`
   /* position: relative;
   top: 3rem; */
-  height: calc(100% = 6rem);
 `
 function App() {
 
