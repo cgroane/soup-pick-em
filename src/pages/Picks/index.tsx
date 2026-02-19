@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react'
-import { Box, Heading } from 'grommet';
+import { Box, Heading, Text } from 'grommet';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import PicksTable, { StyledCell } from './PicksTable';
@@ -50,7 +50,8 @@ export interface PicksColumnDef {
 const columnHelper = createColumnHelper<PicksColumnDef>();
 const Picks: React.FC = () => {
   const {
-    seasonData
+    seasonData,
+    useOffSeason,
   } = useUIContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
@@ -209,7 +210,19 @@ const Picks: React.FC = () => {
   return (
     <>
       <Box>
-        {thisWeeksPickHistory && <PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />}
+        {useOffSeason && (
+          <Box background="light-3" pad="small" align="center">
+            <Text size="small" color="dark-4">The season is currently in the offseason. Showing results from the {seasonData?.Season} season.</Text>
+          </Box>
+        )}
+        {slate?.games?.length
+          ? <PicksTable data={thisWeeksPickHistory as PicksColumnDef[]} columns={columns} />
+          : (
+            <Box align="center" pad="xlarge">
+              <Text color="dark-4">No slate found for the selected week.</Text>
+            </Box>
+          )
+        }
         <SelectWeek
           vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<Heading style={{ width: '100%' }} >

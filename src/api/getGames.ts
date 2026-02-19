@@ -18,7 +18,7 @@ export interface SpreadsAPIRequest {
 
 export const getCurrentWeek = async () => {
   try {
-    const response = await cfbdApi.get<SeasonDetails>(`/api/current-week`);
+    const response = await cfbdApi.get<SeasonDetails>(`/current-week`);
     return response.data
   } catch (err) {
     console.error(err)

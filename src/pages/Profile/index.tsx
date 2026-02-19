@@ -42,7 +42,12 @@ const Profile: React.FC<ProfileProps> = () => {
   const leaderBoard = useMemo(() => {
 
     return users?.reduce<LeaderBoardData[]>((acc, leader) => {
-      const thisSeasonsRecord = leader?.record?.find((r) => r.year === seasonData?.Season);
+      const thisSeasonsRecord = leader?.record?.find((r) => {
+        if (seasonData?.seasonType === 'offseason') {
+          return r.year === seasonData?.Season - 1
+        }
+        return r.year === seasonData?.Season;
+      });
       const wins = thisSeasonsRecord?.wins ?? 0;
       const losses = thisSeasonsRecord?.losses ?? 0;
       const pctg = (wins + losses > 0) ? wins / (wins + losses) : 0;
@@ -63,22 +68,40 @@ const Profile: React.FC<ProfileProps> = () => {
       ?.sort((a, b) => {
         return b.pctg - a.pctg
       })
-  }, [users, seasonData?.Season]);
+  }, [users, seasonData?.Season, seasonData?.seasonType]);
+
+  const headingText = useMemo(() => ({
+    postseason: {
+      text: 'Bowl Season, Week 1',
+      weekNumber: '1',
+      buttonText: canEdit ? 'Pick Slate' : 'View Games'
+    },
+    regular: {
+      text: `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`,
+      weekNumber: seasonData?.ApiWeek?.toString() ?? '1',
+      buttonText: canEdit ? 'Pick Slate' : 'View Games'
+    },
+    offseason: {
+      text: 'Offseason',
+      weekNumber: '',
+      buttonText: 'View Games'
+    },
+  }[seasonData?.seasonType || 'regular']), [seasonData?.ApiWeek, seasonData?.seasonType, canEdit, seasonData?.Season]);
 
   if (status === LoadingState.LOADING) {
     return <Loading iterations={4} type='profileCard' />
-  }
+  };
   return (
     <>
       <ProfileCard background='light-1' >
         <Heading margin={{ top: '0' }} size='medium'>
           {
-            usePostSeason ? 'Bowl Season' : `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`
+            headingText.text
           }
         </Heading>
         <CardBody>
           <Link style={{ textDecoration: 'none', width: '100%' }} to={'/choose-matchups'}>
-            <Button primary label={canEdit ? `Pick Slate` : `View Games`} />
+            <Button primary label={headingText.buttonText} />
           </Link>
         </CardBody>
       </ProfileCard>
