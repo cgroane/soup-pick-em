@@ -1,6 +1,6 @@
 import { doc, setDoc, writeBatch } from "firebase/firestore"
 import { FirebaseDB, db } from ".."
-import { Matchup, Slate, UserCollectionData } from "../../model"
+import { GamesAPIResult, Slate, UserCollectionData } from "../../model"
 import { getGames } from "../../api/getGames";
 
 /**
@@ -16,12 +16,12 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
        * returns games that ARE deleted
        * return games where statement is true
        */
-      const overWrittenGames = existingSlate?.games.filter((_, index) => !!deletions?.includes(index)).map((g) => (g.gameID))
+      const overWrittenGames = existingSlate?.games.filter((_, index) => !!deletions?.includes(index)).map((g) => (g.id))
       /**
        * returns games from existing slate that will not be deleted
        * return all games where statement is false
        */
-      const keptGames = existingSlate?.games.filter((_, index) => !deletions?.includes(index)).map((g) => (g.gameID))
+      const keptGames = existingSlate?.games.filter((_, index) => !deletions?.includes(index)).map((g) => (g.id))
       console.log(overWrittenGames, keptGames);
       // what is goiung to represent the new games? data that is not already in pick game list to update
       /**
@@ -50,11 +50,11 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
            * filter data.games for games NOT in picks
            * pick.find data.games game.id === pick.id
            */
-          const newMatchups = (data.games.filter((g) => !pickHToUpdate?.picks.map((p) => p.matchup)?.includes(g.gameID)) as Matchup[])
+          const newMatchups = (data.games.filter((g) => !pickHToUpdate?.picks.map((p) => p.matchup)?.includes(g.id)) as GamesAPIResult[])
             ?.map((matchup) => {
               return {
                 isCorrect: false,
-                matchup: matchup.gameID,
+                matchup: matchup.id,
                 selection: null,
                 userId: null,
                 week: matchup.week
@@ -83,7 +83,7 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
       await setDoc(doc(db, 'slates', `w${week}-2023`), {
         ...slate,
         games: slate?.games.map((g) => {
-          const match = games.find((game) => game.gameID === g.gameID)
+          const match = games.find((game) => game.id === g.id)
           return {
             ...g,
             ...match,

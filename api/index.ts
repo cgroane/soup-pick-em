@@ -1,14 +1,13 @@
 import dotenv from 'dotenv';
-import express  from 'express';
+import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
-import { client, SeasonType, getGames, getRankings } from 'cfbd';
+import { client, SeasonType, getGames, getRankings, getLines, getFbsTeams, DivisionClassification } from 'cfbd';
 import { fileURLToPath } from 'url';
-/**
- * 
+
 import admin from "firebase-admin";
-import fbCert from '../soup-pick-em-firebase-adminsdk-unk23-e3465f8a0a.json';
+import fbCert from '../soup-pick-em-firebase-adminsdk-unk23-bfa3a7bc3c.json';
 
 const fbApp = admin.initializeApp({
   credential: admin.credential.cert({
@@ -17,10 +16,15 @@ const fbApp = admin.initializeApp({
     privateKey: fbCert.private_key.replace(/\\n/g, '\n'),
   })
 });
- */
+
+import axios from 'axios';
+import { SeasonTypes } from '@/context/ui';
+import { SeasonDetailsData } from '@/api/schema/sportsDataIO';
+// import { theOddsInstance } from '@/api';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 
 interface CFBDRequestQuery {
   year: string;
@@ -42,12 +46,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuery>, res: express.Response) => {
   try {
     const opts = {
       'division': 'fbs',
+      'classification': 'fbs' as DivisionClassification,
       'week': parseInt(req.query.week),
-      'seasonType': req.query.seasonType
+      'seasonType': req.query.seasonType,
     }
     const games = await getGames({
       query: {
@@ -55,10 +61,32 @@ app.get('/api/games', async (req: express.Request<any, any, any, CFBDRequestQuer
         ...opts
       }
     });
-    res.send(games.data);
-    return;
+    res.status(200).json(games.data);
+    return
   } catch (err) {
-    res.send(err)
+    res.status(500).json(err)
+  }
+});
+
+app.get(`/api/games/:id`, async (req: express.Request<{ id: string }>, res: express.Response) => {
+  try {
+    const gameId = req.params.id;
+    const games = await getGames({
+      query: {
+        season: new Date().getFullYear(),
+        division: 'fbs',
+        classification: 'fbs' as DivisionClassification,
+        id: Number(gameId)
+      }
+    });
+    const game = games?.data?.[0];
+    if (game) {
+      res.status(200).json(game);
+    } else {
+      res.status(404).json({ message: 'Game not found' });
+    }
+  } catch (err) {
+    res.status(500).json(err)
   }
 });
 
@@ -74,34 +102,185 @@ app.get('/api/rankings', async (req: express.Request<{}, {}, {}, CFBDRequestQuer
         ...opts
       }
     });
-  
-    if (rankings?.data?.[0].polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
-        res.send(rankings?.data?.[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
-      } else {
-        res.send(rankings?.data?.[0].polls.find((p) => p.poll === 'AP Top 25'));
-      };
-      return;
+    if (rankings?.data?.[0]?.polls.map((p) => p.poll).includes("Playoff Committee Rankings")) {
+      res.status(200).json(rankings?.data?.[0].polls.find((p) => p.poll === "Playoff Committee Rankings"));
+    } else {
+      res.status(200).json(rankings?.data?.[0]?.polls.find((p) => p.poll === 'AP Top 25'));
+    };
+    return;
   } catch (err) {
     console.error(err)
+    res.status(500).send(err)
   }
 });
-/**
- * 
-  app.get('/api/impersonate', async (req: express.Request, res: express.Response) => {
-    try {
-      const userId = req.query.userId as string;
-      const customToken = await fbApp.auth().createCustomToken(userId);
-      res.json({ customToken });
+
+app.get('/api/impersonate', async (req: express.Request, res: express.Response) => {
+  try {
+    const userId = req.query.userId as string;
+    const customToken = await fbApp.auth().createCustomToken(userId);
+    res.json({ customToken });
+  }
+  catch (err) {
+    res.status(500).send('Server error');
+  }
+});
+
+
+app.get('/api/odds', async (req: express.Request<{}, {}, {}, {
+  week?: string;
+  year?: string;
+  seasonType?: SeasonType;
+}>, res: express.Response) => {
+  try {
+    const odds = await getLines({
+      query: {
+        week: req.query.week ? parseInt(req.query.week) : undefined,
+        year: req.query.year ? parseInt(req.query.year) : undefined,
+        seasonType: req.query.seasonType as SeasonType | undefined,
+      }
+    });
+    res.status(200).json(odds.data);
+    return;
+  } catch (err) {
+    res.status(500).send(err)
+  }
+});
+
+app.get('/api/teams', async (_req: express.Request, res: express.Response) => {
+  try {
+    const teams = await getFbsTeams();
+    res.status(200).json(teams.data);
+    return;
+  } catch (err) {
+    res.status(500).send(err)
+  }
+});
+
+app.get(`/api/current-week`, async (_req: express.Request, res: express.Response) => {
+  try {
+    const currentSeasonDetails = await axios.get<SeasonDetailsData>(`https://api.sportsdata.io/v3/cfb/scores/json/CurrentSeasonDetails`, {
+      headers: {
+        'Ocp-Apim-Subscription-Key': process.env.REACT_APP_MATCHUPS_API_KEY ?? '',
+      }
+    });
+    const data = currentSeasonDetails.data;
+    const seasonKeys = {
+      'regular': SeasonTypes.REGULAR,
+      'postseason': SeasonTypes.POST,
+      'offseason': SeasonTypes.OFF,
+      'preseason': SeasonTypes.PRE
+    };
+    let seasonKeyAccessor: keyof typeof seasonKeys = data.ApiSeason.includes('OFF') || data?.ApiSeason?.includes("PRE") ? 'offseason' : data.ApiSeason.includes('POST') ? 'postseason' : 'regular';
+    res.status(200).json({
+      ...data,
+      seasonType: seasonKeys[seasonKeyAccessor],
+      isOffseason: seasonKeyAccessor === 'offseason'
+    });
+    return;
+  } catch (err) {
+    res.status(500).send(err)
+  }
+})
+
+app.get("/api/matchups", async (req: express.Request<{}, {}, {}, {
+  week?: string;
+  year: string;
+  seasonType?: SeasonType;
+}>, res: express.Response) => {
+  try {
+    /**
+     * get games by week, year, seasontype
+     * then sort by data (not necessary anymore since i don't have to request odds by date range)
+     * then get rankings, teams, spreads for the same week and year and seasontype if applicable
+     * merge for each game, map get hometeamdata, awayteamdata, ranking, spreads (outcomes: {away, home});
+     * lines are always in terms of the home team.
+     * map game hometeamid to team.id, awayteamid to team.id for teams api
+     * map game.id to spread.id
+     * return merged data
+     */
+    const opts = {
+      week: req.query.week ? parseInt(req.query.week) : undefined,
+      seasonType: req.query.seasonType ?? "regular",
+      year: parseInt(req.query.year)
     }
-    catch (err) {
-      res.status(500).send('Server error');
-    }
-  });
- */
+    const [_games, rankings, _spreads, _teams] = await Promise.all([
+      getGames({
+        query: {
+          ...opts
+        }
+      }),
+      getRankings({
+        query: {
+          ...opts
+        }
+      }),
+      getLines({
+        query: {
+          ...opts
+        }
+      }),
+      getFbsTeams()
+    ]);
+
+    const teamIds = new Set<number>();
+    _teams?.data?.forEach((team) => teamIds.add(team.id));
+
+    const rankPropAccessor = rankings?.data?.[0]?.polls?.[0]?.poll === "Playoff Committee Rankings" ? 'playoffRank' : 'apRank';
+    const dataArr = _games?.data?.filter((g) => teamIds.has(g.homeId) && teamIds.has(g.awayId)).map((game) => {
+      const awayTeamData = _teams?.data?.find((team) => team.id === game.awayId);
+      const homeTeamData = _teams?.data?.find((team) => team.id === game.homeId);
+      return {
+        ...game,
+        awayTeamData: {
+          ...awayTeamData,
+          coachesRank: undefined,
+          apRank: undefined,
+          playoffRank: undefined,
+          [rankPropAccessor]: rankings?.data?.[0]?.polls?.[0]?.ranks?.find((r) => r.teamId === awayTeamData?.id)?.rank
+        },
+        homeTeamData: {
+          ...homeTeamData,
+          coachesRank: undefined,
+          apRank: undefined,
+          playoffRank: undefined,
+          [rankPropAccessor]: rankings?.data?.[0]?.polls?.[0]?.ranks?.find((r) => r.teamId === homeTeamData?.id)?.rank
+        }
+      }
+    })
+      .map((game) => {
+        const line = _spreads?.data?.find((l) => l.id === game.id);
+        const dk = line?.lines?.find((l) => l.provider === "DraftKings");
+        return {
+          ...game,
+          pointSpread: dk?.spread,
+          outcomes: dk?.spread ? {
+            home: {
+              name: game.homeTeamData?.school ?? game.homeTeam,
+              point: dk?.spread && dk?.spread > 0 ? `+${dk?.spread}` : `${dk?.spread}`,
+              pointValue: dk?.spread,
+              id: 1
+            },
+            away: {
+              name: game.awayTeamData?.school ?? game.awayTeam,
+              point: dk?.spread && dk?.spread < 0 ? `+${-1 * dk?.spread}` : `${-1 * dk?.spread}`,
+              pointValue: -1 * dk?.spread,
+              id: 2
+            }
+          } : undefined
+        }
+      }).filter((g) => !!g.outcomes);
+
+    res.status(200).json(dataArr);
+    return;
+  } catch (err) {
+    res.status(500).send(err);
+  }
+})
+
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));
-app.use(function(req: express.Request, res: express.Response, next: express.NextFunction) {
+app.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
   if (req.method === 'GET' && req.accepts('html') && !req.is('json') && !req.path.includes('.')) {
     res.sendFile('index.html', { root })
   } else next()

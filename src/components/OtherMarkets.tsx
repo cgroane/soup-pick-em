@@ -1,16 +1,16 @@
 import { Accordion, AccordionPanel, Box } from 'grommet';
 import React, { useCallback } from 'react'
-import { getOtherMarkets } from '../api/getOtherMarkets';
-import { Matchup } from '../model';
- 
+// import { getOtherMarkets } from '../api/getOtherMarkets';
+import { GamesAPIResult } from '../model';
+
 interface OtherMarketsProps {
   gameId: string;
-  addToSlate: (game: Matchup) => void;
+  addToSlate: (game: GamesAPIResult) => void;
   addedToSlate: boolean;
   disableSelections: boolean;
 }
 const OtherMarkets: React.FC<OtherMarketsProps> = ({
-  gameId,  
+  gameId,
   // addToSlate,
   // addedToSlate,
   // disableSelections
@@ -20,8 +20,8 @@ const OtherMarkets: React.FC<OtherMarketsProps> = ({
 
   const fetchMoreMarkets = useCallback(() => {
     // setIsLoading(true);
-    const otherMarkets = getOtherMarkets(gameId, ['h2h', 'totals']);
-    console.log(otherMarkets);
+    // const otherMarkets = getOtherMarkets(gameId, ['h2h', 'totals']);
+    // console.log(otherMarkets);
   }, [gameId]);
 
   const onPanelActive = (activeIndexes: number[]) => {
@@ -44,7 +44,7 @@ const OtherMarkets: React.FC<OtherMarketsProps> = ({
     </Accordion>
   )
 }
- 
+
 export default OtherMarkets
- 
+
 OtherMarkets.displayName = "OtherMarkets"

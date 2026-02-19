@@ -5,7 +5,8 @@ export type SeasonDetails = {
   Description: string;
   ApiSeason: string;
   ApiWeek: number;
+  isOffseason: boolean;
 }
 export type SeasonDetailsData = SeasonDetails & {
-  seasonType: 'regular' | 'postseason';
+  seasonType: 'regular' | 'postseason' | 'offseason';
 }

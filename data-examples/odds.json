@@ -1,0 +1,51 @@
+[
+  {
+    "id": 401778304,
+    "season": 2025,
+    "seasonType": "postseason",
+    "week": 1,
+    "startDate": "2025-12-17T22:00:00.000Z",
+    "homeTeamId": 58,
+    "homeTeam": "South Florida",
+    "homeConference": "American Athletic",
+    "homeClassification": "fbs",
+    "homeScore": 10,
+    "awayTeamId": 295,
+    "awayTeam": "Old Dominion",
+    "awayConference": "Sun Belt",
+    "awayClassification": "fbs",
+    "awayScore": 24,
+    "lines": [
+      {
+        "provider": "DraftKings",
+        "spread": -4,
+        "formattedSpread": "South Florida -4",
+        "spreadOpen": null,
+        "overUnder": 52.5,
+        "overUnderOpen": null,
+        "homeMoneyline": -192,
+        "awayMoneyline": 160
+      },
+      {
+        "provider": "Bovada",
+        "spread": -3,
+        "formattedSpread": "South Florida -3.0",
+        "spreadOpen": -6,
+        "overUnder": 54,
+        "overUnderOpen": 55.5,
+        "homeMoneyline": -230,
+        "awayMoneyline": 190
+      },
+      {
+        "provider": "Draft Kings",
+        "spread": -4,
+        "formattedSpread": "South Florida -4",
+        "spreadOpen": null,
+        "overUnder": 52.5,
+        "overUnderOpen": null,
+        "homeMoneyline": null,
+        "awayMoneyline": null
+      }
+    ]
+  }
+]
