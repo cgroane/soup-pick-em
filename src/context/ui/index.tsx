@@ -23,6 +23,7 @@ export type UIValueProp = {
   status: keyof typeof LoadingState;
   setStatus: Dispatch<SetStateAction<keyof typeof LoadingState>>;
   usePostSeason: boolean;
+  useOffSeason: boolean;
 }
 
 type ContextProp = {
@@ -38,36 +39,27 @@ export default function Context({ children }: ContextProp) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const usePostSeason = useMemo(() => {
-    return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST) || seasonData?.ApiSeason?.includes(SeasonTypes.OFF))
+    return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST))
   }, [seasonData?.ApiSeason]);
 
-  /**
-   * is there a better way to force historical? 
-   * this gets called twice on app load, maybe 3 times.
-   */
+  const useOffSeason = useMemo(() => !!seasonData?.isOffseason, [seasonData?.isOffseason]);
+
   const getSeasonData = useCallback(async () => {
     const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
-    /**
-     * MOCK
-     */
-    const usePost = !!(data?.ApiSeason?.includes(SeasonTypes.POST) || data?.ApiSeason?.includes(SeasonTypes.OFF));
+    const isOff = data.isOffseason;
+    const offseasonAdjustment = isOff ? {
+      Season: data.Season - 1,
+      EndYear: data.EndYear - 1,
+      ApiWeek: 1,
+      Description: (parseInt(data.Description) - 1)?.toString(),
+      seasonType: 'offseason' as const
+    } : {};
 
-    if (process.env.REACT_APP_SEASON_KEY === 'offseason') {
-      setSeasonData({
-        ...data,
-        Season: data.Season - 1,
-        EndYear: data.EndYear - 1,
-        ApiWeek: 1,
-        Description: (parseInt(data.Description) - 1)?.toString(),
-        seasonType: usePost ? 'postseason' : 'regular'
-      })
-    } else {
-      setSeasonData({
-        ...data,
-        seasonType: usePostSeason ? 'postseason' : 'regular'
-      })
-    }
-  }, [setSeasonData, usePostSeason]);
+    setSeasonData({
+      ...data,
+      ...offseasonAdjustment,
+    });
+  }, [setSeasonData]);
 
   useEffect(() => {
     getSeasonData()
@@ -76,7 +68,7 @@ export default function Context({ children }: ContextProp) {
 
 
   return (
-    <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason }}>
+    <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason, useOffSeason }}>
       {children}
     </UiContext.Provider>
   )

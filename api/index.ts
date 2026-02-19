@@ -6,6 +6,8 @@ import path, { dirname } from 'path';
 import { client, SeasonType, getGames, getRankings, getLines, getFbsTeams, DivisionClassification } from 'cfbd';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
+import { SeasonTypes } from '@/context/ui';
+import { SeasonDetailsData } from '@/api/schema/sportsDataIO';
 // import { theOddsInstance } from '@/api';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -132,12 +134,24 @@ app.get('/api/teams', async (_req: express.Request, res: express.Response) => {
 
 app.get(`/api/current-week`, async (_req: express.Request, res: express.Response) => {
   try {
-    const currentSeasonDetails = await axios.get(`https://api.sportsdata.io/v3/cfb/scores/json/CurrentSeasonDetails`, {
+    const currentSeasonDetails = await axios.get<SeasonDetailsData>(`https://api.sportsdata.io/v3/cfb/scores/json/CurrentSeasonDetails`, {
       headers: {
         'Ocp-Apim-Subscription-Key': process.env.REACT_APP_MATCHUPS_API_KEY ?? '',
       }
     });
-    res.status(200).json(currentSeasonDetails.data);
+    const data = currentSeasonDetails.data;
+    const seasonKeys = {
+      'regular': SeasonTypes.REGULAR,
+      'postseason': SeasonTypes.POST,
+      'offseason': SeasonTypes.OFF,
+      'preseason': SeasonTypes.PRE
+    };
+    let seasonKeyAccessor: keyof typeof seasonKeys = data.ApiSeason.includes('OFF') || data?.ApiSeason?.includes("PRE") ? 'offseason' : data.ApiSeason.includes('POST') ? 'postseason' : 'regular';
+    res.status(200).json({
+      ...data,
+      seasonType: seasonKeys[seasonKeyAccessor],
+      isOffseason: seasonKeyAccessor === 'offseason'
+    });
     return;
   } catch (err) {
     res.status(500).send(err)
@@ -239,33 +253,6 @@ app.get("/api/matchups", async (req: express.Request<{}, {}, {}, {
   }
 })
 
-
-// app.get(`/api/odds`, async (req: express.Request<{}, {}, {
-//   weekNumber?: string;
-//   season?: string;
-//   bookmakers?: string;
-//   markets?: string;
-//   commenceTimeFrom?: string
-//   commenceTimeTo?: string;
-//   event?: string;
-//   date?: string;
-//   seasonType?: string;
-//   historical?: string;
-// }>, res: express.Response) => {
-//   try {
-//     const odds = await theOddsInstance.get(`${req.query.historical || process.env.REACT_APP_SEASON_KEY === "offseason" ? 'historical/' : ''}sports/americanfootball_ncaaf/odds`, {
-//       params: {
-//         ...req.query,
-//         apiKey: process.env.REACT_APP_THE_ODDS_API_KEY,
-//         regions: 'us',
-//         markets: req.query.markets ?? 'spreads',
-//       }
-//     });
-//     res.status(200).json(odds.data.data);
-//   } catch (err) {
-//     res.status(500).send(err)
-//   }
-// })
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Paragraph, Spinner, TextInput, Toolbar } from 'grommet';
+import { Box, Button, Paragraph, Spinner, Text, TextInput, Toolbar } from 'grommet';
 import Game from '../../components/Game';
 import styled from 'styled-components';
 import { Search } from 'grommet-icons';
@@ -59,6 +59,7 @@ const CreateSlate: React.FC = () => {
     seasonData,
     setStatus,
     status,
+    useOffSeason,
   } = useUIContext()
   const {
     user,
@@ -128,6 +129,11 @@ const CreateSlate: React.FC = () => {
         <Toolbar margin={{ top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
           <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
         </Toolbar>
+        {useOffSeason && (
+          <Box background="light-3" pad="small" align="center">
+            <Text size="small" color="dark-4">The season is currently in the offseason. Showing matchups from the {seasonData?.Season} season.</Text>
+          </Box>
+        )}
         <SelectWeek
           vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<></>}
@@ -139,8 +145,8 @@ const CreateSlate: React.FC = () => {
           ) : (
             <>
               <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
-                {
-                  filteredGames?.map((game) =>
+                {filteredGames?.length
+                  ? filteredGames?.map((game) =>
                     <Game
                       addedToSlate={!!selectedGames?.find((selectedGame) => game.id === selectedGame.id)}
                       disable={disableSelection}
@@ -148,6 +154,7 @@ const CreateSlate: React.FC = () => {
                       key={game.id}
                       game={game}
                     />)
+                  : <Text color="dark-4">No games available for the selected week.</Text>
                 }
               </Box>
               {(canEdit) &&
