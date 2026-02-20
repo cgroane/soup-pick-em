@@ -68,8 +68,11 @@ export default function CreateSlateContext({ children }: ContextProp) {
         seasonType,
       })
       if (results?.length) {
-        setGames(results.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate)));
-        setFilteredGames(results.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate)));
+        const filtered = seasonType === 'postseason'
+          ? results.filter((g) => !(g.notes as string)?.includes('College Football Playoff'))
+          : results;
+        setGames(filtered.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate)));
+        setFilteredGames(filtered.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate)));
       }
       return results;
     } catch (err) {

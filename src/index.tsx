@@ -10,6 +10,7 @@ import Context from './context/user';
 import CreateSlateContext from './context/slate';
 import UiContext from './context/ui';
 import PickContext from './context/pick';
+import CFPContextProvider from './context/cfp';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -22,7 +23,9 @@ root.render(
           <Context>
             <PickContext>
               <CreateSlateContext>
-                <App />
+                <CFPContextProvider>
+                  <App />
+                </CFPContextProvider>
               </CreateSlateContext>
             </PickContext>
           </Context>

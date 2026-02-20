@@ -267,7 +267,63 @@ app.get("/api/matchups", async (req: express.Request<{}, {}, {}, {
             }
           } : undefined
         }
-      }).filter((g) => !!g.outcomes);
+      }).filter((g) => !!g.outcomes)
+      .filter((g) => opts.seasonType === 'postseason' ? !(g.notes as string)?.includes('College Football Playoff') : true);
+
+    res.status(200).json(dataArr);
+    return;
+  } catch (err) {
+    res.status(500).send(err);
+  }
+})
+
+app.get('/api/cfp-games', async (req: express.Request<{}, {}, {}, { year?: string }>, res: express.Response) => {
+  try {
+    const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+    const opts = {
+      week: 1,
+      seasonType: 'postseason' as SeasonType,
+      year,
+    };
+
+    const [_games, _spreads, _teams] = await Promise.all([
+      getGames({ query: opts }),
+      getLines({ query: opts }),
+      getFbsTeams()
+    ]);
+
+    const cfpGames = _games?.data?.filter((g) => (g.notes as string)?.includes('College Football Playoff'));
+
+    const dataArr = cfpGames?.map((game) => {
+      const awayTeamData = _teams?.data?.find((team) => team.id === game.awayId);
+      const homeTeamData = _teams?.data?.find((team) => team.id === game.homeId);
+      return {
+        ...game,
+        awayTeamData: { ...awayTeamData },
+        homeTeamData: { ...homeTeamData },
+      };
+    }).map((game) => {
+      const line = _spreads?.data?.find((l) => l.id === game.id);
+      const dk = line?.lines?.find((l) => l.provider === 'DraftKings');
+      return {
+        ...game,
+        pointSpread: dk?.spread,
+        outcomes: dk?.spread ? {
+          home: {
+            name: game.homeTeamData?.school ?? game.homeTeam,
+            point: dk.spread > 0 ? `+${dk.spread}` : `${dk.spread}`,
+            pointValue: dk.spread,
+            id: 1
+          },
+          away: {
+            name: game.awayTeamData?.school ?? game.awayTeam,
+            point: dk.spread < 0 ? `+${-1 * dk.spread}` : `${-1 * dk.spread}`,
+            pointValue: -1 * dk.spread,
+            id: 2
+          }
+        } : undefined,
+      };
+    });
 
     res.status(200).json(dataArr);
     return;

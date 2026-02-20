@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGlobalContext } from '../context/user'
 import FirebaseUsersClassInstance from '../firebase/user/user'
 import { UserRoles } from '../utils/constants'
+import { useUIContext } from '../context/ui'
  
 const StyledHeader = styled(Header)`
   background-color: ${({theme}) => theme.colors.lightBlue};
@@ -20,6 +21,7 @@ const Navigation: React.FC = () => {
   const {
     user
   } = useGlobalContext();
+  const { usePostSeason } = useUIContext();
 
   const menuItems = useMemo(() => {
     const loggedInItems = [
@@ -38,14 +40,26 @@ const Navigation: React.FC = () => {
         onClick: () => navigate('/')
       }
     ];
+    if (usePostSeason) {
+      loggedInItems.push({
+        label: 'CFP Bracket',
+        onClick: () => navigate('/cfp-bracket')
+      });
+    }
     if (user?.roles?.includes(UserRoles.ADMIN)) {
       loggedInItems.push({
         label: 'Choose Slate Maker',
         onClick: () => navigate('/choose-picker')
       });
+      if (usePostSeason) {
+        loggedInItems.push({
+          label: 'CFP Management',
+          onClick: () => navigate('/admin-cfp')
+        });
+      }
     }
     return !!user?.isAuthenticated ? loggedInItems : loggedOut;
-  }, [user?.isAuthenticated, navigate, signOut, user?.roles])
+  }, [user?.isAuthenticated, navigate, signOut, user?.roles, usePostSeason])
   return (
     <StyledHeader gridArea='header'>
       <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/profile')} />
