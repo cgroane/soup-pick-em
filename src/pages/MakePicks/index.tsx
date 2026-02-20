@@ -100,7 +100,7 @@ const MakePicks: React.FC = () => {
 
   return (
     <>
-      <Box height={'calc(100% - 6rem)'} margin={{ bottom: '8rem' }} pad={'medium'} align='center'>
+      <Box margin={{ bottom: '8rem' }} pad={'medium'} align='center'>
         {slate?.games?.map((game) => <PickCard key={game.id} game={game} />)}
       </Box>
       <BottomToolbar

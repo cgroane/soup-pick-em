@@ -5,7 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useGlobalContext } from '../context/user';
 import { UserCollectionData } from '../model';
+// import FirebaseUsersClassInstance from '../firebase/user/user';
+// import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import FirebaseUsersClassInstance from '../firebase/user/user';
+
+/** import { getAuth, signInWithCustomToken } from 'firebase/auth'; */
 
 
 const LoginButton = styled(Button)`
@@ -24,7 +28,6 @@ const LoginAndSignUp: React.FC = () => {
     newUser,
     setNewUser
   } = useEmailAndPassword();
-
   const {
     setUser
   } = useGlobalContext();
@@ -42,6 +45,25 @@ const LoginAndSignUp: React.FC = () => {
       // }
     }).catch((err) => alert(err.message));
   }, [setUser, navigate]);
+
+
+  // /**
+  //  * 
+  //  * @param userId 
+  //  *
+  //  */
+  // const impersonateAuth = async (userId: string) => {
+  //   try {
+  //     const response = await fetch(`/api/impersonate?userId=${userId}`);
+  //     const data = await response.json();
+  //     if (data.customToken) {
+  //       await signInWithCustomToken(getAuth(), data.customToken);
+  //       navigate('/profile');
+  //     }
+  //   } catch (error) {
+  //     console.error('Impersonation failed', error);
+  //   }
+  // }
 
   return (
     <>

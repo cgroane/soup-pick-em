@@ -47,7 +47,7 @@ const Navigation: React.FC = () => {
     return !!user?.isAuthenticated ? loggedInItems : loggedOut;
   }, [user?.isAuthenticated, navigate, signOut, user?.roles])
   return (
-    <StyledHeader gridArea='header' sticky='scrollup' >
+    <StyledHeader gridArea='header'>
       <Button icon={<Home color={theme.colors.darkBlue} />} hoverIndicator onClick={() => navigate('/profile')} />
       {<Menu color={theme.colors.darkBlue} items={menuItems} />}
     </StyledHeader>
