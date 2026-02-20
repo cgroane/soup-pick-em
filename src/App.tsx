@@ -7,11 +7,24 @@ import { Page } from 'grommet';
 import styled from 'styled-components';
 import React from "react";
 
-const PageWrapper = styled(Page)`
-  /* position: relative;
-  top: 3rem; */
-  height: calc(100% = 6rem);
+const AppLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 `
+
+const ContentArea = styled(Page)`
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  & > * {
+    flex-shrink: 0;
+  }
+`
+
 function App() {
 
   /**
@@ -22,10 +35,12 @@ function App() {
 
   return (
     <Provider store={store}>
-      <Navigation />
-      <PageWrapper>
-        <Router />
-      </PageWrapper>
+      <AppLayout>
+        <Navigation />
+        <ContentArea>
+          <Router />
+        </ContentArea>
+      </AppLayout>
     </Provider>
   );
 }

@@ -25,8 +25,8 @@ import { StatusGood } from 'grommet-icons';
  * narrow screen content overlaps
  */
 const BottomToolbar = styled(Toolbar)`
-  position: sticky;
-  bottom: 0%;
+  position: fixed;
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 8rem;
@@ -144,7 +144,7 @@ const CreateSlate: React.FC = () => {
             <Loading iterations={3} type='gameCard' />
           ) : (
             <>
-              <Box height={'calc(100% - 6rem)'} pad={'medium'} align='center' >
+              <Box pad={'medium'} align='center' margin={{ bottom: canEdit ? '8rem' : '0' }}>
                 {filteredGames?.length
                   ? filteredGames?.map((game) =>
                     <Game
@@ -159,12 +159,13 @@ const CreateSlate: React.FC = () => {
               </Box>
               {(canEdit) &&
                 <BottomToolbar style={{
-                  boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)'
-                }} pad={'4px'} flex direction='column' justify='evenly' align='center' width={'100%'} >
-                  <Paragraph color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
+                  boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)',
+                  flexShrink: 0,
+                }} pad={'4px'} height={'3rem'} flex direction='column' justify='evenly' align='center' width={'100%'} >
+                  <Paragraph margin={"2px"} color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
                   <Box width={'100%'} flex direction='row' justify='center' align='center'>
-                    <Button margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate" />
-                    <Button onClick={() => submitSlate()} margin={'4px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
+                    <Button margin={'2px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate" />
+                    <Button onClick={() => submitSlate()} margin={'2px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
                   </Box>
                 </BottomToolbar>}
             </>
