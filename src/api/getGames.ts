@@ -37,3 +37,10 @@ export const getGames = async (options?: SpreadsAPIRequest) => {
   });
   return matchups.data;
 }
+
+export const getCFPGames = async (year: number): Promise<MatchupsAPIResponse> => {
+  const response = await cfbdApi.get<MatchupsAPIResponse>('/cfp-games', {
+    params: { year }
+  });
+  return response.data;
+}

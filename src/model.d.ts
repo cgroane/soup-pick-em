@@ -215,6 +215,14 @@ export type GamesAPIResponseOutcome = {
   isCorrect?: boolean;
 }
 
+export type CFPRound = 'firstRound' | 'quarterfinal' | 'semifinal' | 'championship';
+
+export type CFPBracket = {
+  year: number;
+  games: GamesAPIResult[];
+  updatedAt: string;
+}
+
 
 /** Response type for GET /api/matchups */
 export type MatchupsAPIResponse = GamesAPIResult[];

@@ -9,6 +9,8 @@ import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
 import Colors from "./pages/Colors";
 import MakePicks from "./pages/MakePicks";
+import CFPBracket from "./pages/CFPBracket";
+import AdminCFP from "./pages/AdminCFP";
 
 /**
  * admin has all routes, but must be logged in.
@@ -92,12 +94,32 @@ const Router = () => {
           </PrivateRoutes>
       }
       />
-      <Route 
-        path="/pick" 
+      <Route
+        path="/pick"
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+        }
+      />
+      <Route
+        path="/cfp-bracket"
+        element={
+          <PrivateRoutes authenticated={!!user?.isAuthenticated}>
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean}>
+              <CFPBracket />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+        }
+      />
+      <Route
+        path="/admin-cfp"
+        element={
+          <PrivateRoutes authenticated={!!user?.isAuthenticated}>
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean}>
+              <AdminCFP />
             </RoleGuardedRoutes>
           </PrivateRoutes>
         }

@@ -10,6 +10,7 @@ import GameCell, { StyledGameCell } from './GameCell';
 import styled from 'styled-components';
 import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
+import { useCFPContext } from '../../context/cfp';
 
 
 const HeaderCell = styled.td`
@@ -52,7 +53,9 @@ const Picks: React.FC = () => {
   const {
     seasonData,
     useOffSeason,
+    usePostSeason,
   } = useUIContext();
+  const { bracket } = useCFPContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
@@ -134,8 +137,104 @@ const Picks: React.FC = () => {
     }) as PicksColumnDef[]
       ;
   }, [slate, allPickHistories]);
+  const cfpSlateId = `cfp-${seasonData?.Season}`;
+
+  const cfpPickHistory = useMemo(() => {
+    if (!bracket?.games?.length || !usePostSeason) return [];
+    return allPickHistories?.filter((pickSet) => pickSet.slateId === cfpSlateId)?.map((userPicks) => {
+      let sumCorrect = 0;
+      return {
+        user: { name: userPicks?.name, id: userPicks?.userId },
+        ...userPicks?.picks.reduce((acc, pick) => {
+          const game = bracket.games?.find((g) => g.id === pick.matchup);
+          const favIsHome = game?.outcomes
+            ? game?.outcomes?.home?.pointValue as number < 0
+            : undefined;
+          const favPointSpread = favIsHome !== undefined
+            ? (favIsHome ? game?.outcomes?.home.pointValue : game?.outcomes?.away.pointValue)
+            : undefined;
+          const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
+          const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
+          let isCorrect = !!pick.isCorrect;
+          if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
+            isCorrect = false;
+          } else if (game) {
+            if (pick.selection?.name === 'PUSH') {
+              if ((favScore ?? 0) + (favPointSpread as number) === underDogScore) {
+                sumCorrect++;
+                isCorrect = true;
+              }
+            } else {
+              const homePick = (pick.selection?.name?.toLowerCase().replace(/ /g, '').includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))) ? 'home' : 'away';
+              const newScore = (game[`${homePick}Points`] ?? 0) + (pick.selection?.pointValue ?? 0);
+              if (newScore > (game[`${homePick === 'home' ? 'away' : 'home'}Points`] ?? 0)) {
+                sumCorrect++;
+                isCorrect = true;
+              }
+            }
+          }
+          return {
+            ...acc,
+            [pick.matchup]: { selection: pick.selection, isCorrect, ...game as GamesAPIResult },
+            numberCorrect: sumCorrect
+          };
+        }, {})
+      }
+    }) as PicksColumnDef[];
+  }, [bracket, allPickHistories, cfpSlateId, usePostSeason]);
+
+  const cfpColumns: ColumnDef<PicksColumnDef>[] = useMemo(() => {
+    if (!bracket?.games?.length) return [];
+    return [
+      {
+        ...columnHelper.accessor('user', {
+          cell: info => (
+            <StyledCell key={info?.cell?.id} style={{ textAlign: 'center' }} border={'horizontal'} background={'white'}>
+              {info?.row?.original?.user?.name}
+            </StyledCell>
+          ),
+          header: 'Soup',
+          size: 100,
+          enablePinning: true,
+        }),
+      },
+      ...bracket.games.map((game) => ({
+        ...columnHelper.accessor(`${game.id}`, {
+          header: () => (
+            <td style={{ borderRadius: '12px', background: 'white', color: 'black', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', justifyContent: 'center', padding: '8px' }}>
+              <p style={{ margin: '2px' }}>{game.awayTeam}</p>
+              <p style={{ margin: '2px' }}><span style={{ fontWeight: 600 }}>at</span></p>
+              <p style={{ margin: '2px' }}>{game.homeTeam}</p>
+              <p style={{ margin: '2px' }}>{game.homeTeamData?.abbreviation} {(game.pointSpread ?? 0) > 0 ? '+' : ''}{game.pointSpread}</p>
+            </td>
+          ),
+          size: 250,
+          cell: (props) => {
+            if (props?.row.original) {
+              const selection = props?.row?.original[props?.column?.id] as GamesAPIResult & { isCorrect: boolean; selection: GamesAPIResponseOutcome };
+              return <GameCell scope='row' game={selection as GamesAPIResult & { isCorrect: boolean }}>
+                {selection?.selection?.name}
+              </GameCell>
+            }
+            return null;
+          }
+        }),
+      })),
+      {
+        ...columnHelper.accessor('numberCorrect', {
+          header: 'Record',
+          cell: info => {
+            const incorrect = Math.abs((info?.row?.original?.numberCorrect) - bracket.games.length);
+            return <StyledGameCell>{info?.row?.original?.numberCorrect} - {incorrect}</StyledGameCell>
+          },
+          size: 100,
+        })
+      }
+    ] as ColumnDef<PicksColumnDef>[];
+  }, [bracket?.games]);
+
   /**
-   * picks column def needs to just be id, name, 
+   * picks column def needs to just be id, name,
    */
   const columns: ColumnDef<PicksColumnDef>[] = useMemo(() => {
 
@@ -230,6 +329,21 @@ const Picks: React.FC = () => {
           </Heading>}
           onChange={setSelectedWeek}
         />
+        {usePostSeason && bracket?.games?.length ? (
+          <Box margin={{ top: 'medium' }}>
+            <Heading level={4} color="light-1" margin={{ horizontal: 'medium', bottom: 'small' }}>
+              CFP Picks — {seasonData?.Season}
+            </Heading>
+            {cfpPickHistory.length
+              ? <PicksTable data={cfpPickHistory as PicksColumnDef[]} columns={cfpColumns} />
+              : (
+                <Box align="center" pad="medium">
+                  <Text color="dark-4">No CFP picks submitted yet.</Text>
+                </Box>
+              )
+            }
+          </Box>
+        ) : null}
       </Box>
     </>
   )

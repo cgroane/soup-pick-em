@@ -39,7 +39,7 @@ export default function Context({ children }: ContextProp) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const usePostSeason = useMemo(() => {
-    return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST))
+    return !(seasonData?.ApiSeason?.includes(SeasonTypes.POST))
   }, [seasonData?.ApiSeason]);
 
   const useOffSeason = useMemo(() => !!seasonData?.isOffseason, [seasonData?.isOffseason]);
