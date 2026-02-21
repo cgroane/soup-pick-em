@@ -1,0 +1,81 @@
+
+name: Manage PR environments (Railway)
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+
+permissions:
+  contents: read
+
+env:
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+  RAILWAY_SERVICE_ID: ${{ vars.RAILWAY_SERVICE_ID }}
+  RAILWAY_ENV_VAR_NAME: ${{ vars.RAILWAY_ENV_VAR_NAME }}
+  RAILWAY_ENV_VAR_VALUE: ${{ secrets.RAILWAY_ENV_VAR_VALUE }}
+  RAILWAY_DUPLICATE_FROM_ID: ${{ vars.RAILWAY_DUPLICATE_FROM_ID }}
+  RAILWAY_LINK_PROJECT_ID: ${{ vars.RAILWAY_LINK_PROJECT_ID }}
+  RAILWAY_WORKSPACE_ID: ${{ vars.RAILWAY_WORKSPACE_ID }}
+
+jobs:
+  pr_opened:
+    if: (github.event.action == 'opened' || github.event.action == 'reopened') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    steps:
+      - name: Validate required configuration
+        shell: sh
+        run: |
+          set -eu
+          test -n "$RAILWAY_API_TOKEN"
+          test -n "$RAILWAY_DUPLICATE_FROM_ID"
+          test -n "$RAILWAY_LINK_PROJECT_ID"
+      - name: Link to project
+        shell: sh
+        run: |
+          set -eu
+          if [ -n "$RAILWAY_WORKSPACE_ID" ]; then
+            railway link --project "$RAILWAY_LINK_PROJECT_ID" --environment "$RAILWAY_DUPLICATE_FROM_ID" --workspace "$RAILWAY_WORKSPACE_ID"
+          else
+            railway link --project "$RAILWAY_LINK_PROJECT_ID" --environment "$RAILWAY_DUPLICATE_FROM_ID"
+          fi
+      - name: Create Railway Environment for PR
+        shell: sh
+        run: |
+          set -eu
+          if [ -n "$RAILWAY_SERVICE_ID" ] && [ -n "$RAILWAY_ENV_VAR_NAME" ] && [ -n "$RAILWAY_ENV_VAR_VALUE" ]; then
+            railway environment new "pr-${{ github.event.pull_request.number }}" \
+              --copy "$RAILWAY_DUPLICATE_FROM_ID" \
+              --service-variable "$RAILWAY_SERVICE_ID" "$RAILWAY_ENV_VAR_NAME=$RAILWAY_ENV_VAR_VALUE" \
+              --service-config "$RAILWAY_SERVICE_ID" "source.branch" "${{ github.head_ref }}"
+          else
+            railway environment new "pr-${{ github.event.pull_request.number }}" \
+              --copy "$RAILWAY_DUPLICATE_FROM_ID"
+          fi
+
+  pr_closed:
+    if: github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    container: ghcr.io/railwayapp/cli:latest
+    steps:
+      - name: Validate required configuration
+        shell: sh
+        run: |
+          set -eu
+          test -n "$RAILWAY_API_TOKEN"
+          test -n "$RAILWAY_DUPLICATE_FROM_ID"
+          test -n "$RAILWAY_LINK_PROJECT_ID"
+      - name: Link to project
+        shell: sh
+        run: |
+          set -eu
+          if [ -n "$RAILWAY_WORKSPACE_ID" ]; then
+            railway link --project "$RAILWAY_LINK_PROJECT_ID" --environment "$RAILWAY_DUPLICATE_FROM_ID" --workspace "$RAILWAY_WORKSPACE_ID"
+          else
+            railway link --project "$RAILWAY_LINK_PROJECT_ID" --environment "$RAILWAY_DUPLICATE_FROM_ID"
+          fi
+      - name: Delete Railway Environment for PR
+        shell: sh
+        run: |
+          set -eu
+          railway environment delete "pr-${{ github.event.pull_request.number }}" || true
