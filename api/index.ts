@@ -248,7 +248,7 @@ app.get("/api/matchups", async (req: express.Request<{}, {}, {}, {
     })
       .map((game) => {
         const line = _spreads?.data?.find((l) => l.id === game.id);
-        const dk = line?.lines?.find((l) => l.provider === "DraftKings") ?? line?.lines?.[0];
+        const dk = line?.lines?.find((l) => l.provider === "DraftKings" || l.provider === "Draft Kings") ?? line?.lines?.[0];
         return {
           ...game,
           pointSpread: dk?.spread,
