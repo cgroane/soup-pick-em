@@ -332,6 +332,10 @@ app.get('/api/cfp-games', async (req: express.Request<{}, {}, {}, { year?: strin
   }
 })
 
+app.post('/api/agentic-picks', async (req: express.Request, res: express.Response) => {
+
+});
+
 
 const root = path.join(__dirname, '../build');
 app.use(express.static(root));
