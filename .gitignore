@@ -26,3 +26,4 @@ yarn-error.log*
 .env
 soup-pick-em-firebase-adminsdk-unk23-bfa3a7bc3c.json
 soup-pick-em-firebase-adminsdk-unk23-e3465f8a0a.json
+firebaseCert.json

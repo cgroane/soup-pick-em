@@ -4,6 +4,7 @@ import { client, getGames, SeasonType } from "cfbd";
 import { SeasonDetails } from "@/api/schema/sportsDataIO";
 import { CFPBracket, GamesAPIResult, Picks, Slate, UserCollectionData } from "@/model";
 import { PickHistory } from "@/pages/Picks/PicksTable";
+import { requireCronSecret } from "api/middlware";
 
 const apiUrl = "https://api.sportsdata.io/v3/cfb/";
 
@@ -67,9 +68,9 @@ const gradePick = (
   return pickedScore + (pointValue ?? 0) > otherScore;
 };
 
-const router = express.Router();
+const updateScoresRouter = express.Router();
 
-router.post("/", async (req: express.Request, res: express.Response) => {
+updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: express.Request, res: express.Response) => {
   const db = getFirestore();
   try {
     if (!process.env.REACT_APP_SEASON_KEY || !process.env.REACT_APP_MATCHUPS_API_KEY) {
@@ -139,7 +140,7 @@ async function processRegularSeason(
         ...sgm,
         homePoints: fresh?.homePoints ?? sgm.homePoints ?? 0,
         awayPoints: fresh?.awayPoints ?? sgm.awayPoints ?? 0,
-        completed: fresh?.completed ?? (sgm as any).completed ?? false,
+        completed: fresh?.completed ?? (sgm).completed ?? false,
       };
     }),
   });
@@ -257,7 +258,7 @@ async function processCFP(
         ...bgm,
         homePoints: fresh?.homePoints ?? bgm.homePoints ?? 0,
         awayPoints: fresh?.awayPoints ?? bgm.awayPoints ?? 0,
-        completed: fresh?.completed ?? (bgm as any).completed ?? false,
+        completed: fresh?.completed ?? (bgm).completed ?? false,
       };
     }),
   });
@@ -341,4 +342,4 @@ async function processCFP(
   await batch.commit();
 }
 
-export default router;
+export default updateScoresRouter;

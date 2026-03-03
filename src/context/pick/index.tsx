@@ -14,7 +14,7 @@ export type PickValueProp = {
   slate: Slate;
   picks: { slateId: string; picks: Picks[] };
   setSlate: Dispatch<SetStateAction<Slate>>;
-  setPicks: Dispatch<SetStateAction< { slateId: string; picks: Picks[] }>>;
+  setPicks: Dispatch<SetStateAction<{ slateId: string; picks: Picks[] }>>;
   addPick: (pick: Picks) => void;
   fetchSlate: ({ week, year }: { week?: number; year?: string }) => Promise<Slate | undefined>;
   getUserPicks: () => PickHistory | undefined;
@@ -62,15 +62,16 @@ const Context = ({
         return {
           ...previousPicks,
           picks: [
-          ...previousPicks.picks,
-          pick
-        ]}
+            ...previousPicks.picks,
+            pick
+          ]
+        }
       }
     })
 
   }, [picks]);
 
-  const fetchSlate = useCallback( async ({ week, year }: { week?: number; year?: string }) => {
+  const fetchSlate = useCallback(async ({ week, year }: { week?: number; year?: string }) => {
     /** update to use seasons data as fallback */
     setStatus(LoadingState.LOADING)
     const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : !usePostSeason ? seasonData?.Season as number : `${seasonData?.Season}POST`}`);
@@ -78,9 +79,9 @@ const Context = ({
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }));
     return results;
   }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus, usePostSeason]);
-  
+
   const refreshSlatePicksStatus = useCallback(async ({ week, year }: { week?: number; year?: number }) => {
-    const updatedSlate = await FBSlateClassInstance.updateSlateScores({ week: week ? week: seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })
+    const updatedSlate = await FBSlateClassInstance.updateSlateScores({ week: week ? week : seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })
     setSlate(updatedSlate as Slate)
   }, [setSlate, seasonData?.ApiWeek, seasonData?.Season]);
 
@@ -93,7 +94,7 @@ const Context = ({
   }, [user?.pickHistory, setPicks, slate?.uniqueWeek]);
 
   useEffect(() => {
-    fetchSlate({ }).then(() => setStatus(LoadingState.IDLE))
+    fetchSlate({}).then(() => setStatus(LoadingState.IDLE))
   }, [fetchSlate, setStatus]);
 
   return (
