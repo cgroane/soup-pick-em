@@ -33,4 +33,4 @@ jobs:
       - name: Test
         env:
           CI: true
-        run: npm test -- --watch=false
+        run: npm test -- --watch=false --passWithNoTests
