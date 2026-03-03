@@ -1,9 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Button, Paragraph, Spinner, Text, TextInput, Toolbar } from 'grommet';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Game from '../../components/Game';
-import styled from 'styled-components';
-import { Search } from 'grommet-icons';
-import { theme } from '../../theme';
+import { Search } from 'lucide-react';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
@@ -15,186 +12,186 @@ import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import SelectWeek from '../../components/SelectWeek';
-import { StatusGood } from 'grommet-icons';
-
-
-/**
- * TODO
- * style fixes
- * bottom bar overlaps content
- * narrow screen content overlaps
- */
-const BottomToolbar = styled(Toolbar)`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 8rem;
-  background-color: ${({ theme }) => theme.colors.darkBlue};
-`
+import { CheckCircle2, Loader2 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 
 const CreateSlate: React.FC = () => {
   const [textFilter, setTextFilter] = useState('');
-  /**
-   * should use local state
-   * submit slate affixed with POST if week is POST
-   */
 
-  /** contexts */
-  const {
-    games,
-    selectedGames,
-    filteredGames,
-    setFilteredGames,
-    fetchMatchups,
-    deletions,
-    canEdit
-  } = useSlateContext()
-  const {
-    fetchSlate
-  } = usePickContext()
-  const {
-    setModalOpen,
-    modalOpen,
-    seasonData,
-    setStatus,
-    status,
-    useOffSeason,
-  } = useUIContext()
-  const {
-    user,
-    users,
-    isSlatePicker
-  } = useGlobalContext();
+  const { games, selectedGames, filteredGames, setFilteredGames, fetchMatchups, deletions, canEdit } =
+    useSlateContext();
+  const { fetchSlate } = usePickContext();
+  const { setModalOpen, modalOpen, seasonData, setStatus, status, useOffSeason } = useUIContext();
+  const { user, users, isSlatePicker } = useGlobalContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
     year: seasonData?.Season?.toString(),
-    seasonType: seasonData?.seasonType as 'postseason' | 'regular'
+    seasonType: seasonData?.seasonType as 'postseason' | 'regular',
   });
-  /** hooks */
+
   const navigate = useNavigate();
 
-  /** stateful operations */
-  const filterGames = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTextFilter(e.target.value);
-  }, [setTextFilter]);
+  const filterGames = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTextFilter(e.target.value);
+    },
+    [setTextFilter]
+  );
 
   useEffect(() => {
     Promise.all([
       fetchSlate({
         week: parseInt(selectedWeek?.week as string),
-        year: selectedWeek?.seasonType === 'postseason' ? selectedWeek?.year + 'POST' : selectedWeek?.year
+        year:
+          selectedWeek?.seasonType === 'postseason'
+            ? selectedWeek?.year + 'POST'
+            : selectedWeek?.year,
       }).then((result) => result),
       fetchMatchups({
-        weekNumber: selectedWeek.seasonType === "postseason" ? 1 : parseInt(selectedWeek?.week as string),
+        weekNumber:
+          selectedWeek.seasonType === 'postseason' ? 1 : parseInt(selectedWeek?.week as string),
         year: parseInt(selectedWeek?.year as string),
-        seasonType: selectedWeek?.seasonType
-      })
+        seasonType: selectedWeek?.seasonType,
+      }),
     ]).then(() => setStatus(LoadingState.IDLE));
-
   }, [fetchMatchups, fetchSlate, setStatus, selectedWeek]);
 
   useEffect(() => {
     if (textFilter) {
       setFilteredGames(() => {
-        const filtered = games.filter((game) =>
-          JSON.stringify(Object.values(game)).toLowerCase().includes(textFilter.toLowerCase()));
-        return filtered;
-      })
+        return games.filter((game) =>
+          JSON.stringify(Object.values(game)).toLowerCase().includes(textFilter.toLowerCase())
+        );
+      });
     } else {
       setFilteredGames(games);
     }
   }, [games, setFilteredGames, textFilter]);
 
-  /** api request */
   const submitSlate = useCallback(async () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
-    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''}`
-    await FBSlateClassInstance.addSlate({
-      week: parseInt(selectedWeek?.week as string),
-      uniqueWeek: uniqueId,
-      providedBy: user as UserCollectionData,
-      processed: false,
-      games: selectedGames,
-    }, users, deletions.length ? deletions : undefined).then(() => setStatus(LoadingState.IDLE));
+    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${
+      selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
+    }`;
+    await FBSlateClassInstance.addSlate(
+      {
+        week: parseInt(selectedWeek?.week as string),
+        uniqueWeek: uniqueId,
+        providedBy: user as UserCollectionData,
+        processed: false,
+        games: selectedGames,
+      },
+      users,
+      deletions.length ? deletions : undefined
+    ).then(() => setStatus(LoadingState.IDLE));
   }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
 
-  const disableSelection = useMemo(() => selectedGames?.length >= 10 || !canEdit, [selectedGames, canEdit]);
+  const disableSelection = useMemo(
+    () => selectedGames?.length >= 10 || !canEdit,
+    [selectedGames, canEdit]
+  );
 
   return (
     <>
-      <Box>
-        <Toolbar margin={{ top: '8px', left: '8px', right: '8px', bottom: '0' }} pad={'4px'} >
-          <TextInput size='medium' icon={<Search />} onChange={filterGames} ></TextInput>
-        </Toolbar>
+      <div>
+        {/* Search bar */}
+        <div className="m-2 flex items-center gap-2 border border-border rounded-md px-3 bg-surface">
+          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Input
+            className="border-0 bg-transparent focus-visible:ring-0 px-0 h-10"
+            onChange={filterGames}
+            placeholder="Search games..."
+          />
+        </div>
+
         {useOffSeason && (
-          <Box background="light-3" pad="small" align="center">
-            <Text size="small" color="dark-4">The season is currently in the offseason. Showing matchups from the {seasonData?.Season} season.</Text>
-          </Box>
+          <div className="bg-warning/10 border border-warning/30 text-warning text-sm px-4 py-2 text-center">
+            The season is currently in the offseason. Showing matchups from the{' '}
+            {seasonData?.Season} season.
+          </div>
         )}
+
         <SelectWeek
           vals={{ week: selectedWeek.week as string, year: selectedWeek.year as string }}
           heading={<></>}
           onChange={setSelectedWeek}
         />
-        {
-          status === LoadingState.LOADING ? (
-            <Loading iterations={3} type='gameCard' />
-          ) : (
-            <>
-              <Box pad={'medium'} align='center' margin={{ bottom: canEdit ? '8rem' : '0' }}>
-                {filteredGames?.length
-                  ? filteredGames?.map((game) =>
-                    <Game
-                      addedToSlate={!!selectedGames?.find((selectedGame) => game.id === selectedGame.id)}
-                      disable={disableSelection}
-                      hideCheckbox={!isSlatePicker}
-                      key={game.id}
-                      game={game}
-                    />)
-                  : <Text color="dark-4">No games available for the selected week.</Text>
-                }
-              </Box>
-              {(canEdit) &&
-                <BottomToolbar style={{
-                  boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)',
-                  flexShrink: 0,
-                }} pad={'4px'} height={'3rem'} flex direction='column' justify='evenly' align='center' width={'100%'} >
-                  <Paragraph margin={"2px"} color={theme.colors.lightBlue} > Soup picks: {selectedGames?.length}/10</Paragraph>
-                  <Box width={'100%'} flex direction='row' justify='center' align='center'>
-                    <Button margin={'2px'} pad={'8px'} primary color={'white'} size='medium' label="Reset Slate" />
-                    <Button onClick={() => submitSlate()} margin={'2px'} pad={'8px'} primary color={'white'} size='medium' label="Submit Slate" disabled={selectedGames?.length < 10} />
-                  </Box>
-                </BottomToolbar>}
-            </>
-          )
-        }
 
-      </Box>
+        {status === LoadingState.LOADING ? (
+          <Loading iterations={3} type="gameCard" />
+        ) : (
+          <>
+            <div className={`px-4 pb-4 flex flex-col items-center ${canEdit ? 'mb-32' : ''}`}>
+              {filteredGames?.length ? (
+                filteredGames?.map((game) => (
+                  <Game
+                    addedToSlate={!!selectedGames?.find((selectedGame) => game.id === selectedGame.id)}
+                    disable={disableSelection}
+                    hideCheckbox={!isSlatePicker}
+                    key={game.id}
+                    game={game}
+                  />
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm py-8">
+                  No games available for the selected week.
+                </p>
+              )}
+            </div>
+
+            {canEdit && (
+              <div
+                className="fixed bottom-0 left-0 w-full bg-surface border-t border-border flex flex-col items-center gap-2 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+                style={{ boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)' }}
+              >
+                <p className="text-sm text-muted-foreground">
+                  Soup picks: {selectedGames?.length}/10
+                </p>
+                <div className="flex gap-2 w-full max-w-xs">
+                  <Button variant="outline" className="flex-1">
+                    Reset Slate
+                  </Button>
+                  <Button
+                    onClick={() => submitSlate()}
+                    disabled={selectedGames?.length < 10}
+                    className="flex-1"
+                  >
+                    Submit Slate
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       {modalOpen && (
-        <Modal actions={[
-          {
-            label: 'Make your picks',
-            onClick: () => {
-              navigate('/pick')
-              setModalOpen(false)
-            }
-          }
-        ]} >
-
-          <Box margin={'0 auto'}>
-            {status === LoadingState.LOADING && <Spinner color={'accent-1'} size='large' />}
-            {status === LoadingState.IDLE && <StatusGood color='accent-1' size='xlarge' />}
-          </Box>
-
+        <Modal
+          actions={[
+            {
+              label: 'Make your picks',
+              onClick: () => {
+                navigate('/pick');
+                setModalOpen(false);
+              },
+            },
+          ]}
+        >
+          <div className="flex items-center justify-center py-4">
+            {status === LoadingState.LOADING && (
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            )}
+            {status === LoadingState.IDLE && <CheckCircle2 className="h-12 w-12 text-success" />}
+          </div>
         </Modal>
       )}
     </>
-  )
-}
+  );
+};
 
-export default CreateSlate
+export default CreateSlate;
 
-CreateSlate.displayName = "CreateSlate"
+CreateSlate.displayName = 'CreateSlate';

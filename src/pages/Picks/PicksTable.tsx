@@ -1,48 +1,18 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from 'react';
 import { Picks } from '../../model';
 import { useReactTable, getCoreRowModel, ColumnDef, flexRender } from '@tanstack/react-table';
 import { PicksColumnDef } from '.';
-import { Box, Table, TableBody, TableCell, TableRow } from 'grommet';
 
+export const StyledCell = ({ className, children, style, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td
+    className={`rounded-tl-xl rounded-bl-xl text-xs bg-white text-black ${className ?? ''}`}
+    style={style}
+    {...props}
+  >
+    {children}
+  </td>
+);
 
-/**
- * COLUMNS
- * user
- * slate.games
- * correct / incorrect sum
- * 
- * CELL
- * user.pick.slate.games
- * 
- *
- * data -- maybe map user.picks into just this slate's picks?
- */
-
-export const StyledCell = styled(TableCell)`
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
-  font-size: 12px;
-`;
-const Row = styled(TableRow)`
-  margin-top: 4px;
-  margin-bottom: 4px;
-`
-const StyledTable = styled(Table)`
-  border-collapse: separate;
-  border-spacing: 0 0.5rem;
-`
-
-const TableWrapper = styled(Box)`
-  width: 100%;
-  height: 400px;
-  overflow-x: scroll;
-`;
-const TableHead = styled.thead`
-  position: sticky;
-  top: 0;
-  background: ${({ theme }) => theme.colors.blackBackground}
-`
 export interface PickHistory {
   slateId: string;
   name: string;
@@ -55,69 +25,58 @@ export interface PickHistory {
   correctCount?: number;
   incorrectCount?: number;
 }
+
 interface PicksTableProps {
   data: PicksColumnDef[];
-  columns: ColumnDef<PicksColumnDef>[]
+  columns: ColumnDef<PicksColumnDef>[];
 }
-const PicksTable: React.FC<PicksTableProps> = ({
-  data,
-  columns
-}: PicksTableProps) => {
 
+const PicksTable: React.FC<PicksTableProps> = ({ data, columns }: PicksTableProps) => {
   const tableInstance = useReactTable({
     data,
     columns,
-    defaultColumn: {
-      enableResizing: false
-    },
+    defaultColumn: { enableResizing: false },
     getCoreRowModel: getCoreRowModel(),
     initialState: {
-      columnPinning: {
-        left: ['soup']
-      }
-    }
+      columnPinning: { left: ['soup'] },
+    },
   });
 
   return (
-    <>
-      <TableWrapper className="p-2" pad={'3rem'} >
-        <StyledTable>
-          <TableHead>
-            {tableInstance.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <TableCell style={{
-                    textAlign: 'center',
-                    width: `${header.getSize()}px`,
-                  }} scope='col' key={header.id}>
-                    {header.id === 'user' ?
-                      flexRender(header.column.columnDef.header, header.getContext()) :
-                      flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableHead>
-          <TableBody>
-            {tableInstance.getRowModel().rows.map(row => (
-              <Row key={row.id}>
-                {row.getVisibleCells().map(cell => {
-                  return (<>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </>
-                  )
-                })
-                }
-              </Row>
-            ))}
-          </TableBody>
-        </StyledTable>
-        <div className="h-4" />
-      </TableWrapper>
-    </>
-  )
-}
+    <div className="w-full h-[400px] overflow-x-auto p-2">
+      <table className="border-separate border-spacing-y-2">
+        <thead className="sticky top-0 bg-background">
+          {tableInstance.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  style={{ width: `${header.getSize()}px`, textAlign: 'center' }}
+                  scope="col"
+                >
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {tableInstance.getRowModel().rows.map((row) => (
+            <tr key={row.id} className="mt-1 mb-1">
+              {row.getVisibleCells().map((cell) => (
+                <React.Fragment key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </React.Fragment>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="h-4" />
+    </div>
+  );
+};
 
-export default PicksTable
+export default PicksTable;
 
-PicksTable.displayName = "PicksTable"
+PicksTable.displayName = 'PicksTable';

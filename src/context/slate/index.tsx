@@ -5,7 +5,7 @@ import { LoadingState, useUIContext } from '../ui';
 import { usePickContext } from '../pick';
 import { useGlobalContext } from '../user';
 import { UserRoles } from '../../utils/constants';
-import { GamesAPIResult } from '@/model';
+import { GamesAPIResult } from '../../model';
 
 export type SlateValueProps = {
   games: GamesAPIResult[];

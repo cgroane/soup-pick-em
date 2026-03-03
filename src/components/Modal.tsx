@@ -1,75 +1,49 @@
-import { Box, Button, Text } from 'grommet'
-import React from 'react'
-import styled from 'styled-components'
-import { useUIContext } from '../context/ui'
-import { Close } from 'grommet-icons';
+import React from 'react';
+import { useUIContext } from '../context/ui';
+import { Button } from './ui/button';
+import { X } from 'lucide-react';
 
-const ModalBackdrop = styled(Box)`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.3);
-`
-const ModalContent = styled(Box)`
-  background: white;
-  height: 30%;
-  width: 80%;
-  border-radius: 15px;
-  position: relative;
-  z-index: 3;
-  padding: 1rem;
-`;
-
-const ActionButton = styled(Button)`
-  width: 50%;
-  margin: 0 auto;
-`
-// const ModalTitle = styled(Box)`
-  
-// `
- 
 interface ModalProps extends React.PropsWithChildren {
-  actions?: { 
+  actions?: {
     label: string;
     onClick: () => void;
-    disable?: boolean
-  }[]
+    disable?: boolean;
+  }[];
 }
 
-const Modal: React.FC<ModalProps> = ({
-  actions,
-  children
-}: ModalProps) => {
-  const {
-    // modalOpen,
-    setModalOpen
-  } = useUIContext();
+const Modal: React.FC<ModalProps> = ({ actions, children }: ModalProps) => {
+  const { setModalOpen } = useUIContext();
 
   return (
-    <ModalBackdrop direction='column' justify='center' align='center' >
-      <ModalContent direction='column' justify='between' >
-        <Box flex={{ grow: 0, shrink: 0 }} direction='row' align='center' justify='between' >
-          <Close fontWeight={'bold'} color='black' onClick={() => setModalOpen(false)} />
-        </Box>
-        <Box align='center'>
-          {children}
-        </Box>
-        {
-          actions?.length && (
-            <Box>
-              {actions.map(({label, onClick, disable = false}) => (
-                <ActionButton primary size='small' label={<Text weight={'bold'} color={'white'} >{label}</Text>} onClick={() => onClick()} disabled={disable} />
-              ))}
-            </Box>
-          )
-        }
-      </ModalContent>
-    </ModalBackdrop>
-  )
-}
- 
-export default Modal
- 
-Modal.displayName = "Modal"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="relative w-[90%] max-w-md rounded-xl border border-border bg-surface p-6 shadow-xl flex flex-col gap-4">
+        <button
+          className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100 text-foreground"
+          onClick={() => setModalOpen(false)}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </button>
+        <div className="flex items-center justify-center">{children}</div>
+        {actions?.length ? (
+          <div className="flex flex-col gap-2">
+            {actions.map(({ label, onClick, disable = false }) => (
+              <Button
+                key={label}
+                onClick={() => onClick()}
+                disabled={disable}
+                className="w-full"
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+export default Modal;
+
+Modal.displayName = 'Modal';

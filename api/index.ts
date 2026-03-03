@@ -17,8 +17,8 @@ import { fileURLToPath } from 'url';
 // });
 
 import axios from 'axios';
-import { SeasonTypes } from '@/context/ui';
-import { SeasonDetailsData } from '@/api/schema/sportsDataIO';
+import { SeasonTypes } from '../src/context/ui';
+import { SeasonDetailsData } from '../src/api/schema/sportsDataIO';
 // import { theOddsInstance } from '@/api';
 
 const __filename = fileURLToPath(import.meta.url);
