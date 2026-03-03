@@ -57,7 +57,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "serve": "tsx api/index.ts"
+    "serve": "tsx api/index.ts",
+    "prepare": "husky"
   },
   "eslintConfig": {
     "extends": [
@@ -77,10 +78,17 @@
       "last 1 safari version"
     ]
   },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --max-warnings=0"
+    ]
+  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/cors": "^2.8.19",
     "@types/react-router-dom": "^5.3.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
     "tsx": "^4.21.0"
   }
 }
