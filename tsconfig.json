@@ -26,13 +26,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"],
-      "@server/*": ["./server/*"],
-      "@client/*": ["./client/*"],
-      "@shared/*": ["./shared/*"]
-    }
+    "baseUrl": "src"
   },
   "include": [
     "src/**/*",

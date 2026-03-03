@@ -1,41 +1,38 @@
-import React from 'react'
-import styled from 'styled-components'
-import { GamesAPIResult } from '../../model'
-import { Box, TableCell, TableCellProps } from 'grommet';
+import React from 'react';
+import { GamesAPIResult } from '../../model';
+import { cn } from 'lib/utils';
 
-export const StyledGameCell = styled(TableCell)`
-  text-align: center;
-  background-color: white;
-  color: black;
-  border-left: 1px solid grey;
-  font-size: 12px;
-  :last-of-type {
-    border-top-right-radius: 12px;
-    border-bottom-right-radius: 12px;
-  }
-`;
+export const StyledGameCell = ({ className, children, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+  <td
+    className={cn(
+      'text-center bg-white text-black border-l border-gray-400 text-xs last:rounded-tr-xl last:rounded-br-xl',
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </td>
+);
 
-const TextContainer = styled(Box)<{ correct?: boolean }>`
-  border-radius: 4px;
-`
- 
-interface GameCellProps extends TableCellProps, React.PropsWithChildren {
+interface GameCellProps extends React.TdHTMLAttributes<HTMLTableCellElement>, React.PropsWithChildren {
   game: GamesAPIResult & { isCorrect: boolean };
 }
 
-const GameCell: React.FC<GameCellProps> = ({
-  game,
-  children
-}: GameCellProps) => {
+const GameCell: React.FC<GameCellProps> = ({ game, children, ...rest }: GameCellProps) => {
   return (
-    <StyledGameCell border={'between'} pad={'4px'}>
-      <TextContainer background={game?.isCorrect ? 'brand' : 'error'} >
+    <StyledGameCell {...rest}>
+      <div
+        className={cn(
+          'rounded px-1 py-0.5',
+          game?.isCorrect ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'
+        )}
+      >
         {children}
-      </TextContainer>
+      </div>
     </StyledGameCell>
-  )
-}
- 
-export default GameCell
- 
-GameCell.displayName = "GameCell"
+  );
+};
+
+export default GameCell;
+
+GameCell.displayName = 'GameCell';
