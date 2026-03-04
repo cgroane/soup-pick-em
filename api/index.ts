@@ -33,7 +33,6 @@ const firebaseConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string
   client_email: string;
   private_key: string;
 };
-
 export const fbApp = admin.initializeApp({
   credential: admin.credential.cert({
     projectId: firebaseConfig.project_id,
