@@ -1,6 +1,6 @@
-import { fbApp } from "api";
-import { requireAdmin, requireAuth } from "api/middlware";
 import express from "express";
+import { fbApp } from "..";
+import { requireAdmin, requireAuth } from "../middlware";
 
 const adminRouter = express.Router();
 adminRouter.use(requireAuth);

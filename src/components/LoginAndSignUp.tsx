@@ -1,122 +1,58 @@
-import { Box, Button, Form, FormField, Paragraph, TextInput } from 'grommet'
-import React, { useCallback } from 'react'
-import { useEmailAndPassword } from '../hooks/useEmailAndPassword'
+import React, { useCallback } from 'react';
+import { useEmailAndPassword } from '../hooks/useEmailAndPassword';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 import { useGlobalContext } from '../context/user';
 import { UserCollectionData } from '../model';
-// import FirebaseUsersClassInstance from '../firebase/user/user';
-// import { getAuth, signInWithCustomToken } from 'firebase/auth';
 import FirebaseUsersClassInstance from '../firebase/user/user';
-
-/** import { getAuth, signInWithCustomToken } from 'firebase/auth'; */
-
-
-const LoginButton = styled(Button)`
-  height: 1.5rem;
-  margin: 4px;
-  background: ${({ theme }) => theme.colors.darkBlue};
-  color: ${({ theme }) => theme.colors.white};
-  border-color: ${({ theme }) => theme.colors.white};
-  
-`;
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 const LoginAndSignUp: React.FC = () => {
-  const {
-    handleChange,
-    handleSubmit,
-    newUser,
-    setNewUser
-  } = useEmailAndPassword();
-  const {
-    setUser
-  } = useGlobalContext();
-  const navigate = useNavigate()
+  const { handleChange, handleSubmit, newUser, setNewUser } = useEmailAndPassword();
+  const { setUser } = useGlobalContext();
+  const navigate = useNavigate();
 
   const googleAuth = useCallback(async () => {
-    /**
-     * if signIN -- auth and then getUser
-     * if register -- auth then addUserDoc
-     */
-    FirebaseUsersClassInstance.loginWithGoogle().then((res) => {
-      navigate('/profile')
-      // if (typeof res === 'object') {
-      if (res) setUser(res as UserCollectionData);
-      // }
-    }).catch((err) => alert(err.message));
+    FirebaseUsersClassInstance.loginWithGoogle()
+      .then((res) => {
+        navigate('/profile');
+        if (res) setUser(res as UserCollectionData);
+      })
+      .catch((err) => alert(err.message));
   }, [setUser, navigate]);
 
-
-  // /**
-  //  * 
-  //  * @param userId 
-  //  *
-  //  */
-  // const impersonateAuth = async (userId: string) => {
-  //   try {
-  //     const response = await fetch(`/api/impersonate?userId=${userId}`);
-  //     const data = await response.json();
-  //     if (data.customToken) {
-  //       await signInWithCustomToken(getAuth(), data.customToken);
-  //       navigate('/profile');
-  //     }
-  //   } catch (error) {
-  //     console.error('Impersonation failed', error);
-  //   }
-  // }
-
   return (
-    <>
-      <Box align='center' pad={'xlarge'} gap='medium'>
-        <Box
-          align="center"
-          pad='medium'
-          width="medium"
-          height="medium"
+    <div className="flex flex-col items-center px-6 py-12 gap-6">
+      <div className="w-full max-w-sm">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {newUser && (
+            <>
+              <Input onChange={handleChange} name="fName" placeholder="First Name" />
+              <Input onChange={handleChange} name="lName" placeholder="Last Name" />
+            </>
+          )}
+          <Input onChange={handleChange} name="email" placeholder="Email" type="email" />
+          <Input onChange={handleChange} name="password" placeholder="Password" type="password" />
+          <div className="flex flex-col gap-2 mt-2">
+            <Button type="submit" className="w-full">
+              {newUser ? 'Register' : 'Login'}
+            </Button>
+            <Button type="button" variant="outline" className="w-full" onClick={() => googleAuth()}>
+              {newUser ? 'Register with Google' : 'Sign In with Google'}
+            </Button>
+          </div>
+        </form>
+        <p
+          className="mt-4 text-center text-sm text-muted-foreground cursor-pointer hover:text-foreground"
+          onClick={() => setNewUser(!newUser)}
         >
-          <Form onSubmit={handleSubmit}>
-            {newUser && (
-              <>
-                <FormField>
-                  <TextInput onChange={handleChange} name='fName' placeholder='First Name' />
-                </FormField>
-                <FormField>
-                  <TextInput onChange={handleChange} name='lName' placeholder='Last Name' />
-                </FormField>
-              </>
-            )}
-            <FormField>
-              <TextInput onChange={handleChange} name='email' placeholder='Email' />
-            </FormField>
-            <FormField>
-              <TextInput onChange={handleChange} name='password' placeholder='Password' type='password' />
-            </FormField>
-            <Box margin={{ top: "medium" }} >
-              <LoginButton
-                pad={'medium'}
-                type='submit'
-                label={newUser ? 'Register' : 'Login'}
-                justify='center'
-                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
-              />
-              <LoginButton
-                pad={'medium'}
-                label={newUser ? 'Register with Google' : 'Sign In with Google'}
-                onClick={() => googleAuth()}
-                justify='center'
-                style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}
-              />
-            </Box>
-          </Form>
-          <Box style={{ cursor: 'pointer' }} onClick={() => setNewUser(!newUser)}>
-            <Paragraph>{newUser ? 'Already have an account? Sign In' : 'New User? Sign up'}</Paragraph>
-          </Box>
-        </Box>
-      </Box>
-    </>
-  )
-}
+          {newUser ? 'Already have an account? Sign In' : 'New User? Sign up'}
+        </p>
+      </div>
+    </div>
+  );
+};
 
-export default LoginAndSignUp
+export default LoginAndSignUp;
 
-LoginAndSignUp.displayName = "LoginAndSignUp"
+LoginAndSignUp.displayName = 'LoginAndSignUp';

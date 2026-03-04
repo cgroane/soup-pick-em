@@ -1,10 +1,10 @@
 import express from "express";
 import { getFirestore } from "firebase-admin/firestore";
 import { client, getGames, SeasonType } from "cfbd";
-import { SeasonDetails } from "@/api/schema/sportsDataIO";
-import { CFPBracket, GamesAPIResult, Picks, Slate, UserCollectionData } from "@/model";
-import { PickHistory } from "@/pages/Picks/PicksTable";
-import { requireCronSecret } from "api/middlware";
+import { SeasonDetails } from "api/schema/sportsDataIO";
+import { CFPBracket, GamesAPIResult, Picks, Slate, UserCollectionData } from "model";
+import { PickHistory } from "pages/Picks/PicksTable";
+import { requireCronSecret } from "../middlware";
 
 const apiUrl = "https://api.sportsdata.io/v3/cfb/";
 

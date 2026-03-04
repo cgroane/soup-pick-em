@@ -11,9 +11,10 @@ import matchupsRouter from "./routes/matchups";
 import fbCert from "../firebaseCert.json";
 import admin from "firebase-admin";
 import adminRouter from './routes/admin';
-import { SeasonDetailsData } from '@/api/schema/sportsDataIO';
 import axios from 'axios';
-import { SeasonTypes } from '@/context/ui';
+import { SeasonTypes } from '../src/context/ui';
+import { SeasonDetailsData } from 'api/schema/sportsDataIO';
+// import { theOddsInstance } from '@/api';
 
 export interface CFBDRequestQuery {
   year: string;

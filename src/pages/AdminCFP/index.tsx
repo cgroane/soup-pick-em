@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { Box, Button, Heading, Spinner, Text } from 'grommet';
 import { useCFPContext, cfpRound } from '../../context/cfp';
 import { useUIContext } from '../../context/ui';
 import { CFPRound, GamesAPIResult } from '../../model';
+import { Button } from '../../components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const ROUND_LABELS: Record<CFPRound, string> = {
   firstRound: 'First Round',
@@ -30,71 +31,66 @@ const AdminCFP: React.FC = () => {
   }, [bracket?.games]);
 
   return (
-    <Box pad="medium">
-      <Heading level={3} color="light-1">CFP Bracket Management</Heading>
+    <div className="p-4">
+      <h3 className="text-xl font-bold text-foreground mb-2">CFP Bracket Management</h3>
 
       {bracket?.updatedAt && (
-        <Text size="small" color="dark-4" margin={{ bottom: 'small' }}>
+        <p className="text-xs text-muted-foreground mb-3">
           Last updated: {new Date(bracket.updatedAt).toLocaleString()}
-        </Text>
+        </p>
       )}
 
-      <Box direction="row" gap="small" margin={{ bottom: 'medium' }}>
+      <div className="flex gap-2 mb-4">
         <Button
-          primary
-          label={isRefreshing ? 'Fetching...' : `Fetch & Publish CFP Games (${year})`}
-          disabled={isRefreshing}
-          icon={isRefreshing ? <Spinner size="xsmall" /> : undefined}
           onClick={() => refreshAndSaveBracket(year)}
-        />
-      </Box>
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          {isRefreshing && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isRefreshing ? 'Fetching...' : `Fetch & Publish CFP Games (${year})`}
+        </Button>
+      </div>
 
       {bracket?.games?.length ? (
-        <Box>
-          <Heading level={5} color="light-1" margin={{ bottom: 'small' }}>
+        <div>
+          <h5 className="text-sm font-semibold text-foreground mb-2">
             {bracket?.games?.length} CFP games published
-          </Heading>
+          </h5>
           {ROUND_ORDER.map((round) => {
             const games = gamesByRound[round];
             if (!games?.length) return null;
             return (
-              <Box key={round} margin={{ bottom: 'medium' }}>
-                <Heading level={6} color="accent-1" margin={{ bottom: 'xsmall', top: '0' }}>
+              <div key={round} className="mb-4">
+                <h6 className="text-xs font-semibold text-primary mb-1 uppercase tracking-wide">
                   {ROUND_LABELS[round]} ({games.length} games)
-                </Heading>
+                </h6>
                 {games.map((game) => (
-                  <Box
+                  <div
                     key={game.id}
-                    direction="row"
-                    justify="between"
-                    align="center"
-                    pad={{ horizontal: 'small', vertical: 'xsmall' }}
-                    margin={{ bottom: 'xsmall' }}
-                    background="dark-2"
-                    round="small"
+                    className="flex justify-between items-center px-3 py-2 mb-1 bg-surface-elevated rounded-lg"
                   >
-                    <Text size="small" color="light-1">
+                    <span className="text-sm text-foreground">
                       {game.awayTeam} at {game.homeTeam}
-                    </Text>
-                    <Text size="xsmall" color="dark-4">
+                    </span>
+                    <span className="text-xs text-muted-foreground">
                       {game.pointSpread !== undefined
                         ? `Spread: ${game.pointSpread}`
                         : 'No spread yet'}
-                    </Text>
-                  </Box>
+                    </span>
+                  </div>
                 ))}
-              </Box>
+              </div>
             );
           })}
-        </Box>
+        </div>
       ) : (
-        <Box pad="medium" align="center">
-          <Text color="dark-4">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">
             No CFP bracket published yet. Click "Fetch & Publish" to load the current bracket.
-          </Text>
-        </Box>
+          </p>
+        </div>
       )}
-    </Box>
+    </div>
   );
 };
 

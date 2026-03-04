@@ -1,72 +1,39 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import styled from 'styled-components'
-import { GameCard, TeamLogo } from '../../components/Styled'
-import { Box, Button, CardBody, CardHeader, Heading, Paragraph } from 'grommet'
-import { GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model'
-import { useGetTeamData } from '../../hooks/useGetTeamData'
-import { usePickContext } from '../../context/pick'
-import { useGlobalContext } from '../../context/user'
-import { useUIContext } from '../../context/ui'
-import { Lock } from 'grommet-icons'
-
-const Team = styled(Box)`
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 1;
-`
-const TeamWrapper = styled(Box) <{ selected: boolean }>`
-  cursor: pointer;
-  position: relative;
-  border-radius: 12px;
-  ${({ selected }) => selected ? `
-    background: radial-gradient(circle, rgba(144, 209, 240, 0.2) 0%, rgba(144, 209, 240, 0.3) 15%, rgba(144, 209, 240,0.8) 100%);
-  ` : ``}
-  :hover {
-    background-color:  rgba(0, 0, 0, 0.1);
-  }
-`;
-const Push = styled(Button) <{ selected: boolean }>`
-  width: 80%;
-  font-size: 12px;
-  padding: 4px;
-  ${({ selected, theme }) => selected ? `
-    background: ${theme.colors.brand};
-    color: white;
-  ` : ``}
-`
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model';
+import { useGetTeamData } from '../../hooks/useGetTeamData';
+import { usePickContext } from '../../context/pick';
+import { useGlobalContext } from '../../context/user';
+import { useUIContext } from '../../context/ui';
+import { Lock } from 'lucide-react';
+import { cn } from 'lib/utils';
 
 interface PickCardProps {
-  game: GamesAPIResult
+  game: GamesAPIResult;
 }
-const PickCard: React.FC<PickCardProps> = ({
-  game,
-}: PickCardProps) => {
-  const {
-    user,
-  } = useGlobalContext();
 
-  const {
-    rankings,
-    dateTime,
-  } = useGetTeamData(game);
+const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
+  const { user } = useGlobalContext();
+  const { rankings, dateTime } = useGetTeamData(game);
+  const { addPick, slate } = usePickContext();
+  const { seasonData } = useUIContext();
 
-  const {
-    addPick,
-    slate,
-  } = usePickContext();
-  const {
-    seasonData
-  } = useUIContext();
+  const [choice, setChoice] = useState<GamesAPIResponseOutcome>({
+    name: 'PUSH',
+    point: '0',
+    pointValue: 0,
+    id: 0,
+  });
 
-  const [choice, setChoice] = useState<GamesAPIResponseOutcome>({ name: 'PUSH', point: '0', pointValue: 0, id: 0 });
   const pastDate = useMemo(() => {
-    return (Date.parse(game?.startDate) < Date.parse(new Date().toDateString()))
-  }, [game])
+    return Date.parse(game?.startDate) < Date.parse(new Date().toDateString());
+  }, [game]);
 
-  const getSelected = useCallback((choiceId: number) => {
-    return typeof choice === 'object' ? choice?.id === choiceId : false
-  }, [choice]);
+  const getSelected = useCallback(
+    (choiceId: number) => {
+      return typeof choice === 'object' ? choice?.id === choiceId : false;
+    },
+    [choice]
+  );
 
   useEffect(() => {
     if (user?.pickHistory?.length) {
@@ -76,77 +43,110 @@ const PickCard: React.FC<PickCardProps> = ({
     }
   }, [setChoice, user?.pickHistory, game.id, slate.uniqueWeek]);
 
-
-  const makeSelection = useCallback((outcome: GamesAPIResponseOutcome) => {
-    const pick: Picks = {
-      matchup: game.id,
-      userId: user?.uid as string,
-      isCorrect: false,
-      week: seasonData?.ApiWeek as number,
-      selection: outcome as GamesAPIResponseOutcome
-    }
-    addPick(pick);
-    setChoice(outcome);
-  }, [addPick, game.id, user?.uid, seasonData?.ApiWeek]);
+  const makeSelection = useCallback(
+    (outcome: GamesAPIResponseOutcome) => {
+      const pick: Picks = {
+        matchup: game.id,
+        userId: user?.uid as string,
+        isCorrect: false,
+        week: seasonData?.ApiWeek as number,
+        selection: outcome as GamesAPIResponseOutcome,
+      };
+      addPick(pick);
+      setChoice(outcome);
+    },
+    [addPick, game.id, user?.uid, seasonData?.ApiWeek]
+  );
 
   return (
-    <>
-      <GameCard disabled={pastDate} pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
-        <Box flex align='stretch' justify='center'>
-          <CardHeader width={'100%'} pad={"medium"} >
-            <Paragraph>Away</Paragraph>
-            <Paragraph>{game.homeTeam} {(game?.pointSpread || 0) > 0 ? `+${game.pointSpread}` : game.pointSpread}</Paragraph>
-            <Paragraph>Home</Paragraph>
-          </CardHeader>
-          <CardBody flex direction='row' align='stretch' >
-            <TeamWrapper
-              onClick={!pastDate ? () => makeSelection(game.outcomes?.away as GamesAPIResponseOutcome) : undefined}
-              selected={getSelected(2)}
-              width={'37%'}
-              height={'100%'}
+    <div
+      className={cn(
+        'w-full max-w-lg rounded-xl border border-border bg-surface my-1 p-5',
+        pastDate && 'opacity-60 cursor-not-allowed'
+      )}
+    >
+      {/* Header */}
+      <div className="flex justify-between items-center mb-3 text-sm text-muted-foreground">
+        <span>Away</span>
+        <span className="font-semibold text-foreground">
+          {game.homeTeam} {(game?.pointSpread || 0) > 0 ? `+${game.pointSpread}` : game.pointSpread}
+        </span>
+        <span>Home</span>
+      </div>
+
+      {/* Teams row */}
+      <div className="flex items-stretch gap-2">
+        {/* Away team */}
+        <div
+          onClick={!pastDate ? () => makeSelection(game.outcomes?.away as GamesAPIResponseOutcome) : undefined}
+          className={cn(
+            'flex-1 rounded-xl flex flex-col items-center justify-center p-3 cursor-pointer transition-colors relative',
+            getSelected(2)
+              ? 'bg-[radial-gradient(circle,rgba(144,209,240,0.2)_0%,rgba(144,209,240,0.3)_15%,rgba(144,209,240,0.8)_100%)]'
+              : 'hover:bg-surface-elevated',
+            pastDate && 'pointer-events-none'
+          )}
+        >
+          <img
+            src={game?.awayTeamData?.logos?.[0]}
+            alt={game.awayTeam}
+            className="w-12 h-12 object-contain"
+          />
+          <p className="text-center text-xs mt-1 font-medium">
+            {rankings.awayRank ? `#${rankings.awayRank}` : ''} {game.awayTeam}
+          </p>
+        </div>
+
+        {/* Center: time + push */}
+        <div className="flex flex-col items-center justify-center w-20 gap-1">
+          {pastDate && <Lock className="h-4 w-4 text-primary" />}
+          <p className="text-xs text-muted-foreground text-center">
+            {dateTime.dayOfTheWeek}, {dateTime.month} {dateTime.dayOfTheMonth}
+          </p>
+          <p className="text-xs text-muted-foreground text-center">
+            {dateTime.hours}:{dateTime.minutes} {dateTime.amPm}
+          </p>
+          {!(game.pointSpread as number % 0.5) && (
+            <button
+              onClick={!pastDate ? () => makeSelection({ name: 'PUSH', point: '0', pointValue: 0, id: 0 }) : undefined}
+              disabled={pastDate}
+              className={cn(
+                'w-full text-xs py-1 px-2 rounded border border-border transition-colors',
+                choice?.name === 'PUSH'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface-elevated text-foreground hover:bg-border'
+              )}
             >
-              <Team pad={'8px'} width={'100%'} height={'100%'} align='center' justify='center'  >
-                <TeamLogo src={game?.awayTeamData?.logos?.[0]} fit='contain' />
-                <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.awayRank ? `#${rankings.awayRank}` : ``} {game.awayTeam}</Heading>
-              </Team>
-            </TeamWrapper>
-            <Box flex align='center' justify='center' width={'20%'} >
-              {pastDate && <Lock color='brand' />}
-              <Paragraph margin={'4px'} size='12px' textAlign='center' >
-                {dateTime.dayOfTheWeek}, {dateTime.month} {dateTime.dayOfTheMonth}, {dateTime.year}
-              </Paragraph>
-              <Paragraph margin={'4px'} size='12px' textAlign='center' >
-                {dateTime.hours}:{dateTime.minutes} {dateTime.amPm}
-              </Paragraph>
-              {
-                !(game.pointSpread as number % 0.5) &&
-                <Push
-                  margin={{ top: '4px' }}
-                  label="PUSH"
-                  onClick={!pastDate ? () => makeSelection({ name: "PUSH", point: '0', pointValue: 0, id: 0 }) : undefined}
-                  selected={choice?.name === "PUSH"}
-                />
-              }
+              PUSH
+            </button>
+          )}
+        </div>
 
-            </Box>
-            <TeamWrapper
-              onClick={!pastDate ? () => makeSelection(game?.outcomes?.home as GamesAPIResponseOutcome) : undefined}
-              width={'37%'}
-              height={'100%'}
-              selected={getSelected(1)}
-            >
-              <Team pad={'8px'} width={'100%'} height={'100%'} align='center' justify='center' >
-                <TeamLogo src={game?.homeTeamData?.logos?.[0]} fit='contain' />
-                <Heading textAlign='center' margin='0' level={'4'} size='12px'>{rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeam}</Heading>
-              </Team>
-            </TeamWrapper>
-          </CardBody>
-        </Box>
-      </GameCard>
-    </>
-  )
-}
+        {/* Home team */}
+        <div
+          onClick={!pastDate ? () => makeSelection(game?.outcomes?.home as GamesAPIResponseOutcome) : undefined}
+          className={cn(
+            'flex-1 rounded-xl flex flex-col items-center justify-center p-3 cursor-pointer transition-colors relative',
+            getSelected(1)
+              ? 'bg-[radial-gradient(circle,rgba(144,209,240,0.2)_0%,rgba(144,209,240,0.3)_15%,rgba(144,209,240,0.8)_100%)]'
+              : 'hover:bg-surface-elevated',
+            pastDate && 'pointer-events-none'
+          )}
+        >
+          <img
+            src={game?.homeTeamData?.logos?.[0]}
+            alt={game.homeTeam}
+            className="w-12 h-12 object-contain"
+          />
+          <p className="text-center text-xs mt-1 font-medium">
+            {rankings.homeRank ? `#${rankings.homeRank}` : ''} {game.homeTeam}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default PickCard
+export default PickCard;
 
-PickCard.displayName = "PickCard"
+PickCard.displayName = 'PickCard';

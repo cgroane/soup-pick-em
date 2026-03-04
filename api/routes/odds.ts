@@ -1,6 +1,6 @@
 import express from "express";
 import { getLines, SeasonType } from "cfbd";
-import { requireAuth } from "api/middlware";
+import { requireAuth } from "../middlware";
 
 const oddsRouter = express.Router();
 oddsRouter.use(requireAuth);
