@@ -1,18 +1,11 @@
 import express from "express";
 import { getFirestore } from "firebase-admin/firestore";
-import { client, getGames, SeasonType } from "cfbd";
+import { getGames, SeasonType } from "cfbd";
 import { SeasonDetails } from "api/schema/sportsDataIO";
 import { CFPBracket, GamesAPIResult, Picks, Slate, UserCollectionData } from "model";
 import { PickHistory } from "pages/Picks/PicksTable";
 import { requireCronSecret } from "../middlware";
-
-const apiUrl = "https://api.sportsdata.io/v3/cfb/";
-
-client.setConfig({
-  headers: {
-    "Authorization": `Bearer ${process.env.REACT_APP_CFBD_API_KEY}`,
-  },
-});
+import axios from "axios";
 
 const getSeasonData = async (): Promise<SeasonDetails> => {
   /**
@@ -21,17 +14,9 @@ const getSeasonData = async (): Promise<SeasonDetails> => {
    * returns NEXT SAT or prev SAT
    * I THINK prev
    */
-  const search = new URLSearchParams({
-    key: process.env.REACT_APP_MATCHUPS_API_KEY as string,
-  });
-  const url = `${apiUrl}scores/json/CurrentSeasonDetails?${search}`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Ocp-Apim-Subscription-Key": process.env.REACT_APP_MATCHUPS_API_KEY as string,
-    },
-  });
-  return response.json();
+  const url = `${process.env.REACT_APP_API_URL}/api/current-week`;
+  const response = await axios.get(url);
+  return response.data;
 };
 
 /**
