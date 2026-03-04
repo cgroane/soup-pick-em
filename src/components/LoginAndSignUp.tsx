@@ -6,6 +6,7 @@ import { UserCollectionData } from '../model';
 import FirebaseUsersClassInstance from '../firebase/user/user';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+// import { getAuth, signInWithCustomToken } from 'firebase/auth';
 
 const LoginAndSignUp: React.FC = () => {
   const { handleChange, handleSubmit, newUser, setNewUser } = useEmailAndPassword();
@@ -20,6 +21,22 @@ const LoginAndSignUp: React.FC = () => {
       })
       .catch((err) => alert(err.message));
   }, [setUser, navigate]);
+  /**
+   * 
+   * @param userId 
+  const impersonateAuth = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/impersonate?userId=${userId}`);
+      const data = await response.json();
+      if (data.customToken) {
+        await signInWithCustomToken(getAuth(), data.customToken);
+        navigate('/profile');
+      }
+    } catch (error) {
+      console.error('Impersonation failed', error);
+    }
+  }
+   */
 
   return (
     <div className="flex flex-col items-center px-6 py-12 gap-6">

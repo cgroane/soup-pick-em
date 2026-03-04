@@ -1,17 +1,10 @@
 import React, { useCallback } from 'react';
-import { GamesAPIResult } from '../model';
 
-interface OtherMarketsProps {
-  gameId: string;
-  addToSlate: (game: GamesAPIResult) => void;
-  addedToSlate: boolean;
-  disableSelections: boolean;
-}
 
-const OtherMarkets: React.FC<OtherMarketsProps> = ({ gameId }: OtherMarketsProps) => {
+const OtherMarkets: React.FC = () => {
   const fetchMoreMarkets = useCallback(() => {
     // placeholder for future market data
-  }, [gameId]);
+  }, []);
 
   return (
     <details className="mt-2" onToggle={(e) => (e.currentTarget.open ? fetchMoreMarkets() : null)}>
