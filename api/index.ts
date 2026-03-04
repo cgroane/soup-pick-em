@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 import updateScores from "./routes/update-score";
 import oddsRouter from "./routes/odds";
 import matchupsRouter from "./routes/matchups";
-import fbCert from "../firebaseCert.json";
 import admin from "firebase-admin";
 import adminRouter from './routes/admin';
 import axios from 'axios';
@@ -29,11 +28,17 @@ dotenv.config({ path: path.resolve(`.env.${env}`), override: true });
 dotenv.config({ path: path.resolve(`.env.local`), override: true });
 dotenv.config({ path: path.resolve(`.env.${env}.local`), override: true });
 
+const firebaseConfig = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string) as {
+  project_id: string;
+  client_email: string;
+  private_key: string;
+};
+
 export const fbApp = admin.initializeApp({
   credential: admin.credential.cert({
-    projectId: fbCert.project_id,
-    clientEmail: fbCert.client_email,
-    privateKey: fbCert.private_key.replace(/\\n/g, '\n'),
+    projectId: firebaseConfig.project_id,
+    clientEmail: firebaseConfig.client_email,
+    privateKey: firebaseConfig.private_key.replace(/\\n/g, '\n'),
   })
 });
 
