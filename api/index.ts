@@ -5,16 +5,17 @@ import bodyParser from 'body-parser';
 import path, { dirname } from 'path';
 import { client, SeasonType, getGames, getRankings, getLines, getFbsTeams, DivisionClassification } from 'cfbd';
 import { fileURLToPath } from 'url';
+import fbCert from "../firebaseCert.json";
 
-// import admin from "firebase-admin";
+import admin from "firebase-admin";
 
-// const fbApp = admin.initializeApp({
-//   credential: admin.credential.cert({
-//     projectId: fbCert.project_id,
-//     clientEmail: fbCert.client_email,
-//     privateKey: fbCert.private_key.replace(/\\n/g, '\n'),
-//   })
-// });
+const fbApp = admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: fbCert.project_id,
+    clientEmail: fbCert.client_email,
+    privateKey: fbCert.private_key.replace(/\\n/g, '\n'),
+  })
+});
 
 import axios from 'axios';
 import { SeasonTypes } from '../src/context/ui';
@@ -331,6 +332,16 @@ app.get('/api/cfp-games', async (req: express.Request<{}, {}, {}, { year?: strin
     res.status(500).send(err);
   }
 })
+
+app.post('/api/admin/set-roles', async (req: express.Request, res: express.Response) => {
+  try {
+    const { userId, roles } = req.body;
+    await fbApp.auth().setCustomUserClaims(userId, { roles: [...roles] });
+    res.status(200).json({ message: 'Roles updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating roles', error: err });
+  }
+});
 
 
 const root = path.join(__dirname, '../build');

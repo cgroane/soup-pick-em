@@ -14,7 +14,7 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
    * addDoc does not do anything other than add user to the db users collection
    * 
    */
-  registerWithEmailAndPassword = async (name: string, fName:string, lName: string, email: string, password: string) => {
+  registerWithEmailAndPassword = async (name: string, fName: string, lName: string, email: string, password: string) => {
     try {
       const res = await createUserWithEmailAndPassword(this.auth, email, password);
       const user = this.transformUserData(res.user, name, fName, lName);
@@ -44,39 +44,40 @@ export class FirebaseUsers extends FirebaseDB<UserCollectionData> {
     }
   }
   loginWithGoogle = async () => {
-      try {
-        const res = await signInWithPopup(this.auth, this.googleProvider);
-        const user = this.transformUserData(res.user);
-        const userRef = await this.getDocumentInCollection(user.uid);
-        if (!!userRef) {
-          return userRef;
-        }
-        return await this.addDocument(user, user.uid);
-      } catch (err) {
-        console.error(err)
+    try {
+      const res = await signInWithPopup(this.auth, this.googleProvider);
+      const user = this.transformUserData(res.user);
+
+      const userRef = await this.getDocumentInCollection(user.uid);
+      if (!!userRef) {
+        return userRef;
       }
-    };
-    transformUserData = (user: User, name?: string, fName?: string, lName?: string) => {
-      return {
-        uid: user.uid,
-        name: name ? name : user.displayName,
-        authProvider: "local",
-        email: user.email,
-        fName: fName ? fName : name ? name : user?.displayName?.split(' ')[0],
-        lName: lName ? lName : name ? name : user.displayName?.split(' ')[user.displayName?.split(' ').length - 1],
-        id: user.uid,
-        roles: [UserRoles.BASIC],
-        record: [
-          {
-            wins: 0,
-            losses: 0
-          }
-        ],
-        trophyCase: [],
-        isAuthenticated: !!auth.currentUser,
-        pickHistory: [],
-      }
+      return await this.addDocument(user, user.uid);
+    } catch (err) {
+      console.error(err)
     }
+  };
+  transformUserData = (user: User, name?: string, fName?: string, lName?: string) => {
+    return {
+      uid: user.uid,
+      name: name ? name : user.displayName,
+      authProvider: "local",
+      email: user.email,
+      fName: fName ? fName : name ? name : user?.displayName?.split(' ')[0],
+      lName: lName ? lName : name ? name : user.displayName?.split(' ')[user.displayName?.split(' ').length - 1],
+      id: user.uid,
+      roles: [UserRoles.BASIC],
+      record: [
+        {
+          wins: 0,
+          losses: 0
+        }
+      ],
+      trophyCase: [],
+      isAuthenticated: !!auth.currentUser,
+      pickHistory: [],
+    }
+  }
 };
 
 const FirebaseUsersClassInstance = new FirebaseUsers();
