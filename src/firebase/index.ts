@@ -15,11 +15,11 @@ import {
   setDoc,
   updateDoc,
   where,
-  connectFirestoreEmulator
+  // connectFirestoreEmulator
 } from "firebase/firestore";
 import {
   GoogleAuthProvider,
-  connectAuthEmulator,
+  // connectAuthEmulator,
   getAuth,
 } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -39,8 +39,8 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
 if (process.env.NODE_ENV === 'development') {
-  connectFirestoreEmulator(db, "127.0.0.1", 8080);
-  connectAuthEmulator(auth, "http://127.0.0.1:9099");
+  // connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  // connectAuthEmulator(auth, "http://127.0.0.1:9099");
 }
 
 /**
