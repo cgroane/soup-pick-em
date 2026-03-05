@@ -1,9 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
-import { Box, Heading, Text } from 'grommet';
-import styled from 'styled-components';
 import { CFPRound, GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model';
 import { cfpRound } from '../../context/cfp';
-import { TeamLogo } from '../Styled';
+import { cn } from 'lib/utils';
 
 const ROUND_ORDER: CFPRound[] = ['firstRound', 'quarterfinal', 'semifinal', 'championship'];
 const ROUND_LABELS: Record<CFPRound, string> = {
@@ -19,31 +17,6 @@ const EXPECTED_GAMES: Record<CFPRound, number> = {
   championship: 1,
 };
 
-const RoundColumn = styled(Box)`
-  min-width: 180px;
-`;
-
-const GameSlot = styled(Box)<{ tbd?: boolean }>`
-  border-radius: 12px;
-  border: 1px solid ${({ theme, tbd }) => tbd ? '#555' : theme.colors.brand};
-  background: ${({ tbd }) => tbd ? 'rgba(80,80,80,0.3)' : 'rgba(255,255,255,0.07)'};
-  padding: 8px;
-  margin: 6px 0;
-  cursor: ${({ tbd }) => tbd ? 'default' : 'pointer'};
-  width: 170px;
-`;
-
-const TeamRow = styled(Box)<{ selected?: boolean }>`
-  border-radius: 8px;
-  padding: 4px 8px;
-  margin: 2px 0;
-  cursor: pointer;
-  background: ${({ selected, theme }) => selected ? theme.colors.brand : 'transparent'};
-  &:hover {
-    background: ${({ selected, theme }) => selected ? theme.colors.brand : 'rgba(144,209,240,0.15)'};
-  }
-`;
-
 interface BracketDisplayProps {
   games: GamesAPIResult[];
   userPicks: Picks[];
@@ -52,10 +25,10 @@ interface BracketDisplayProps {
 }
 
 const TBDSlot: React.FC = () => (
-  <GameSlot tbd direction="column" align="center" justify="center">
-    <Text size="small" color="dark-4">TBD vs TBD</Text>
-    <Text size="xsmall" color="dark-5">Matchup not yet determined</Text>
-  </GameSlot>
+  <div className="rounded-xl border border-border bg-surface/50 p-2 my-1.5 w-44 flex flex-col items-center justify-center cursor-default">
+    <p className="text-xs text-muted-foreground">TBD vs TBD</p>
+    <p className="text-xs text-muted-foreground/60">Matchup not yet determined</p>
+  </div>
 );
 
 const GameSlotCard: React.FC<{
@@ -66,16 +39,13 @@ const GameSlotCard: React.FC<{
 }> = ({ game, userPick, onPick, userId }) => {
   const pastDate = useMemo(() => Date.parse(game.startDate) < Date.now(), [game.startDate]);
 
-  const pickTeam = useCallback((outcome: GamesAPIResponseOutcome) => {
-    if (pastDate) return;
-    onPick({
-      matchup: game.id,
-      userId,
-      isCorrect: false,
-      week: 1,
-      selection: outcome,
-    });
-  }, [game.id, onPick, userId, pastDate]);
+  const pickTeam = useCallback(
+    (outcome: GamesAPIResponseOutcome) => {
+      if (pastDate) return;
+      onPick({ matchup: game.id, userId, isCorrect: false, week: 1, selection: outcome });
+    },
+    [game.id, onPick, userId, pastDate]
+  );
 
   const homeOutcome = game.outcomes?.home;
   const awayOutcome = game.outcomes?.away;
@@ -83,55 +53,75 @@ const GameSlotCard: React.FC<{
   const awaySelected = userPick?.selection?.id === 2;
 
   return (
-    <GameSlot direction="column">
-      <TeamRow
-        direction="row"
-        align="center"
-        gap="xsmall"
-        selected={awaySelected}
+    <div className="rounded-xl border border-primary/40 bg-white/5 p-2 my-1.5 w-44 cursor-pointer">
+      {/* Away team row */}
+      <div
+        className={cn(
+          'flex items-center gap-1 rounded-lg px-2 py-1 my-0.5 cursor-pointer transition-colors',
+          awaySelected ? 'bg-primary text-white' : 'hover:bg-primary/15'
+        )}
         onClick={awayOutcome && !pastDate ? () => pickTeam(awayOutcome) : undefined}
       >
         {game.awayTeamData?.logos?.[0] && (
-          <TeamLogo src={game.awayTeamData.logos[0]} fit="contain" style={{ width: '1.5rem', height: '1.5rem' }} />
+          <img
+            src={game.awayTeamData.logos[0]}
+            alt={game.awayTeam}
+            className="w-5 h-5 object-contain flex-shrink-0"
+          />
         )}
-        <Box flex>
-          <Text size="xsmall" weight={awaySelected ? 'bold' : 'normal'} color={awaySelected ? 'white' : 'light-1'}>
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              'text-xs truncate',
+              awaySelected ? 'font-bold text-white' : 'text-foreground'
+            )}
+          >
             {game.awayTeam}
-          </Text>
+          </p>
           {awayOutcome && (
-            <Text size="xsmall" color="accent-1">{awayOutcome.point}</Text>
+            <p className="text-xs text-primary/80">{awayOutcome.point}</p>
           )}
-        </Box>
-      </TeamRow>
+        </div>
+      </div>
 
-      <Text size="xsmall" color="dark-4" textAlign="center">at</Text>
+      <p className="text-xs text-muted-foreground text-center">at</p>
 
-      <TeamRow
-        direction="row"
-        align="center"
-        gap="xsmall"
-        selected={homeSelected}
+      {/* Home team row */}
+      <div
+        className={cn(
+          'flex items-center gap-1 rounded-lg px-2 py-1 my-0.5 cursor-pointer transition-colors',
+          homeSelected ? 'bg-primary text-white' : 'hover:bg-primary/15'
+        )}
         onClick={homeOutcome && !pastDate ? () => pickTeam(homeOutcome) : undefined}
       >
         {game.homeTeamData?.logos?.[0] && (
-          <TeamLogo src={game.homeTeamData.logos[0]} fit="contain" style={{ width: '1.5rem', height: '1.5rem' }} />
+          <img
+            src={game.homeTeamData.logos[0]}
+            alt={game.homeTeam}
+            className="w-5 h-5 object-contain flex-shrink-0"
+          />
         )}
-        <Box flex>
-          <Text size="xsmall" weight={homeSelected ? 'bold' : 'normal'} color={homeSelected ? 'white' : 'light-1'}>
+        <div className="flex-1 min-w-0">
+          <p
+            className={cn(
+              'text-xs truncate',
+              homeSelected ? 'font-bold text-white' : 'text-foreground'
+            )}
+          >
             {game.homeTeam}
-          </Text>
+          </p>
           {homeOutcome && (
-            <Text size="xsmall" color="accent-1">{homeOutcome.point}</Text>
+            <p className="text-xs text-primary/80">{homeOutcome.point}</p>
           )}
-        </Box>
-      </TeamRow>
+        </div>
+      </div>
 
       {pastDate && (
-        <Text size="xsmall" color="dark-4" textAlign="center" margin={{ top: '4px' }}>
+        <p className="text-xs text-muted-foreground text-center mt-1">
           {game.completed ? `${game.awayPoints} - ${game.homePoints}` : 'In Progress'}
-        </Text>
+        </p>
       )}
-    </GameSlot>
+    </div>
   );
 };
 
@@ -147,17 +137,17 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({ games, userPicks, onPic
   }, [games]);
 
   return (
-    <Box direction="row" gap="medium" overflow={{ horizontal: 'auto' }} pad="medium">
+    <div className="flex flex-row gap-4 overflow-x-auto p-4">
       {ROUND_ORDER.map((round) => {
         const roundGames = gamesByRound[round] ?? [];
         const expected = EXPECTED_GAMES[round];
         const tbdCount = Math.max(0, expected - roundGames.length);
 
         return (
-          <RoundColumn key={round} direction="column" align="center">
-            <Heading level={5} margin={{ bottom: '8px', top: '0' }} color="light-1">
+          <div key={round} className="flex flex-col items-center min-w-[180px]">
+            <h5 className="text-sm font-semibold text-foreground mb-2 text-center">
               {ROUND_LABELS[round]}
-            </Heading>
+            </h5>
             {roundGames.map((game) => (
               <GameSlotCard
                 key={game.id}
@@ -170,10 +160,10 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({ games, userPicks, onPic
             {Array.from({ length: tbdCount }).map((_, i) => (
               <TBDSlot key={`tbd-${round}-${i}`} />
             ))}
-          </RoundColumn>
+          </div>
         );
       })}
-    </Box>
+    </div>
   );
 };
 

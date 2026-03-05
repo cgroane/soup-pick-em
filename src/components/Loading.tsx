@@ -1,43 +1,26 @@
-import React from "react"
-import { Box, Card, CardBody, Heading, Skeleton } from "grommet";
-import { GameCard, ProfileCard } from "./Styled";
-
-const options = {
-    card: {
-        component: Card
-    },
-    gameCard: {
-        component: GameCard
-    },
-    profileCard: {
-        component: ProfileCard
-    }
-}
+import React from 'react';
+import { Skeleton } from './ui/skeleton';
 
 interface LoadingProps {
-    iterations?: number
-    type: keyof typeof options;
+  iterations?: number;
+  type: 'card' | 'gameCard' | 'profileCard';
+}
 
-};
-const Loading = ({
-  type, iterations = 1
-}: LoadingProps ) => {
-    const arrayOfSkels = Array.from(Array(iterations));
-    const ParentComponent = options[type].component;
+const Loading = ({ iterations = 1 }: LoadingProps) => {
+  const items = Array.from(Array(iterations));
   return (
     <>
-      {arrayOfSkels.map((_, index) => 
-      <Box key={`skeleton-${index}`} pad={'medium'} align="center" >
-      <ParentComponent pad={'20px'} margin={'4px'} height="small" width="large" background="light-1" >
-        <Heading><Skeleton ></Skeleton></Heading>
-        <CardBody>
-            <Skeleton/>
-        </CardBody>
-      </ParentComponent>
-      </Box>
-      )}
+      {items.map((_, index) => (
+        <div key={`skeleton-${index}`} className="p-4 flex justify-center">
+          <div className="w-full max-w-lg rounded-xl border border-border bg-surface p-5 space-y-3">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+        </div>
+      ))}
     </>
-  )
+  );
 };
 
 export default Loading;

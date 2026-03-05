@@ -6,7 +6,6 @@ import {
   DocumentData,
   collection,
   collectionGroup,
-  // connectFirestoreEmulator,
   deleteDoc,
   doc,
   getDoc,
@@ -22,7 +21,6 @@ import {
   GoogleAuthProvider,
   // connectAuthEmulator,
   getAuth,
-  // connectAuthEmulator 
 } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries

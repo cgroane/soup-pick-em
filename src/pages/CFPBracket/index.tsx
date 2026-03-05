@@ -1,50 +1,54 @@
 import React, { useCallback } from 'react';
-import { Box, Button, Heading, Spinner, Text } from 'grommet';
 import { useCFPContext } from '../../context/cfp';
 import { useGlobalContext } from '../../context/user';
 import { useUIContext } from '../../context/ui';
 import BracketDisplay from '../../components/BracketDisplay';
 import { Picks } from '../../model';
+import { Button } from '../../components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const CFPBracket: React.FC = () => {
   const { bracket, cfpPicks, addCfpPick, saveCfpPicks, isSaving } = useCFPContext();
   const { user } = useGlobalContext();
   const { seasonData } = useUIContext();
 
-  const handlePick = useCallback((pick: Picks) => {
-    addCfpPick(pick);
-  }, [addCfpPick]);
+  const handlePick = useCallback(
+    (pick: Picks) => {
+      addCfpPick(pick);
+    },
+    [addCfpPick]
+  );
 
   if (!bracket?.games?.length) {
     return (
-      <Box pad="xlarge" align="center">
-        <Text color="dark-4">
+      <div className="flex items-center justify-center py-16 px-4">
+        <p className="text-muted-foreground text-center">
           The CFP bracket has not been published yet. Check back soon.
-        </Text>
-      </Box>
+        </p>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Box pad={{ horizontal: 'medium', top: 'medium' }} direction="row" justify="between" align="center">
-        <Heading level={3} color="light-1" margin="0">
+    <div>
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <h3 className="text-xl font-bold text-foreground">
           CFP Bracket — {seasonData?.Season}
-        </Heading>
-        <Box direction="row" gap="small" align="center">
-          <Text size="small" color="dark-4">
+        </h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
             {cfpPicks.picks.length} pick{cfpPicks.picks.length !== 1 ? 's' : ''} made
-          </Text>
+          </span>
           <Button
-            primary
-            size="small"
-            label={isSaving ? 'Saving...' : 'Save Picks'}
-            disabled={isSaving || cfpPicks.picks.length === 0}
-            icon={isSaving ? <Spinner size="xsmall" /> : undefined}
+            size="sm"
             onClick={saveCfpPicks}
-          />
-        </Box>
-      </Box>
+            disabled={isSaving || cfpPicks.picks.length === 0}
+          >
+            {isSaving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
+            {isSaving ? 'Saving...' : 'Save Picks'}
+          </Button>
+        </div>
+      </div>
 
       <BracketDisplay
         games={bracket.games}
@@ -53,16 +57,17 @@ const CFPBracket: React.FC = () => {
         userId={user?.uid ?? ''}
       />
 
-      <Box pad="medium" align="center">
+      <div className="flex justify-center p-4">
         <Button
-          primary
-          label={isSaving ? 'Saving...' : 'Save Picks'}
-          disabled={isSaving || cfpPicks.picks.length === 0}
-          icon={isSaving ? <Spinner size="xsmall" /> : undefined}
           onClick={saveCfpPicks}
-        />
-      </Box>
-    </Box>
+          disabled={isSaving || cfpPicks.picks.length === 0}
+          className="w-full max-w-xs"
+        >
+          {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+          {isSaving ? 'Saving...' : 'Save Picks'}
+        </Button>
+      </div>
+    </div>
   );
 };
 

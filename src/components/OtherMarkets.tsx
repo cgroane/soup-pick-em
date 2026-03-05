@@ -1,50 +1,21 @@
-import { Accordion, AccordionPanel, Box } from 'grommet';
-import React, { useCallback } from 'react'
-// import { getOtherMarkets } from '../api/getOtherMarkets';
-import { GamesAPIResult } from '../model';
+import React, { useCallback } from 'react';
 
-interface OtherMarketsProps {
-  gameId: string;
-  addToSlate: (game: GamesAPIResult) => void;
-  addedToSlate: boolean;
-  disableSelections: boolean;
-}
-const OtherMarkets: React.FC<OtherMarketsProps> = ({
-  gameId,
-  // addToSlate,
-  // addedToSlate,
-  // disableSelections
-}: OtherMarketsProps) => {
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [markets, setMarkets] = useState<Market[]>([]);
 
+const OtherMarkets: React.FC = () => {
   const fetchMoreMarkets = useCallback(() => {
-    // setIsLoading(true);
-    // const otherMarkets = getOtherMarkets(gameId, ['h2h', 'totals']);
-    // console.log(otherMarkets);
-  }, [gameId]);
-
-  const onPanelActive = (activeIndexes: number[]) => {
-    if (activeIndexes.length) {
-      fetchMoreMarkets()
-    }
-  }
+    // placeholder for future market data
+  }, []);
 
   return (
-    <Accordion onActive={onPanelActive} >
-      <AccordionPanel label="More Market Options" >
-        <Box pad={'medium'} >
-          {/* {
-            markets.map((market) => (
-              <CheckBox label />
-            ))
-          } */}
-        </Box>
-      </AccordionPanel>
-    </Accordion>
-  )
-}
+    <details className="mt-2" onToggle={(e) => (e.currentTarget.open ? fetchMoreMarkets() : null)}>
+      <summary className="text-sm text-muted-foreground cursor-pointer select-none px-2 py-1 hover:text-foreground transition-colors">
+        More Market Options
+      </summary>
+      <div className="p-3">{/* market options will appear here */}</div>
+    </details>
+  );
+};
 
-export default OtherMarkets
+export default OtherMarkets;
 
-OtherMarkets.displayName = "OtherMarkets"
+OtherMarkets.displayName = 'OtherMarkets';

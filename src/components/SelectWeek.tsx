@@ -1,51 +1,30 @@
-import { Box, Select } from 'grommet'
-import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react'
+import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
 import { useUIContext } from '../context/ui';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface SelectWeekProps {
   onChange: Dispatch<SetStateAction<{ week?: string; year?: string; seasonType: 'regular' | 'postseason' }>>;
-  vals: { week: string; year: string }
+  vals: { week: string; year: string };
   heading: React.ReactNode;
 }
-const SelectWeek: React.FC<SelectWeekProps> = ({
-  onChange, heading, vals
-}: SelectWeekProps) => {
-  const {
-    seasonData,
-    usePostSeason,
-  } = useUIContext()
-  /**
-   * this needs to know if year is previous
-   * if yes, you can show all weeks from the season
-   * if not, then it's current and you can show up to THIS week
-   * 
-   * if current
-   * if season includes POST --> default should be last index which is bowls
-   * 
-   * selecting week 1 will be tricky. 
-   * if POST week 1 will fetch POST SEASON WEEK 1 every time, but should pick the week that they actually select
-   * this is because in POST, i am forcing seasontype postseason
-   * to handle week 1, need to make seasontype regular
-   * 
-   */
-  const handlePostSeasonEdge = (val: { label: string; value: number }, propName: string) => {
-    if (val.label === 'Post Season') {
-      onChange((prev) => {
 
-        return {
-          ...prev,
-          [propName]: val.value,
-          seasonType: 'postseason'
-        }
-      })
+const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: SelectWeekProps) => {
+  const { seasonData, usePostSeason } = useUIContext();
+
+  const handlePostSeasonEdge = (val: { label: string; value: string }, propName: string) => {
+    if (val.label === 'Post Season') {
+      onChange((prev) => ({ ...prev, [propName]: val.value, seasonType: 'postseason' }));
     } else {
-      onChange((prev) => ({
-        ...prev,
-        [propName]: val.value,
-        seasonType: 'regular'
-      }))
+      onChange((prev) => ({ ...prev, [propName]: val.value, seasonType: 'regular' }));
     }
-  }
+  };
+
   const weeks = useMemo(() => {
     const maxWeeks = parseInt(vals.year) < new Date().getFullYear() ? 14 : seasonData?.ApiWeek;
     const weekArray = Array.from(Array(14).keys())
@@ -55,61 +34,70 @@ const SelectWeek: React.FC<SelectWeekProps> = ({
     return weekArray;
   }, [seasonData?.ApiWeek, vals.year]);
 
-  const defaultWeek = useMemo(() => weeks.find((w) => usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek?.toString()), [usePostSeason, seasonData?.ApiWeek, weeks]);
-  const defaultYear = useMemo(() => ({
-    label: seasonData?.Season?.toString(),
-    value: seasonData?.Season
-  }), [seasonData?.Season]);
-
-  /**
-   * when i change a year, should reset the week
-   */
-
-  useEffect(() => {
-    if (parseInt(vals.week) > weeks.length) {
-      onChange((prev) => ({ ...prev, week: weeks[weeks.length - 2].value }))
-    }
-  }, [weeks, onChange, vals?.week]);
+  const defaultWeek = useMemo(
+    () => weeks.find((w) => (usePostSeason ? w.label === 'Post Season' : w.value === seasonData?.ApiWeek?.toString())),
+    [usePostSeason, seasonData?.ApiWeek, weeks]
+  );
 
   const toDate = useMemo(() => {
     const now = new Date();
     const year = seasonData?.Season || now.getFullYear();
-
-    let yearsOptions = [];
+    const yearsOptions = [];
     for (let initYear = 2024; initYear <= year; initYear++) {
-      yearsOptions.push({ label: initYear?.toString(), value: initYear?.toString() })
-    };
+      yearsOptions.push({ label: initYear.toString(), value: initYear.toString() });
+    }
     return yearsOptions;
   }, [seasonData?.Season]);
 
+  useEffect(() => {
+    if (parseInt(vals.week) > weeks.length) {
+      onChange((prev) => ({ ...prev, week: weeks[weeks.length - 2].value }));
+    }
+  }, [weeks, onChange, vals?.week]);
+
+  const currentWeek = weeks.find((w) => vals.week === w.value);
+  const currentYear = toDate.find((y) => y.value === vals.year);
 
   return (
-    <>
-      <Box pad={'2rem 1rem'} flex direction='row' margin={'0 auto'} justify='between' content='center' wrap >
-        {heading}
-        <Select
-          margin={'1rem auto'}
-          style={{ flexGrow: 1 }}
-          onChange={({ option }) => handlePostSeasonEdge(option, 'week')}
-          placeholder='Select Week'
-          defaultValue={defaultWeek}
-          value={weeks.find((w) => vals.week === w.value)}
-          options={weeks}
-        />
-        <Select
-          onChange={({ option }) => onChange((prev) => ({ ...prev, year: option.value }))}
-          style={{ flexGrow: 1 }}
-          margin={'1rem auto'}
-          placeholder='Select Season'
-          defaultValue={defaultYear}
-          value={toDate.find((y) => y.value === vals.year)}
-          options={toDate}
-        />
-      </Box>
-    </>
-  )
-}
+    <div className="px-4 py-6 flex flex-wrap gap-3 items-center justify-between">
+      {heading}
+      <Select
+        value={currentWeek?.value ?? defaultWeek?.value}
+        onValueChange={(value) => {
+          const option = weeks.find((w) => w.value === value);
+          if (option) handlePostSeasonEdge(option, 'week');
+        }}
+      >
+        <SelectTrigger className="flex-1 min-w-[140px]">
+          <SelectValue placeholder="Select Week" />
+        </SelectTrigger>
+        <SelectContent>
+          {weeks.map((w) => (
+            <SelectItem key={w.value} value={w.value}>
+              {w.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={currentYear?.value}
+        onValueChange={(value) => onChange((prev) => ({ ...prev, year: value }))}
+      >
+        <SelectTrigger className="flex-1 min-w-[120px]">
+          <SelectValue placeholder="Select Season" />
+        </SelectTrigger>
+        <SelectContent>
+          {toDate.map((y) => (
+            <SelectItem key={y.value} value={y.value}>
+              {y.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
-export default SelectWeek
+export default SelectWeek;
 
-SelectWeek.displayName = "SelectWeek"
+SelectWeek.displayName = 'SelectWeek';

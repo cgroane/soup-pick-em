@@ -28,7 +28,7 @@ export const getCurrentWeek = async () => {
 
 
 export const getGames = async (options?: SpreadsAPIRequest) => {
-  const matchups = await cfbdApi.get<MatchupsAPIResponse>(`/matchups`, {
+  const matchups = await cfbdApi.get<MatchupsAPIResponse>(`/game-data/matchups`, {
     params: {
       year: options?.season,
       week: options?.weekNumber,
@@ -39,7 +39,7 @@ export const getGames = async (options?: SpreadsAPIRequest) => {
 }
 
 export const getCFPGames = async (year: number): Promise<MatchupsAPIResponse> => {
-  const response = await cfbdApi.get<MatchupsAPIResponse>('/cfp-games', {
+  const response = await cfbdApi.get<MatchupsAPIResponse>('/game-data/cfp-games', {
     params: { year }
   });
   return response.data;
