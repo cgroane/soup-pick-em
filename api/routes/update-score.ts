@@ -64,16 +64,16 @@ updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: expres
 
     let seasonInfo = await getSeasonData();
 
-    if (process.env.REACT_APP_SEASON_KEY === "offseason") {
-      seasonInfo = {
-        ApiWeek: 5,
-        Season: 2024,
-        EndYear: 2025,
-        StartYear: 2024,
-        ApiSeason: "2024",
-        Description: seasonInfo.Description,
-        isOffseason: true,
-      };
+    // if (process.env.REACT_APP_SEASON_KEY === "offseason") {
+    seasonInfo = {
+      ApiWeek: 5,
+      Season: 2024,
+      EndYear: 2025,
+      StartYear: 2024,
+      ApiSeason: "2024",
+      Description: "",
+      isOffseason: false,
+      // };
     }
 
     const isCFP =

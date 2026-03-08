@@ -9,6 +9,7 @@ import Modal from '../../components/Modal';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import FirebaseUsersClassInstance from '../../firebase/user/user';
 import { Button } from '../../components/ui/button';
+import cfbdApi from 'api';
 
 const MakePicks: React.FC = () => {
   const { picks, slate, fetchSlate, getUserPicks } = usePickContext();
@@ -72,6 +73,23 @@ const MakePicks: React.FC = () => {
 
   const picksCount = picks.picks.filter((p) => !!p.selection).length;
 
+  const autoPickWithClaude = useCallback(async () => {
+    if (!user) navigate('/');
+    setStatus(LoadingState.LOADING);
+    setModalOpen(true);
+    try {
+      await cfbdApi.post('/ai/agentic-picks', {
+        slateId: slate?.uniqueWeek as string,
+        userId: user?.uid as string,
+        userName: `${user?.fName} ${user?.lName}`,
+      });
+      setStatus(LoadingState.IDLE);
+    } catch (err) {
+      console.error("Error generating picks:", err instanceof Error ? err.message : String(err));
+      setStatus(LoadingState.IDLE);
+    }
+  }, [navigate, setModalOpen, user, slate?.uniqueWeek, setStatus]);
+
   return (
     <>
       <div className="flex flex-col items-center px-4 pb-32">
@@ -92,6 +110,12 @@ const MakePicks: React.FC = () => {
           className="w-full max-w-xs"
         >
           Submit Picks
+        </Button>
+        <Button
+          onClick={() => autoPickWithClaude()}
+          className="w-full max-w-xs"
+        >
+          Auto Pick With Claude
         </Button>
       </div>
 
