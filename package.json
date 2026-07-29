@@ -50,7 +50,8 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "firebase-functions": "6.4.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -58,7 +59,15 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "serve": "tsx api/index.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "eslint --ext .js,.ts . --fix",
+    "fb:build": "tsc",
+    "build:watch": "tsc --watch",
+    "fb:serve": "npm run build && firebase emulators:start --debug --import=./emulator-data/2024-09-20T00:16:09_85072 --only auth,functions,firestore",
+    "shell": "npm run build && firebase functions:shell",
+    "fb:start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
   },
   "eslintConfig": {
     "extends": [
@@ -89,6 +98,14 @@
     "@types/react-router-dom": "^5.3.3",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.2",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "@types/node": "^22.18.1",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^4.3.5"
   }
 }

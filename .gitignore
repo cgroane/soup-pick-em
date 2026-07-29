@@ -27,3 +27,6 @@ yarn-error.log*
 soup-pick-em-firebase-adminsdk-unk23-bfa3a7bc3c.json
 soup-pick-em-firebase-adminsdk-unk23-e3465f8a0a.json
 firebaseCert.json
+emulator-data
+firestore-debug.log
+Firestore-export.overall_export_metadata
