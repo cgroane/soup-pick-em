@@ -1,17 +1,21 @@
-import { doc, setDoc, writeBatch } from "firebase/firestore"
+import { doc, getDoc, setDoc, writeBatch } from "firebase/firestore"
 import { FirebaseDB, db } from ".."
 import { GamesAPIResult, Slate, UserCollectionData } from "../../model"
 import { getGames } from "../../api/getGames";
 
 /**
  * TODO -- updateSlateScores fix
+ *
+ * Slates and picks are group-scoped: groups/{gid}/slates/{uniqueWeek} and
+ * groups/{gid}/members/{uid}/picks/{uniqueWeek}.
  */
 
 export class FirebaseSlatesClass extends FirebaseDB<Slate> {
   constructor(collectionName: string = 'slates') { super(collectionName) }
-  addSlate = async (data: Slate, users: UserCollectionData[], deletions?: number[]) => {
+  addSlate = async (gid: string, data: Slate, users: UserCollectionData[], deletions?: number[]) => {
     try {
-      const existingSlate = await this.getDocumentInCollection(data.uniqueWeek);
+      const existingSnap = await getDoc(doc(this.db, 'groups', gid, 'slates', data.uniqueWeek));
+      const existingSlate = existingSnap.exists() ? (existingSnap.data() as Slate) : undefined;
       /**
        * returns games that ARE deleted
        * return games where statement is true
@@ -28,16 +32,16 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
        * delete from each user the games included in overwritten games
        * user pick history games filter delections !include index
        */
-      await this.addDocument(data, data?.uniqueWeek);
+      await setDoc(doc(this.db, 'groups', gid, 'slates', data.uniqueWeek), data);
       const batch = writeBatch(this.db);
-      
+
       users.forEach((userData) => {
           /**
-          * find pick history that needs to be updated using slateid 
+          * find pick history that needs to be updated using slateid
           * keep old picks that weren't deleted
           */
           const pickHToUpdate = userData.pickHistory.find((pH) => pH.slateId === data?.uniqueWeek);
-          const docRef = doc(this.db, 'users', userData.uid, 'picks', data.uniqueWeek);
+          const docRef = doc(this.db, 'groups', gid, 'members', userData.uid, 'picks', data.uniqueWeek);
           /** below needs to set doc data equal to the unique weeks pick history */
           /**
            * find each game that is in keptgames == games to copy over
@@ -74,13 +78,15 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
       throw new Error('Could not update slate to the database')
     }
   }
-  updateSlateScores = async ({ week, year }: { week: number; year: number }): Promise<Slate | undefined> => {
+  updateSlateScores = async (gid: string, { week, year }: { week: number; year: number }): Promise<Slate | undefined> => {
     const slateId = `w${week}-${year}`;
-    
+    const slateRef = doc(db, 'groups', gid, 'slates', slateId);
+
     try {
       const games = await getGames()
-      let slate = await this.getDocumentInCollection(slateId);
-      await setDoc(doc(db, 'slates', `w${week}-2023`), {
+      const existing = await getDoc(slateRef);
+      const slate = existing.exists() ? (existing.data() as Slate) : undefined;
+      const updated = {
         ...slate,
         games: slate?.games.map((g) => {
           const match = games.find((game) => game.id === g.id)
@@ -89,9 +95,9 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
             ...match,
           }
         })
-      })
-      slate = await this.getDocumentInCollection(slateId);
-      return slate;
+      };
+      await setDoc(slateRef, updated);
+      return updated as Slate;
     } catch (err) {
       console.error(err);
       return;

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingState, useUIContext } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
+import { useGroupContext } from '../../context/group';
 import { UserCollectionData } from '../../model';
 import { usePickContext } from '../../context/pick';
 import FBSlateClassInstance from '../../firebase/slate/slate';
@@ -23,7 +24,8 @@ const CreateSlate: React.FC = () => {
     useSlateContext();
   const { fetchSlate } = usePickContext();
   const { setModalOpen, modalOpen, seasonData, setStatus, status, useOffSeason } = useUIContext();
-  const { user, users, isSlatePicker } = useGlobalContext();
+  const { user, users } = useGlobalContext();
+  const { activeGroupId, isSlatePicker } = useGroupContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
@@ -76,7 +78,9 @@ const CreateSlate: React.FC = () => {
     const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${
       selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
     }`;
+    if (!activeGroupId) return;
     await FBSlateClassInstance.addSlate(
+      activeGroupId,
       {
         week: parseInt(selectedWeek?.week as string),
         uniqueWeek: uniqueId,
@@ -87,7 +91,7 @@ const CreateSlate: React.FC = () => {
       users,
       deletions.length ? deletions : undefined
     ).then(() => setStatus(LoadingState.IDLE));
-  }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users]);
+  }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users, activeGroupId]);
 
   const disableSelection = useMemo(
     () => selectedGames?.length >= 10 || !canEdit,

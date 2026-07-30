@@ -50,6 +50,56 @@ export type Slate = {
   processed?: boolean;
 }
 
+// ============================================================================
+// Groups feature (branch: feature/groups)
+//
+// Independent pick'em pools. Storage is group-centric:
+//   groups/{gid}
+//     members/{uid}                        <- membership = the join + per-group state
+//       picks/{uniqueWeek}                 <- PickHistory (authoritative; NOT mirrored on member doc)
+//     slates/{uniqueWeek}                  <- Slate, scoped to the group
+//   users/{uid}/memberships/{gid}          <- mirror for "list my groups"
+// ============================================================================
+
+export type GroupVisibility = 'private' | 'public';
+export type GroupRole = 'owner' | 'slate-picker' | 'member';
+
+export type Group = {
+  id: string;
+  name: string;
+  visibility: GroupVisibility;
+  /** Shareable code used to join a private group. */
+  inviteCode: string;
+  /** uid of the group owner (maps to the global admin for the legacy group). */
+  ownerUid: string;
+  /** ISO timestamp. */
+  createdAt: string;
+  description?: string;
+};
+
+/** groups/{gid}/members/{uid} — per-group state that used to live on the user doc. */
+export type GroupMember = {
+  uid: string;
+  role: GroupRole;
+  record: WinLossRecord[];
+  trophyCase?: Trophy[];
+  /** Denormalized for cheap leaderboard rendering without a users read. */
+  fName: string;
+  lName: string;
+  email: string;
+  /** ISO timestamp. */
+  joinedAt: string;
+};
+
+/** users/{uid}/memberships/{gid} — lightweight mirror so a user can list their groups. */
+export type GroupMembership = {
+  gid: string;
+  name: string;
+  role: GroupRole;
+  /** ISO timestamp. */
+  joinedAt: string;
+};
+
 /** @deprecated Use GamesAPIResult instead */
 export type Matchup = {
   id: number

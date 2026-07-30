@@ -14,6 +14,7 @@ import {
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Menu } from 'lucide-react';
+import GroupSwitcher from './GroupSwitcher';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const Navigation: React.FC = () => {
   const menuItems = useMemo(() => {
     const loggedInItems: { label: string; onClick: () => void }[] = [
       { label: 'Profile', onClick: () => navigate('/profile') },
+      { label: 'Groups', onClick: () => navigate('/groups') },
       { label: 'Logout', onClick: () => signOut() },
     ];
     const loggedOut = [{ label: 'Login', onClick: () => navigate('/') }];
@@ -43,14 +45,17 @@ const Navigation: React.FC = () => {
 
   return (
     <header className="flex items-center justify-between px-4 h-14 bg-surface border-b border-border flex-shrink-0">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => navigate('/profile')}
-        aria-label="Home"
-      >
-        <Home className="h-5 w-5 text-foreground" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/profile')}
+          aria-label="Home"
+        >
+          <Home className="h-5 w-5 text-foreground" />
+        </Button>
+        {!!user?.isAuthenticated && <GroupSwitcher />}
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" aria-label="Menu">

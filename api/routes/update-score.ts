@@ -2,7 +2,7 @@ import express from "express";
 import { getFirestore } from "firebase-admin/firestore";
 import { getGames, SeasonType } from "cfbd";
 import { SeasonDetails } from "api/schema/sportsDataIO";
-import { CFPBracket, GamesAPIResult, Picks, Slate, UserCollectionData } from "model";
+import { CFPBracket, GamesAPIResult, GroupMember, Picks, Slate } from "model";
 import { PickHistory } from "pages/Picks/PicksTable";
 import { requireCronSecret } from "../middlware";
 import axios from "axios";
@@ -93,56 +93,29 @@ updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: expres
   }
 });
 
-async function processRegularSeason(
+/**
+ * Grade every member of one group for a single slate/bracket doc and stage the
+ * writes (member records + graded pick docs) into `batch`. `refGames` supplies
+ * the spread/outcomes (from the group's slate or the bracket); `freshGames`
+ * supplies the latest scores from CFBD.
+ */
+async function gradeGroupMembers(
   db: ReturnType<typeof getFirestore>,
-  seasonInfo: SeasonDetails
+  gid: string,
+  docId: string,
+  year: number,
+  refGames: GamesAPIResult[],
+  freshGames: Awaited<ReturnType<typeof getGames>>["data"],
+  batch: ReturnType<ReturnType<typeof getFirestore>["batch"]>
 ): Promise<void> {
-  const week = seasonInfo.ApiWeek - 1;
-  const year = seasonInfo.Season;
-  const slateId = `w${week}-${year}`;
-
-  const slateRef = db.collection("slates").doc(slateId);
-  const slateData = (await slateRef.get()).data() as Slate;
-  if (!slateData) throw new Error(`Slate not found: ${slateId}`);
-
-  const slateGameIds = new Set<number>(slateData.games.map((gm) => gm.id));
-
-  const freshGamesResp = await getGames({
-    query: { week, year, division: "fbs" },
-  });
-  const freshGames = (freshGamesResp?.data ?? []).filter((gm) =>
-    slateGameIds.has(gm.id)
-  );
-
-  const batch = db.batch();
-
-  // Update slate with latest scores
-  batch.set(slateRef, {
-    ...slateData,
-    games: slateData.games.map((sgm) => {
-      const fresh = freshGames.find((g) => g.id === sgm.id);
-      return {
-        ...sgm,
-        homePoints: fresh?.homePoints ?? sgm.homePoints ?? 0,
-        awayPoints: fresh?.awayPoints ?? sgm.awayPoints ?? 0,
-        completed: fresh?.completed ?? (sgm).completed ?? false,
-      };
-    }),
-  });
-
-  const usersSnap = await db.collection("users").get();
+  const membersCol = db.collection("groups").doc(gid).collection("members");
+  const membersSnap = await membersCol.get();
 
   await Promise.all(
-    usersSnap.docs.map(async (userDoc) => {
-      const userData = userDoc.data() as UserCollectionData;
-      const pickDocRef = db
-        .collection("users")
-        .doc(userDoc.id)
-        .collection("picks")
-        .doc(slateId);
-      const pickDocSnap = await pickDocRef.get();
-      const pickData = pickDocSnap.data() as PickHistory | undefined;
-
+    membersSnap.docs.map(async (memberDoc) => {
+      const member = memberDoc.data() as GroupMember;
+      const pickDocRef = membersCol.doc(memberDoc.id).collection("picks").doc(docId);
+      const pickData = (await pickDocRef.get()).data() as PickHistory | undefined;
       if (!pickData) return;
 
       /**
@@ -156,13 +129,11 @@ async function processRegularSeason(
       let newIncorrect = 0;
 
       const updatedPicks = pickData.picks.map((pick) => {
-        const slateGame = slateData.games.find(
-          (gm) => gm.id === pick.matchup
-        ) as GamesAPIResult;
-        const freshGame = freshGames.find((gm) => gm.id === pick.matchup);
+        const refGame = refGames.find((gm) => gm.id === pick.matchup);
+        const freshGame = (freshGames ?? []).find((gm) => gm.id === pick.matchup);
         if (!freshGame) return pick;
 
-        const result = gradePick(pick, freshGame, slateGame?.outcomes);
+        const result = gradePick(pick, freshGame, refGame?.outcomes);
         if (result === null) return pick; // game not yet complete
 
         if (result) newCorrect++;
@@ -174,25 +145,22 @@ async function processRegularSeason(
       const deltaIncorrect = newIncorrect - prevIncorrect;
 
       if (deltaCorrect !== 0 || deltaIncorrect !== 0) {
-        const thisSeasonIdx =
-          userData.record?.findIndex((r) => r.year === year) ?? -1;
-        if (thisSeasonIdx >= 0) {
-          userData.record[thisSeasonIdx] = {
-            wins: (userData.record[thisSeasonIdx].wins ?? 0) + deltaCorrect,
-            losses: (userData.record[thisSeasonIdx].losses ?? 0) + deltaIncorrect,
+        const record = [...(member.record ?? [])];
+        const idx = record.findIndex((r) => r.year === year);
+        if (idx >= 0) {
+          record[idx] = {
+            wins: (record[idx].wins ?? 0) + deltaCorrect,
+            losses: (record[idx].losses ?? 0) + deltaIncorrect,
             year,
           };
         } else {
-          userData.record.push({
+          record.push({
             wins: Math.max(0, deltaCorrect),
             losses: Math.max(0, deltaIncorrect),
             year,
           });
         }
-        batch.set(db.collection("users").doc(userData.id), {
-          ...userData,
-          record: [...userData.record],
-        });
+        batch.set(memberDoc.ref, { ...member, record });
       }
 
       batch.set(pickDocRef, {
@@ -205,8 +173,51 @@ async function processRegularSeason(
       });
     })
   );
+}
 
-  await batch.commit();
+async function processRegularSeason(
+  db: ReturnType<typeof getFirestore>,
+  seasonInfo: SeasonDetails
+): Promise<void> {
+  const week = seasonInfo.ApiWeek - 1;
+  const year = seasonInfo.Season;
+  const slateId = `w${week}-${year}`;
+
+  // Real-world results are the same for every group — fetch once, reuse per group.
+  const freshGamesResp = await getGames({
+    query: { week, year, division: "fbs" },
+  });
+  const freshGames = freshGamesResp?.data ?? [];
+
+  const groupsSnap = await db.collection("groups").get();
+
+  // One batch per group keeps each commit under the 500-write limit and isolates
+  // a bad group from the rest.
+  for (const groupDoc of groupsSnap.docs) {
+    const gid = groupDoc.id;
+    const slateRef = db.collection("groups").doc(gid).collection("slates").doc(slateId);
+    const slateData = (await slateRef.get()).data() as Slate | undefined;
+    if (!slateData) continue; // this group has no slate for this week
+
+    const batch = db.batch();
+
+    // Update the group's slate with the latest scores.
+    batch.set(slateRef, {
+      ...slateData,
+      games: slateData.games.map((sgm) => {
+        const fresh = freshGames.find((g) => g.id === sgm.id);
+        return {
+          ...sgm,
+          homePoints: fresh?.homePoints ?? sgm.homePoints ?? 0,
+          awayPoints: fresh?.awayPoints ?? sgm.awayPoints ?? 0,
+          completed: fresh?.completed ?? sgm.completed ?? false,
+        };
+      }),
+    });
+
+    await gradeGroupMembers(db, gid, slateId, year, slateData.games, freshGames, batch);
+    await batch.commit();
+  }
 }
 
 async function processCFP(
@@ -231,10 +242,9 @@ async function processCFP(
       (gm.notes as string)?.includes("College Football Playoff")
   );
 
-  const batch = db.batch();
-
-  // Update bracket document with latest scores
-  batch.set(bracketRef, {
+  // The CFP bracket itself stays global (one real playoff); only picks/records
+  // are per-group. Update the bracket scores once.
+  await bracketRef.set({
     ...bracketData,
     updatedAt: new Date().toISOString(),
     games: bracketData.games.map((bgm) => {
@@ -248,83 +258,13 @@ async function processCFP(
     }),
   });
 
-  const usersSnap = await db.collection("users").get();
-
-  await Promise.all(
-    usersSnap.docs.map(async (userDoc) => {
-      const userData = userDoc.data() as UserCollectionData;
-      const pickDocRef = db
-        .collection("users")
-        .doc(userDoc.id)
-        .collection("picks")
-        .doc(bracketId);
-      const pickDocSnap = await pickDocRef.get();
-      const pickData = pickDocSnap.data() as PickHistory | undefined;
-
-      if (!pickData) return;
-
-      /**
-       * CFP games complete across multiple rounds over several weeks.
-       * Delta tracking ensures each round's results are counted exactly once,
-       * even if the job is re-run before all rounds are finished.
-       */
-      const prevCorrect = pickData.correctCount ?? 0;
-      const prevIncorrect = pickData.incorrectCount ?? 0;
-
-      let newCorrect = 0;
-      let newIncorrect = 0;
-
-      const updatedPicks = pickData.picks.map((pick) => {
-        const bracketGame = bracketData.games.find(
-          (gm) => gm.id === pick.matchup
-        ) as GamesAPIResult;
-        const freshGame = cfpFreshGames.find((gm) => gm.id === pick.matchup);
-        if (!freshGame) return pick;
-
-        const result = gradePick(pick, freshGame, bracketGame?.outcomes);
-        if (result === null) return pick; // game not yet complete
-
-        if (result) newCorrect++;
-        else newIncorrect++;
-        return { ...pick, isCorrect: result };
-      });
-
-      const deltaCorrect = newCorrect - prevCorrect;
-      const deltaIncorrect = newIncorrect - prevIncorrect;
-
-      if (deltaCorrect !== 0 || deltaIncorrect !== 0) {
-        const thisSeasonIdx =
-          userData.record?.findIndex((r) => r.year === year) ?? -1;
-        if (thisSeasonIdx >= 0) {
-          userData.record[thisSeasonIdx] = {
-            wins: (userData.record[thisSeasonIdx].wins ?? 0) + deltaCorrect,
-            losses: (userData.record[thisSeasonIdx].losses ?? 0) + deltaIncorrect,
-            year,
-          };
-        } else {
-          userData.record.push({
-            wins: Math.max(0, deltaCorrect),
-            losses: Math.max(0, deltaIncorrect),
-            year,
-          });
-        }
-        batch.set(db.collection("users").doc(userData.id), {
-          ...userData,
-          record: [...userData.record],
-        });
-      }
-
-      batch.set(pickDocRef, {
-        ...pickData,
-        picks: updatedPicks,
-        correctCount: newCorrect,
-        incorrectCount: newIncorrect,
-        processedAt: new Date().toISOString(),
-      });
-    })
-  );
-
-  await batch.commit();
+  // Grade every group's members against the shared bracket.
+  const groupsSnap = await db.collection("groups").get();
+  for (const groupDoc of groupsSnap.docs) {
+    const batch = db.batch();
+    await gradeGroupMembers(db, groupDoc.id, bracketId, year, bracketData.games, cfpFreshGames, batch);
+    await batch.commit();
+  }
 }
 
 export default updateScoresRouter;

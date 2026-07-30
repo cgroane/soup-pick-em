@@ -58,11 +58,19 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "serve": "tsx api/index.ts",
+    "serve:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 tsx api/index.ts",
+    "start:emu": "REACT_APP_USE_EMULATOR=true react-scripts start",
+    "dev": "concurrently -k -n emu,api,web -c magenta,cyan,green \"npm run fb:serve\" \"wait-on tcp:127.0.0.1:8080 && npm run serve:emu\" \"wait-on tcp:127.0.0.1:8080 && npm run start:emu\"",
+    "dev:live": "concurrently -k -n api,web -c cyan,green \"npm run serve\" \"npm run start\"",
+    "migrate:groups:dry": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/migrate-groups.js --dry-run",
+    "migrate:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/migrate-groups.js",
+    "verify:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/verify-groups.js",
+    "seed:auth:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=soup-pick-em node scripts/seed-emulator-auth.js",
     "prepare": "husky",
     "lint": "eslint --ext .js,.ts . --fix",
     "fb:build": "npm --prefix functions run build",
     "fb:build:watch": "npm --prefix functions run build:watch",
-    "fb:serve": "npm --prefix functions run build && firebase emulators:start --import=./emulator-data/2026-03-03T00:53:13_60333 --only auth,functions,firestore",
+    "fb:serve": "npm --prefix functions run build && firebase emulators:start --import=./emulator-data/dev-seed --only auth,functions,firestore",
     "fb:shell": "npm --prefix functions run build && firebase functions:shell",
     "fb:start": "npm run fb:shell",
     "deploy": "firebase deploy --only functions",
@@ -95,8 +103,10 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/cors": "^2.8.19",
     "@types/react-router-dom": "^5.3.3",
+    "concurrently": "^10.0.4",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.2",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "wait-on": "^9.1.0"
   }
 }

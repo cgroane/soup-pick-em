@@ -10,6 +10,7 @@ import oddsRouter from "./routes/odds";
 import matchupsRouter from "./routes/matchups";
 import admin from "firebase-admin";
 import adminRouter from './routes/admin';
+import groupsRouter from './routes/groups';
 import axios from 'axios';
 import { SeasonTypes } from '../src/context/ui';
 import { SeasonDetailsData } from 'api/schema/sportsDataIO';
@@ -63,6 +64,7 @@ app.use("/api/cron", updateScores);
 app.use("/api/betting", oddsRouter);
 app.use("/api/game-data", matchupsRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/groups", groupsRouter);
 
 app.get(`/api/current-week`, async (_req: express.Request, res: express.Response) => {
   try {

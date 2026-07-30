@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/button';
 interface ProfileProps {}
 
 const Profile: React.FC<ProfileProps> = () => {
-  const { seasonData, setStatus, status, usePostSeason } = useUIContext();
+  const { seasonData, setStatus, status, usePostSeason, useOffSeason } = useUIContext();
   const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
   const { slate, fetchSlate } = usePickContext();
   const { canEdit } = useSlateContext();
@@ -51,15 +51,17 @@ const Profile: React.FC<ProfileProps> = () => {
       ?.sort((a, b) => b.pctg - a.pctg);
   }, [users, seasonData?.Season, seasonData?.seasonType]);
 
-  const headingText = useMemo(
-    () =>
-      ({
-        postseason: { text: 'Bowl Season, Week 1', weekNumber: '1', buttonText: canEdit ? 'Pick Slate' : 'View Games' },
-        regular: { text: `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`, weekNumber: seasonData?.ApiWeek?.toString() ?? '1', buttonText: canEdit ? 'Pick Slate' : 'View Games' },
-        offseason: { text: 'Offseason', weekNumber: '', buttonText: 'View Games' },
-      }[seasonData?.seasonType || 'regular']),
-    [seasonData?.ApiWeek, seasonData?.seasonType, canEdit, seasonData?.Season]
-  );
+  const headingText = useMemo(() => {
+    // Key off the derived booleans, not seasonData.seasonType — the API returns
+    // uppercase SeasonTypes values ('REGULAR'/'POST'/'PRE') which don't match
+    // these keys, so a raw lookup can be undefined and crash on `.text`.
+    const key = usePostSeason ? 'postseason' : useOffSeason ? 'offseason' : 'regular';
+    return {
+      postseason: { text: 'Bowl Season, Week 1', weekNumber: '1', buttonText: canEdit ? 'Pick Slate' : 'View Games' },
+      regular: { text: `Week ${seasonData?.ApiWeek ?? 1}, ${seasonData?.Season}`, weekNumber: seasonData?.ApiWeek?.toString() ?? '1', buttonText: canEdit ? 'Pick Slate' : 'View Games' },
+      offseason: { text: 'Offseason', weekNumber: '', buttonText: 'View Games' },
+    }[key];
+  }, [seasonData?.ApiWeek, seasonData?.Season, canEdit, usePostSeason, useOffSeason]);
 
   if (status === LoadingState.LOADING) {
     return <Loading iterations={4} type="profileCard" />;

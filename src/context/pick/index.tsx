@@ -2,6 +2,8 @@ import { Dispatch, SetStateAction, createContext, useCallback, useContext, useEf
 import { Picks, Slate } from "../../model"
 import { useGlobalContext } from "../user";
 import FBSlateClassInstance from "../../firebase/slate/slate";
+import FirebaseGroupsInstance from "../../firebase/group/group";
+import { useGroupContext } from "../group";
 import { LoadingState, useUIContext } from "../ui";
 import { PickHistory } from "../../pages/Picks/PicksTable";
 import React from "react";
@@ -31,6 +33,7 @@ const Context = ({
   children
 }: ContextProp) => {
   const { user } = useGlobalContext()
+  const { activeGroupId } = useGroupContext();
   const { seasonData, setStatus, usePostSeason } = useUIContext();
   const [slate, setSlate] = useState({} as Slate);
   // const [weeklyResults, setWeeklyResults] = useState()
@@ -74,16 +77,19 @@ const Context = ({
   const fetchSlate = useCallback(async ({ week, year }: { week?: number; year?: string }) => {
     /** update to use seasons data as fallback */
     setStatus(LoadingState.LOADING)
-    const results = await FBSlateClassInstance.getDocumentInCollection(`w${week ? week : seasonData?.ApiWeek as number}-${year ? year : !usePostSeason ? seasonData?.Season as number : `${seasonData?.Season}POST`}`);
+    if (!activeGroupId) return undefined;
+    const slateId = `w${week ? week : seasonData?.ApiWeek as number}-${year ? year : !usePostSeason ? seasonData?.Season as number : `${seasonData?.Season}POST`}`;
+    const results = await FirebaseGroupsInstance.getSlate(activeGroupId, slateId);
     setSlate(results as Slate);
     setPicks((prev) => ({ slateId: results?.uniqueWeek as string, picks: [...prev?.picks] }));
     return results;
-  }, [setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus, usePostSeason]);
+  }, [activeGroupId, setSlate, setPicks, seasonData?.ApiWeek, seasonData?.Season, setStatus, usePostSeason]);
 
   const refreshSlatePicksStatus = useCallback(async ({ week, year }: { week?: number; year?: number }) => {
-    const updatedSlate = await FBSlateClassInstance.updateSlateScores({ week: week ? week : seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })
+    if (!activeGroupId) return;
+    const updatedSlate = await FBSlateClassInstance.updateSlateScores(activeGroupId, { week: week ? week : seasonData?.ApiWeek as number, year: year ? year : seasonData?.Season as number })
     setSlate(updatedSlate as Slate)
-  }, [setSlate, seasonData?.ApiWeek, seasonData?.Season]);
+  }, [activeGroupId, setSlate, seasonData?.ApiWeek, seasonData?.Season]);
 
   const getUserPicks = useCallback(() => {
     const findPicks = user?.pickHistory?.find((p) => p.slateId === slate?.uniqueWeek);

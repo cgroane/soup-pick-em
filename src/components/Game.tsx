@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useSlateContext } from '../context/slate';
 import { useGetTeamData } from '../hooks/useGetTeamData';
-import { useGlobalContext } from '../context/user';
+import { useGroupContext } from '../context/group';
 import { GamesAPIResult } from '../model';
 import { Checkbox } from './ui/checkbox';
 import { cn } from 'lib/utils';
@@ -15,7 +15,7 @@ interface GameProps {
 
 const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox }: GameProps) => {
   const { addAndRemove, canEdit } = useSlateContext();
-  const { isSlatePicker } = useGlobalContext();
+  const { isSlatePicker } = useGroupContext();
   const { rankings, dateTime } = useGetTeamData(game);
   const final = useMemo(() => game?.completed, [game?.completed]);
 
