@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// ============================================================================
+// DEV / EMULATOR RULES — PERMISSIVE.
+//
+// These allow all reads/writes so the local emulator + UI eyeball step work
+// during the groups migration build-out (Step 0). The Admin SDK used by the
+// migration scripts bypasses rules entirely, so these do not affect dry runs.
+//
+// DO NOT `firebase deploy --only firestore` with these in place. The real,
+// group-scoped rules (isMember / canRead / isSlatePicker) land in the groups
+// feature (Phase 1/3) before anything is enforced in prod.
+// ============================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

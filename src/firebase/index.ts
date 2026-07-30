@@ -15,11 +15,11 @@ import {
   setDoc,
   updateDoc,
   where,
-  // connectFirestoreEmulator
+  connectFirestoreEmulator
 } from "firebase/firestore";
 import {
   GoogleAuthProvider,
-  // connectAuthEmulator,
+  connectAuthEmulator,
   getAuth,
 } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -38,9 +38,13 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-if (process.env.NODE_ENV === 'development') {
-  // connectFirestoreEmulator(db, "127.0.0.1", 8080);
-  // connectAuthEmulator(auth, "http://127.0.0.1:9099");
+// Point the client SDK at the local emulator when explicitly opted in via
+// REACT_APP_USE_EMULATOR=true. Lets us run the real UI against migrated
+// emulator data (the "eyeball" step of the migration dry-run loop) without
+// depending on NODE_ENV. Ports match firebase.json (firestore 8080, auth 9099).
+if (process.env.REACT_APP_USE_EMULATOR === 'true') {
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
 }
 
 /**

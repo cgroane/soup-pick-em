@@ -62,7 +62,7 @@
     "lint": "eslint --ext .js,.ts . --fix",
     "fb:build": "npm --prefix functions run build",
     "fb:build:watch": "npm --prefix functions run build:watch",
-    "fb:serve": "npm --prefix functions run build && firebase emulators:start --debug --import=./emulator-data/2024-09-20T00:16:09_85072 --only auth,functions,firestore",
+    "fb:serve": "npm --prefix functions run build && firebase emulators:start --import=./emulator-data/2026-03-03T00:53:13_60333 --only auth,functions,firestore",
     "fb:shell": "npm --prefix functions run build && firebase functions:shell",
     "fb:start": "npm run fb:shell",
     "deploy": "firebase deploy --only functions",
