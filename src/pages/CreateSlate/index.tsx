@@ -30,7 +30,10 @@ const CreateSlate: React.FC = () => {
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
     year: seasonData?.Season?.toString(),
-    seasonType: seasonData?.seasonType as 'postseason' | 'regular',
+    // CFBD only knows 'regular' | 'postseason'. Offseason queries the prior
+    // completed season's regular games (the UI context already decrements
+    // Season/ApiWeek), so anything that isn't postseason maps to regular.
+    seasonType: seasonData?.seasonType === 'postseason' ? 'postseason' : 'regular',
   });
 
   const navigate = useNavigate();

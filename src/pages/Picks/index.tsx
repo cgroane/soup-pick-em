@@ -32,7 +32,8 @@ const Picks: React.FC = () => {
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
     year: seasonData?.Season?.toString(),
-    seasonType: seasonData?.seasonType as 'postseason' | 'regular',
+    // CFBD only knows 'regular' | 'postseason'; offseason falls back to regular.
+    seasonType: seasonData?.seasonType === 'postseason' ? 'postseason' : 'regular',
   });
 
   const { fetchUsers, allPickHistories } = useGlobalContext();

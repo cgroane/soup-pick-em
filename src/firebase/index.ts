@@ -10,7 +10,7 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
+  initializeFirestore,
   query,
   setDoc,
   updateDoc,
@@ -33,7 +33,11 @@ const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG as strin
 export const app = initializeApp(firebaseConfig);
 
 export const analytics = getAnalytics(app);
-export const db = getFirestore(app);
+// ignoreUndefinedProperties drops `undefined` fields on write instead of
+// throwing "Unsupported field value: undefined". Game data carries optional
+// ranks (apRank/playoffRank/coachesRank) that are undefined for unranked teams,
+// so slate writes (and any other optional-field writes) would otherwise fail.
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
