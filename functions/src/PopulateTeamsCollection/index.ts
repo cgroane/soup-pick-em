@@ -19,7 +19,7 @@ export default {
       if (!response.ok) {
         throw new Error("HTTP ERROR");
       }
-      const data: Team[] = await response.json().then((json) => convertKeyNames<Team>(json));
+      const data: Team[] = await response.json().then((json) => convertKeyNames<Team>(json as Team[]));
 
       const db = getFirestore();
       const batch = db.batch();
