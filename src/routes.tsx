@@ -7,10 +7,12 @@ import { UserRoles } from "./utils/constants";
 import ChoosePicker from "./pages/ChoosePicker";
 import CreateSlate from "./pages/CreateSlate";
 import { useGlobalContext } from "./context/user";
+import { useGroupContext } from "./context/group";
 import Colors from "./pages/Colors";
 import MakePicks from "./pages/MakePicks";
 import CFPBracket from "./pages/CFPBracket";
 import AdminCFP from "./pages/AdminCFP";
+import Groups from "./pages/Groups";
 
 /**
  * admin has all routes, but must be logged in.
@@ -46,6 +48,7 @@ const PrivateRoutes: React.FC<PropsWithChildren & {authenticated: boolean}> = ({
 
 const Router = () => {
   const { user } = useGlobalContext();
+  const { isGroupOwner } = useGroupContext();
 
   return (
     <Routes>
@@ -75,10 +78,10 @@ const Router = () => {
       }
       />
       <Route 
-        path="/choose-picker" 
+        path="/choose-picker"
         element={
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
-            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean} >
+            <RoleGuardedRoutes hasPermission={!!user?.roles?.includes(UserRoles.ADMIN) || isGroupOwner} >
               <ChoosePicker />
             </RoleGuardedRoutes>
           </PrivateRoutes>
@@ -100,6 +103,16 @@ const Router = () => {
           <PrivateRoutes authenticated={!!user?.isAuthenticated} >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+        }
+      />
+      <Route
+        path="/groups"
+        element={
+          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+            <RoleGuardedRoutes hasPermission={!!user?.roles?.includes(UserRoles.BASIC)} >
+              <Groups />
             </RoleGuardedRoutes>
           </PrivateRoutes>
         }

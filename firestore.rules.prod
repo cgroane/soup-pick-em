@@ -1,0 +1,100 @@
+rules_version = '2';
+
+// ============================================================================
+// GROUP-SCOPED PRODUCTION RULES — ACTIVE (F1 resolved).
+//
+// This file is the canonical source; its contents are mirrored into
+// `firestore.rules` (the file firebase.json points at, used by both the
+// emulator and `firebase deploy`). Keep the two in sync — the rules test loads
+// both and asserts they behave identically.
+//
+// Design notes:
+//  - The Admin SDK (migration scripts + cron + Express API) BYPASSES these
+//    rules entirely, so server-side writes (grading, invite-code joins) are not
+//    constrained here — they are enforced in application/middleware code.
+//  - rules `get()`/`exists()` bypass read rules, so we can check a private
+//    group's inviteCode even though the client can't read the group doc.
+// ============================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function isGlobalAdmin() { return signedIn() && request.auth.token.admin == true; }
+
+    function groupData(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)).data;
+    }
+    function isMember(gid) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/groups/$(gid)/members/$(uid()));
+    }
+    function memberRole(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)/members/$(uid())).data.role;
+    }
+    function isGroupSlatePicker(gid) {
+      return isMember(gid) && memberRole(gid) in ['owner', 'slate-picker'];
+    }
+    function isGroupOwner(gid) {
+      return signedIn() && groupData(gid).ownerUid == uid();
+    }
+    function groupIsPublic(gid) {
+      return groupData(gid).visibility == 'public';
+    }
+
+    // --- Users: identity doc + membership mirror are self-owned -------------
+    match /users/{userId} {
+      allow read: if signedIn() && (uid() == userId || isGlobalAdmin());
+      allow write: if signedIn() && uid() == userId;
+
+      match /memberships/{gid} {
+        allow read: if signedIn() && uid() == userId;
+        allow write: if signedIn() && uid() == userId;
+      }
+
+      // Legacy pre-groups picks subcollection — read/write own only.
+      // Remove this block after the post-migration data cleanup step.
+      match /picks/{doc} {
+        allow read, write: if signedIn() && uid() == userId;
+      }
+    }
+
+    // --- Groups ------------------------------------------------------------
+    match /groups/{gid} {
+      // Public groups are discoverable; private groups only to members/admin.
+      allow read:   if groupIsPublic(gid) || isMember(gid) || isGlobalAdmin();
+      allow create: if signedIn() && request.resource.data.ownerUid == uid();
+      allow update, delete: if isGroupOwner(gid) || isGlobalAdmin();
+
+      // Roster / leaderboard: readable by any member. Writes to member docs
+      // (records from the cron, invite-code joins) go through the Admin SDK,
+      // which bypasses these rules — so client writes are denied here.
+      match /members/{memberUid} {
+        allow read:  if isMember(gid) || isGlobalAdmin();
+        allow write: if false;
+
+        // A member makes/edits only their own picks.
+        match /picks/{uniqueWeek} {
+          allow read:  if isMember(gid);
+          allow write: if isMember(gid) && memberUid == uid();
+        }
+      }
+
+      // Slates: any member can read; only the group's slate-picker/owner writes.
+      match /slates/{uniqueWeek} {
+        allow read:  if isMember(gid);
+        allow write: if isGroupSlatePicker(gid);
+      }
+    }
+
+    // --- CFP bracket -------------------------------------------------------
+    // The playoff bracket is global (one real playoff), so any signed-in user
+    // can read it to pick/view. Writes come from the admin-gated AdminCFP page
+    // (a global-admin claim) and from the cron via the Admin SDK (bypasses
+    // rules). Group-scoping of CFP happens on the pick docs, not the bracket.
+    match /cfpBracket/{year} {
+      allow read:  if signedIn();
+      allow write: if isGlobalAdmin();
+    }
+  }
+}

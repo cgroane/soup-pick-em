@@ -23,9 +23,15 @@ jobs:
 
       - name: Sync Lock File
         run: npm i
+      
+      - name: Sync GCF Lock File
+        run: npm --prefix functions i
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install GCF dependencies
+        run: npm --prefix functions ci
 
       - name: Build
         run: npm run build

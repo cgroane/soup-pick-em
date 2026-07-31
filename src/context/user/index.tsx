@@ -3,9 +3,10 @@ import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
-import { UserRoles } from "../../utils/constants";
 import { LoadingState, useUIContext } from "../ui";
 import { PickHistory } from "../../pages/Picks/PicksTable";
+import { useGroupContext } from "../group";
+import FirebaseGroupsInstance from "../../firebase/group/group";
 
 export type UserValueProp = {
     user: UserCollectionData | null;
@@ -26,6 +27,7 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
 const {
   setStatus
 } = useUIContext();
+const { activeGroupId, isSlatePicker } = useGroupContext();
 
 const [ user, setUser ] = useState<UserCollectionData | null>({} as UserCollectionData);
 const [users, setUsers] = useState<UserCollectionData[]>([]);
@@ -41,13 +43,23 @@ const userOverallRecord = useMemo(() => {
 }, [user?.record]);
   
 const fetchUsers = useCallback(async () => {
+  if (!activeGroupId) { setUsers([]); setUsersPicks([]); return; }
   setStatus(LoadingState.LOADING);
-  const allPickHistories = await FirebaseUsersClassInstance.getSubCollection<PickHistory>('picks');
-  const results = await FirebaseUsersClassInstance.getCollection<UserCollectionData>();
-  results?.map((u) => u.pickHistory = allPickHistories.filter((p) => p.userId === u.uid))
-  setUsers(results as UserCollectionData[]);
-  setUsersPicks(allPickHistories)
-}, [setUsers, setStatus, setUsersPicks]);
+  // Group-scoped: only this group's members + their picks. Replaces the old
+  // global getCollection('users') + collectionGroup('picks') that read everyone.
+  const [members, allPickHistories] = await Promise.all([
+    FirebaseGroupsInstance.getMembers(activeGroupId),
+    FirebaseGroupsInstance.getAllPicks(activeGroupId),
+  ]);
+  const results = members.map((m) => ({
+    ...m,
+    // consumers (Leaderboard/Profile) expect `id`; the member doc keys on `uid`.
+    id: m.uid,
+    pickHistory: allPickHistories.filter((p) => p.userId === m.uid),
+  })) as unknown as UserCollectionData[];
+  setUsers(results);
+  setUsersPicks(allPickHistories);
+}, [activeGroupId, setUsers, setStatus, setUsersPicks]);
 
 const navigate = useNavigate();
 
@@ -55,14 +67,7 @@ useEffect(() => {
   const unsubscribe = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((currUser) => {
     if (!!currUser) {
       FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
-        /** get doc in colletion with extra path segment to get all picks */
-        FirebaseUsersClassInstance.getCollection<PickHistory>([`${res?.id}`, 'picks']).then((completeRequest) => {
-          if (res) {
-            setUser({ ...res as Omit<UserCollectionData, 'pickHistory'>, pickHistory: completeRequest as PickHistory[] })
-          } else {
-            setUser(null);
-          }
-        });
+        setUser(res ? { ...(res as UserCollectionData) } : null);
       })
     } else {
       navigate('/');
@@ -71,15 +76,29 @@ useEffect(() => {
   return unsubscribe;
 }, [navigate]);
 
+  // The user's per-group state (picks, record, trophyCase) now lives on their
+  // membership doc — load it for the active group whenever either changes.
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!uid || !activeGroupId) return;
+    Promise.all([
+      FirebaseGroupsInstance.getMemberPicks(activeGroupId, uid),
+      FirebaseGroupsInstance.getMember(activeGroupId, uid),
+    ]).then(([picks, member]) => {
+      setUser((prev) => prev ? {
+        ...prev,
+        pickHistory: picks,
+        record: member?.record ?? [],
+        trophyCase: member?.trophyCase ?? prev.trophyCase,
+      } : prev);
+    });
+  }, [user?.uid, activeGroupId]);
+
   useEffect(() => {
     if (user?.uid) {
       fetchUsers();
     }
   }, [fetchUsers, user?.uid]);
-
-  const isSlatePicker = useMemo(() => {
-    return !!user?.roles?.includes(UserRoles.SLATE_PICKER);
-  }, [user?.roles])
 
   return (
     <AppContext.Provider value={{

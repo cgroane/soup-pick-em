@@ -1,69 +1,70 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { UserCollectionData } from '../../model';
-import { UserRoles } from '../../utils/constants';
+import { GroupMember } from '../../model';
 import { useGlobalContext } from '../../context/user';
-import FirebaseUsersClassInstance from '../../firebase/user/user';
+import { useGroupContext } from '../../context/group';
+import { assignSlatePicker } from '../../api/groups';
 
 interface ChoosePickerProps {}
 
 const ChoosePicker: React.FC<ChoosePickerProps> = () => {
   const { users, fetchUsers } = useGlobalContext();
-  const [selected, setSelected] = useState({} as UserCollectionData);
+  const { activeGroupId, activeGroup, isGroupOwner } = useGroupContext();
+  const [selectedUid, setSelectedUid] = useState<string | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // `users` is now the active group's members (each carries a group `role`).
+  const members = users as unknown as GroupMember[];
+
   useEffect(() => {
-    if (users) {
-      const findCurrentPicker = users?.find((user) => user?.roles?.includes(UserRoles.SLATE_PICKER));
-      setSelected(findCurrentPicker as UserCollectionData);
-    }
-  }, [setSelected, users]);
+    const current = members?.find((m) => m.role === 'slate-picker' || m.role === 'owner');
+    setSelectedUid(current?.uid);
+  }, [members]);
 
-  const radioOptions = useMemo(() => {
-    return users?.map((user) => ({
-      id: user.uid,
-      disabled: false,
-      label: user.fName,
-      value: user.uid,
-    }));
-  }, [users]);
-
-  const getUpdatedUserWithRoles = useCallback(
-    async (user: UserCollectionData, previous: UserCollectionData) => {
-      await FirebaseUsersClassInstance.updateDocumentInCollection(user.uid, {
-        roles: [...user.roles, UserRoles.SLATE_PICKER],
-      });
-      const findPreviousUserSlatePickIndex = previous.roles.findIndex(
-        (r) => r === UserRoles.SLATE_PICKER
-      );
-      const newRolesForPrevPicker = [...previous.roles];
-      newRolesForPrevPicker.splice(findPreviousUserSlatePickIndex, 1);
-      await FirebaseUsersClassInstance.updateDocumentInCollection(previous.uid, {
-        roles: newRolesForPrevPicker,
-      });
-      return await fetchUsers();
-    },
-    [fetchUsers]
+  const options = useMemo(
+    () => members?.map((m) => ({ id: m.uid, label: `${m.fName} ${m.lName}`.trim(), value: m.uid })),
+    [members]
   );
 
-  const updateSelectedUser = useCallback(
+  const onSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      return await setSelected((previous) => {
-        const user = users?.find((u) => u.uid === e.target.value);
-        getUpdatedUserWithRoles(user as UserCollectionData, previous);
-        return { ...user } as UserCollectionData;
-      });
+      const uid = e.target.value;
+      if (!activeGroupId) return;
+      setSelectedUid(uid);
+      setSaving(true);
+      try {
+        await assignSlatePicker(activeGroupId, uid);
+        await fetchUsers();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setSaving(false);
+      }
     },
-    [users, getUpdatedUserWithRoles]
+    [activeGroupId, fetchUsers]
   );
+
+  if (!isGroupOwner) {
+    return (
+      <div className="p-5">
+        <p className="text-muted-foreground text-sm">
+          Only the group owner can choose the slate maker.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-5">
-      <h2 className="text-xl font-bold mb-4 text-foreground">Choose Slate Maker</h2>
+      <h2 className="text-xl font-bold mb-1 text-foreground">Choose Slate Maker</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        For {activeGroup?.name ?? 'this group'}
+      </p>
       <div className="flex flex-col gap-3">
-        {radioOptions?.map((option) => (
+        {options?.map((option) => (
           <label
             key={option.id}
             className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-border bg-surface hover:bg-surface-elevated transition-colors"
@@ -72,9 +73,9 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
               type="radio"
               name="Slate maker"
               value={option.value}
-              checked={selected?.uid === option.value}
-              onChange={updateSelectedUser}
-              disabled={option.disabled}
+              checked={selectedUid === option.value}
+              onChange={onSelect}
+              disabled={saving}
               className="accent-primary h-4 w-4"
             />
             <span className="text-foreground text-sm">{option.label}</span>

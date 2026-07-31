@@ -10,8 +10,8 @@ import oddsRouter from "./routes/odds";
 import matchupsRouter from "./routes/matchups";
 import admin from "firebase-admin";
 import adminRouter from './routes/admin';
+import groupsRouter from './routes/groups';
 import axios from 'axios';
-import { SeasonTypes } from '../src/context/ui';
 import { SeasonDetailsData } from 'api/schema/sportsDataIO';
 // import { theOddsInstance } from '@/api';
 
@@ -42,6 +42,12 @@ export const fbApp = admin.initializeApp({
   })
 });
 
+// Match the client SDK (src/firebase/index.ts): drop `undefined` fields on
+// write instead of throwing. The cron writes fresh CFBD game data with optional
+// ranks (apRank/playoffRank/coachesRank) that are undefined for unranked teams.
+// Must run before any getFirestore() use — safe here at module init.
+admin.firestore().settings({ ignoreUndefinedProperties: true });
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -63,6 +69,7 @@ app.use("/api/cron", updateScores);
 app.use("/api/betting", oddsRouter);
 app.use("/api/game-data", matchupsRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/groups", groupsRouter);
 
 app.get(`/api/current-week`, async (_req: express.Request, res: express.Response) => {
   try {
@@ -72,13 +79,18 @@ app.get(`/api/current-week`, async (_req: express.Request, res: express.Response
       }
     });
     const data = currentSeasonDetails.data;
-    const seasonKeys = {
-      'regular': SeasonTypes.REGULAR,
-      'postseason': SeasonTypes.POST,
-      'offseason': SeasonTypes.OFF,
-      'preseason': SeasonTypes.PRE
-    };
-    let seasonKeyAccessor: keyof typeof seasonKeys = data.ApiSeason.includes('OFF') || data?.ApiSeason?.includes("PRE") ? 'offseason' : data.ApiSeason.includes('POST') ? 'postseason' : 'regular';
+    // Canonical seasonType is the lowercase CFBD vocabulary ('regular' |
+    // 'postseason' | 'offseason') declared on SeasonDetailsData. Preseason is
+    // collapsed into 'offseason'. Downstream consumers (CFBD queries,
+    // SelectWeek, fetchMatchups, Profile) all compare against these lowercase
+    // words, so returning the uppercase SeasonTypes enum here silently breaks
+    // every one of them (e.g. CFBD returns no games for seasonType=REGULAR).
+    const seasonType: SeasonDetailsData['seasonType'] =
+      data.ApiSeason.includes('OFF') || data?.ApiSeason?.includes('PRE')
+        ? 'offseason'
+        : data.ApiSeason.includes('POST')
+          ? 'postseason'
+          : 'regular';
     res.status(200).json({
       ...data,
       /**
@@ -92,8 +104,8 @@ app.get(`/api/current-week`, async (_req: express.Request, res: express.Response
       isOffseason: true,
       seasonType: "regular",
        */
-      isOffseason: seasonKeyAccessor === 'offseason',
-      seasonType: seasonKeys[seasonKeyAccessor],
+      isOffseason: seasonType === 'offseason',
+      seasonType,
     });
     return;
   } catch (err) {

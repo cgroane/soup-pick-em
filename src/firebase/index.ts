@@ -10,16 +10,16 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
+  initializeFirestore,
   query,
   setDoc,
   updateDoc,
   where,
-  // connectFirestoreEmulator
+  connectFirestoreEmulator
 } from "firebase/firestore";
 import {
   GoogleAuthProvider,
-  // connectAuthEmulator,
+  connectAuthEmulator,
   getAuth,
 } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
@@ -33,14 +33,16 @@ const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG as strin
 export const app = initializeApp(firebaseConfig);
 
 export const analytics = getAnalytics(app);
-export const db = getFirestore(app);
+
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-if (process.env.NODE_ENV === 'development') {
-  // connectFirestoreEmulator(db, "127.0.0.1", 8080);
-  // connectAuthEmulator(auth, "http://127.0.0.1:9099");
+/** use emulator if true for local development */
+if (process.env.REACT_APP_USE_EMULATOR === 'true') {
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
 }
 
 /**
