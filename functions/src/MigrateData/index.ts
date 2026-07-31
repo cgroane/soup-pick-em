@@ -1,6 +1,6 @@
-import {getFirestore} from "firebase-admin/firestore";
-import {logger} from "firebase-functions/v1";
-import {MigrationResult, NewOutcomes, OldGame, OldPickDocument, OldSelection, Outcome} from "../types";
+import { getFirestore } from "firebase-admin/firestore";
+import { logger } from "firebase-functions/v1";
+import { MigrationResult, NewOutcomes, OldGame, OldPickDocument, OldSelection, Outcome } from "../types";
 
 const BATCH_SIZE = 400;
 
@@ -61,7 +61,7 @@ function migrateGameOutcomes(game: OldGame): NewOutcomes | undefined {
 }
 
 function migrateSlateGame(game: OldGame): OldGame {
-  const migrated: OldGame = {...game};
+  const migrated: OldGame = { ...game };
 
   if ("gameID" in migrated && !("id" in migrated)) {
     migrated.id = migrated.gameID;
@@ -118,7 +118,7 @@ function migrateSlateGame(game: OldGame): OldGame {
 }
 
 function migratePickSelection(selection: OldSelection, slateGames: OldGame[], slateId: string): OldSelection {
-  const migrated: OldSelection = {...selection};
+  const migrated: OldSelection = { ...selection };
 
   delete migrated.price;
 
@@ -205,7 +205,7 @@ async function migrateSlates(dryRun: boolean): Promise<{ cache: Map<string, OldG
     if (dryRun) {
       logger.log(`[DRY RUN] Would update ${slateDoc.id}`);
     } else {
-      batch.set(slateDoc.ref, {...data, games: migratedGames});
+      batch.set(slateDoc.ref, { ...data, games: migratedGames });
       batchCount++;
 
       if (batchCount >= BATCH_SIZE) {
@@ -226,7 +226,7 @@ async function migrateSlates(dryRun: boolean): Promise<{ cache: Map<string, OldG
   }
 
   logger.log(`Slates migration complete: ${totalMigrated} documents ${dryRun ? "would be " : ""}updated`);
-  return {cache: slateCache, count: totalMigrated};
+  return { cache: slateCache, count: totalMigrated };
 }
 
 async function migratePicks(slateCache: Map<string, OldGame[]>, dryRun: boolean): Promise<number> {
@@ -289,7 +289,7 @@ async function migratePicks(slateCache: Map<string, OldGame[]>, dryRun: boolean)
       if (dryRun) {
         logger.log(`[DRY RUN] Would update picks for ${pickDoc.id}`);
       } else {
-        batch.set(pickDoc.ref, {...data, picks: migratedPicks});
+        batch.set(pickDoc.ref, { ...data, picks: migratedPicks });
         batchCount++;
 
         if (batchCount >= BATCH_SIZE) {
@@ -320,10 +320,10 @@ export default {
     logger.log("Firestore Migration: Old Types → New CFBD-based Types");
     logger.log(`Mode: ${dryRun ? "DRY RUN (no writes)" : "LIVE"}`);
 
-    const {cache: slateCache, count: slatesMigrated} = await migrateSlates(dryRun);
+    const { cache: slateCache, count: slatesMigrated } = await migrateSlates(dryRun);
     const picksMigrated = await migratePicks(slateCache, dryRun);
 
     logger.log("=== Migration Complete ===");
-    return {slatesMigrated, picksMigrated, dryRun};
+    return { slatesMigrated, picksMigrated, dryRun };
   },
 };

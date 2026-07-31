@@ -6,7 +6,26 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "serve"],
+      "runtimeArgs": [
+        "run",
+        "serve"
+      ],
+      "restart": true,
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Launch Dev With Emulator",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "restart": true,
       "env": {
         "NODE_ENV": "development"
@@ -20,7 +39,9 @@
       "request": "launch",
       "program": "${workspaceFolder}/server.js",
       "restart": true,
-      "runtimeArgs": ["--inspect"],
+      "runtimeArgs": [
+        "--inspect"
+      ],
       "env": {
         "NODE_ENV": "development"
       },

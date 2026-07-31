@@ -1,10 +1,9 @@
 import express from "express";
 import { fbApp } from "..";
-import { requireAdmin, requireAuth } from "../middlware";
+import { requireAdmin, requireAuth, reqUser } from "../middlware";
 
 const adminRouter = express.Router();
-adminRouter.use(requireAuth);
-adminRouter.use(requireAdmin);
+adminRouter.use(requireAuth, reqUser, requireAdmin);
 
 
 adminRouter.get('/impersonate', async (req: express.Request, res: express.Response) => {

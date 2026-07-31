@@ -20,7 +20,7 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
   const members = users as unknown as GroupMember[];
 
   useEffect(() => {
-    const current = members?.find((m) => m.role === 'slate-picker' || m.role === 'owner');
+    const current = members?.find((m) => m.roles?.includes('slate-picker'));
     setSelectedUid(current?.uid);
   }, [members]);
 

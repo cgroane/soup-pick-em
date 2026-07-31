@@ -80,7 +80,9 @@ export type Group = {
 /** groups/{gid}/members/{uid} — per-group state that used to live on the user doc. */
 export type GroupMember = {
   uid: string;
-  role: GroupRole;
+  /** Every member has MEMBER; at most one carries OWNER and one SLATE_PICKER
+   * (the same person may hold both). See constants.GroupRole. */
+  roles: GroupRole[];
   record: WinLossRecord[];
   trophyCase?: Trophy[];
   /** Denormalized for cheap leaderboard rendering without a users read. */
@@ -95,7 +97,7 @@ export type GroupMember = {
 export type GroupMembership = {
   gid: string;
   name: string;
-  role: GroupRole;
+  roles: GroupRole[];
   /** ISO timestamp. */
   joinedAt: string;
 };

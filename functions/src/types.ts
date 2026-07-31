@@ -1,5 +1,5 @@
-import {GetGamesResponse, Team as CFBDTeam} from "cfbd";
-import {UserInfo} from "firebase-admin/auth";
+import { GetGamesResponse, Team as CFBDTeam } from "cfbd";
+import { UserInfo } from "firebase-admin/auth";
 
 export type SeasonDetails = {
   Season: number;

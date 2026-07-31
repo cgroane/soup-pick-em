@@ -29,11 +29,11 @@ service cloud.firestore {
       return signedIn() &&
         exists(/databases/$(database)/documents/groups/$(gid)/members/$(uid()));
     }
-    function memberRole(gid) {
-      return get(/databases/$(database)/documents/groups/$(gid)/members/$(uid())).data.role;
+    function memberRoles(gid) {
+      return get(/databases/$(database)/documents/groups/$(gid)/members/$(uid())).data.roles;
     }
     function isGroupSlatePicker(gid) {
-      return isMember(gid) && memberRole(gid) in ['owner', 'slate-picker'];
+      return isMember(gid) && ('slate-picker' in memberRoles(gid));
     }
     function isGroupOwner(gid) {
       return signedIn() && groupData(gid).ownerUid == uid();
@@ -80,10 +80,11 @@ service cloud.firestore {
         }
       }
 
-      // Slates: any member can read; only the group's slate-picker/owner writes.
+      // Slates: any member can read; only the group's slate-picker (or a global
+      // admin, matching the client's canEdit override) writes.
       match /slates/{uniqueWeek} {
         allow read:  if isMember(gid);
-        allow write: if isGroupSlatePicker(gid);
+        allow write: if isGroupSlatePicker(gid) || isGlobalAdmin();
       }
     }
 

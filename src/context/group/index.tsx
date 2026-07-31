@@ -17,8 +17,8 @@ export type GroupValueProp = {
   memberships: GroupMembership[];
   activeGroupId: string | undefined;
   activeGroup: Group | undefined;
-  activeRole: GroupRole | undefined;
-  /** True when the user is the slate-picker (or owner) of the active group. */
+  activeRoles: GroupRole[];
+  /** True when the user holds the slate-picker role in the active group. */
   isSlatePicker: boolean;
   isGroupOwner: boolean;
   setActiveGroup: (gid: string) => void;
@@ -87,8 +87,8 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     setActiveGroupData(await FirebaseGroupsInstance.getGroup(activeGroupId));
   }, [activeGroupId]);
 
-  const activeRole = useMemo<GroupRole | undefined>(
-    () => memberships.find((m) => m.gid === activeGroupId)?.role,
+  const activeRoles = useMemo<GroupRole[]>(
+    () => memberships.find((m) => m.gid === activeGroupId)?.roles ?? [],
     [memberships, activeGroupId]
   );
 
@@ -97,14 +97,14 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
       memberships,
       activeGroupId,
       activeGroup,
-      activeRole,
-      isSlatePicker: activeRole === 'owner' || activeRole === 'slate-picker',
-      isGroupOwner: activeRole === 'owner',
+      activeRoles,
+      isSlatePicker: activeRoles.includes('slate-picker'),
+      isGroupOwner: activeRoles.includes('owner'),
       setActiveGroup,
       refreshMemberships,
       refreshActiveGroup,
     }),
-    [memberships, activeGroupId, activeGroup, activeRole, setActiveGroup, refreshMemberships, refreshActiveGroup]
+    [memberships, activeGroupId, activeGroup, activeRoles, setActiveGroup, refreshMemberships, refreshActiveGroup]
   );
 
   return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;

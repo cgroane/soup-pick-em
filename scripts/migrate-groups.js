@@ -79,10 +79,14 @@ function initApp() {
   }
 }
 
-function memberRole(roles, uid, ownerUid) {
-  if (uid === ownerUid) return ROLE.OWNER;
-  if (Array.isArray(roles) && roles.includes('slate-picker')) return ROLE.SLATE_PICKER;
-  return ROLE.MEMBER;
+// Group roles are additive: everyone is a MEMBER; the legacy owner also gets
+// OWNER, and anyone who was a global slate-picker also gets SLATE_PICKER. The
+// same user can hold several (e.g. an owner who also makes the slates).
+function memberRoles(roles, uid, ownerUid) {
+  const out = [ROLE.MEMBER];
+  if (uid === ownerUid) out.push(ROLE.OWNER);
+  if (Array.isArray(roles) && roles.includes('slate-picker')) out.push(ROLE.SLATE_PICKER);
+  return out;
 }
 
 function genInviteCode() {
@@ -158,12 +162,12 @@ async function main() {
   for (const userDoc of users) {
     const u = userDoc.data();
     const uid = userDoc.id;
-    const role = memberRole(u.roles, uid, ownerUid);
-    roleTally[role]++;
+    const roles = memberRoles(u.roles, uid, ownerUid);
+    roles.forEach((r) => roleTally[r]++);
 
     await writer.set(groupRef.collection('members').doc(uid), {
       uid,
-      role,
+      roles,
       record: u.record || [],
       trophyCase: u.trophyCase || [],
       fName: u.fName || '',
@@ -176,7 +180,7 @@ async function main() {
     await writer.set(db.collection('users').doc(uid).collection('memberships').doc(LEGACY_GID), {
       gid: LEGACY_GID,
       name: LEGACY_NAME,
-      role,
+      roles,
       joinedAt: nowIso,
     });
 
