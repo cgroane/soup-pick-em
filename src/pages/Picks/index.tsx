@@ -9,6 +9,7 @@ import GameCell, { StyledGameCell } from './GameCell';
 import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import { useCFPContext } from '../../context/cfp';
+import { gradePick } from '../../utils/grade';
 
 export interface PicksColumnDef {
   user: { name: string; id: string };
@@ -61,41 +62,10 @@ const Picks: React.FC = () => {
           user: { name: userPicks?.name, id: userPicks?.userId },
           ...userPicks?.picks.reduce((acc, pick) => {
             const game = slate?.games?.find((g) => g.id === pick.matchup);
-            const favIsHome = game?.outcomes
-              ? (game?.outcomes?.home?.pointValue as number) < 0
-              : undefined;
-            const favPointSpread =
-              favIsHome !== undefined
-                ? favIsHome
-                  ? game?.outcomes?.home.pointValue
-                  : game?.outcomes?.away.pointValue
-                : undefined;
-            const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
-            const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
-            let isCorrect = !!pick.isCorrect;
-            if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
-              isCorrect = false;
-            } else if (game) {
-              if (pick.selection?.name === 'PUSH') {
-                if ((favScore ?? 0) + (favPointSpread as number) === underDogScore) {
-                  sumCorrect++;
-                  isCorrect = true;
-                }
-              } else {
-                const homePick = pick.selection?.name
-                  ?.toLowerCase()
-                  .replace(/ /g, '')
-                  .includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))
-                  ? 'home'
-                  : 'away';
-                const newScore =
-                  (game[`${homePick}Points`] ?? 0) + (pick.selection?.pointValue ?? 0);
-                if (newScore > (game[`${homePick === 'home' ? 'away' : 'home'}Points`] ?? 0)) {
-                  sumCorrect++;
-                  isCorrect = true;
-                }
-              }
-            }
+            // Shared grader (F7): same logic the cron persists. `null` = not yet
+            // gradeable (game incomplete) → neutral cell, not counted.
+            const isCorrect = game ? gradePick(pick, game, game.outcomes) === true : false;
+            if (isCorrect) sumCorrect++;
             return {
               ...acc,
               [pick.matchup]: { selection: pick.selection, isCorrect, ...(game as GamesAPIResult) },
@@ -118,41 +88,10 @@ const Picks: React.FC = () => {
           user: { name: userPicks?.name, id: userPicks?.userId },
           ...userPicks?.picks.reduce((acc, pick) => {
             const game = bracket.games?.find((g) => g.id === pick.matchup);
-            const favIsHome = game?.outcomes
-              ? (game?.outcomes?.home?.pointValue as number) < 0
-              : undefined;
-            const favPointSpread =
-              favIsHome !== undefined
-                ? favIsHome
-                  ? game?.outcomes?.home.pointValue
-                  : game?.outcomes?.away.pointValue
-                : undefined;
-            const favScore = favIsHome ? game?.homePoints : game?.awayPoints;
-            const underDogScore = favIsHome ? game?.awayPoints : game?.homePoints;
-            let isCorrect = !!pick.isCorrect;
-            if (Date.parse(game?.startDate as string) > Date.parse(new Date().toDateString())) {
-              isCorrect = false;
-            } else if (game) {
-              if (pick.selection?.name === 'PUSH') {
-                if ((favScore ?? 0) + (favPointSpread as number) === underDogScore) {
-                  sumCorrect++;
-                  isCorrect = true;
-                }
-              } else {
-                const homePick = pick.selection?.name
-                  ?.toLowerCase()
-                  .replace(/ /g, '')
-                  .includes(game?.homeTeam.toLowerCase().replace(/ /g, ''))
-                  ? 'home'
-                  : 'away';
-                const newScore =
-                  (game[`${homePick}Points`] ?? 0) + (pick.selection?.pointValue ?? 0);
-                if (newScore > (game[`${homePick === 'home' ? 'away' : 'home'}Points`] ?? 0)) {
-                  sumCorrect++;
-                  isCorrect = true;
-                }
-              }
-            }
+            // Shared grader (F7): same logic the cron persists. `null` = not yet
+            // gradeable (game incomplete) → neutral cell, not counted.
+            const isCorrect = game ? gradePick(pick, game, game.outcomes) === true : false;
+            if (isCorrect) sumCorrect++;
             return {
               ...acc,
               [pick.matchup]: { selection: pick.selection, isCorrect, ...(game as GamesAPIResult) },

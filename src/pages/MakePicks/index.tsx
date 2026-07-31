@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Picks } from '../../model';
@@ -10,6 +10,8 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 import FirebaseGroupsInstance from '../../firebase/group/group';
 import { useGroupContext } from '../../context/group';
 import { Button } from '../../components/ui/button';
+import { UserRoles } from '../../utils/constants';
+import { arePicksLocked } from '../../utils/pickLock';
 
 const MakePicks: React.FC = () => {
   const { picks, slate, fetchSlate, getUserPicks } = usePickContext();
@@ -40,7 +42,10 @@ const MakePicks: React.FC = () => {
             matchup: game.id,
             isCorrect: false,
             userId: user?.uid,
-            selection: { name: 'PUSH', point: 0, price: 0 },
+            // Canonical PUSH outcome (GamesAPIResponseOutcome). `id: 0` is what the
+            // grader keys on for a push; the legacy {point,price} shape has no id
+            // and was mis-graded as an away-team pick against a 0 spread.
+            selection: { name: 'PUSH', point: '0', pointValue: 0, id: 0 },
             week: seasonData?.ApiWeek,
           })),
         ]);
@@ -49,9 +54,16 @@ const MakePicks: React.FC = () => {
     [slate?.games, seasonData?.ApiWeek, user?.uid]
   );
 
+  const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
+  // Picks lock the moment the earliest game in the slate kicks off (admin exempt).
+  const locked = useMemo(
+    () => arePicksLocked(slate?.games, isAdmin),
+    [slate?.games, isAdmin]
+  );
+
   const submitPicks = useCallback(async () => {
     if (!user) navigate('/');
-    if (!activeGroupId || !user?.uid) return;
+    if (!activeGroupId || !user?.uid || locked) return;
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
     await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, picks.slateId, {
@@ -66,7 +78,7 @@ const MakePicks: React.FC = () => {
     const refreshed = await FirebaseGroupsInstance.getMemberPicks(activeGroupId, user.uid);
     setUser((prev) => (prev ? { ...prev, pickHistory: refreshed } : prev));
     setStatus(LoadingState.IDLE);
-  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId]);
+  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
 
   const picksCount = picks.picks.filter((p) => !!p.selection).length;
 
@@ -83,13 +95,15 @@ const MakePicks: React.FC = () => {
         className="fixed bottom-0 left-0 w-full bg-surface border-t border-border flex flex-col items-center justify-center gap-2 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
         style={{ boxShadow: '0px -1rem 2rem 0px rgba(0,0,0,0.28)' }}
       >
-        <p className="text-sm text-muted-foreground">Picks: {picksCount}/10</p>
+        <p className="text-sm text-muted-foreground">
+          {locked ? 'Picks are locked — the first game has started.' : `Picks: ${picksCount}/10`}
+        </p>
         <Button
           onClick={() => submitPicks()}
-          disabled={picksCount < 10}
+          disabled={picksCount < 10 || locked}
           className="w-full max-w-xs"
         >
-          Submit Picks
+          {locked ? 'Picks Locked' : 'Submit Picks'}
         </Button>
       </div>
 

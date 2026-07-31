@@ -25,7 +25,8 @@ const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
   });
 
   const pastDate = useMemo(() => {
-    return Date.parse(game?.startDate) < Date.parse(new Date().toDateString());
+    // Precise instant, not local midnight: a card locks the moment its game starts.
+    return Date.parse(game?.startDate) <= Date.now();
   }, [game]);
 
   const getSelected = useCallback(

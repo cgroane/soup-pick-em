@@ -1,11 +1,16 @@
 import express from "express";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, DocumentReference } from "firebase-admin/firestore";
 import { getGames, SeasonType } from "cfbd";
 import { SeasonDetails } from "api/schema/sportsDataIO";
-import { CFPBracket, GamesAPIResult, GroupMember, Picks, Slate } from "model";
+import { CFPBracket, GamesAPIResult, GroupMember, Slate } from "model";
 import { PickHistory } from "pages/Picks/PicksTable";
 import { requireCronSecret } from "../middlware";
+import { gradePick } from "utils/grade";
 import axios from "axios";
+
+// Re-exported so the grading unit test (test/grading) can bind to the shared
+// implementation via this module.
+export { gradePick };
 
 const getSeasonData = async (): Promise<SeasonDetails> => {
   /**
@@ -17,40 +22,6 @@ const getSeasonData = async (): Promise<SeasonDetails> => {
   const url = `${process.env.REACT_APP_API_URL}/api/current-week`;
   const response = await axios.get(url);
   return response.data;
-};
-
-/**
- * Grade a single pick against a completed game.
- * Returns true/false when the game is complete and gradeable.
- * Returns null when the game is not yet complete or lacks spread data.
- */
-const gradePick = (
-  pick: Picks,
-  freshGame: { homePoints?: number | null; awayPoints?: number | null; completed?: boolean },
-  outcomes: GamesAPIResult["outcomes"]
-): boolean | null => {
-  if (!freshGame?.completed) return null;
-  if (!pick.selection || !outcomes) return null;
-
-  const homePoints = freshGame.homePoints ?? 0;
-  const awayPoints = freshGame.awayPoints ?? 0;
-  const { id, pointValue } = pick.selection;
-
-  if (id === 0) {
-    // PUSH: check if the favorite covers exactly
-    const favIsHome = (outcomes.home?.pointValue ?? 0) < 0;
-    const favScore = favIsHome ? homePoints : awayPoints;
-    const underDogScore = favIsHome ? awayPoints : homePoints;
-    const favSpread = favIsHome
-      ? (outcomes.home?.pointValue ?? 0)
-      : (outcomes.away?.pointValue ?? 0);
-    return favScore + favSpread === underDogScore;
-  }
-
-  // id === 1 → picked home team, id === 2 → picked away team
-  const pickedScore = id === 1 ? homePoints : awayPoints;
-  const otherScore = id === 1 ? awayPoints : homePoints;
-  return pickedScore + (pointValue ?? 0) > otherScore;
 };
 
 const updateScoresRouter = express.Router();
@@ -81,7 +52,14 @@ updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: expres
       seasonInfo.ApiSeason.includes("POST");
 
     if (isCFP) {
-      await processCFP(db, seasonInfo.Season);
+      // Fetch the postseason games once and reuse for both graders: the CFP
+      // bracket (cfp-{year}) and any group's postseason bowl slate (…POST).
+      const freshGamesResp = await getGames({
+        query: { year: seasonInfo.Season, seasonType: "postseason" as SeasonType },
+      });
+      const postseasonGames = freshGamesResp?.data ?? [];
+      await processCFP(db, seasonInfo.Season, postseasonGames);
+      await processPostseasonSlates(db, seasonInfo.Season, postseasonGames);
     } else {
       await processRegularSeason(db, seasonInfo);
     }
@@ -175,6 +153,41 @@ async function gradeGroupMembers(
   );
 }
 
+/**
+ * Grade one group's slate doc: refresh its scores and grade every member's
+ * picks against it. The pick docs are keyed by the slate's id (`slateRef.id ===
+ * uniqueWeek`), so the same helper works for regular (`w{week}-{year}`) and
+ * postseason (`w{week}-{year}POST`) slates. One batch per slate keeps each commit
+ * under the 500-write limit and isolates a bad slate from the rest.
+ */
+async function gradeSlateForGroup(
+  db: ReturnType<typeof getFirestore>,
+  gid: string,
+  slateRef: DocumentReference,
+  slateData: Slate,
+  year: number,
+  freshGames: Awaited<ReturnType<typeof getGames>>["data"]
+): Promise<void> {
+  const batch = db.batch();
+
+  // Update the group's slate with the latest scores.
+  batch.set(slateRef, {
+    ...slateData,
+    games: slateData.games.map((sgm) => {
+      const fresh = (freshGames ?? []).find((g) => g.id === sgm.id);
+      return {
+        ...sgm,
+        homePoints: fresh?.homePoints ?? sgm.homePoints ?? 0,
+        awayPoints: fresh?.awayPoints ?? sgm.awayPoints ?? 0,
+        completed: fresh?.completed ?? sgm.completed ?? false,
+      };
+    }),
+  });
+
+  await gradeGroupMembers(db, gid, slateRef.id, year, slateData.games, freshGames, batch);
+  await batch.commit();
+}
+
 async function processRegularSeason(
   db: ReturnType<typeof getFirestore>,
   seasonInfo: SeasonDetails
@@ -191,38 +204,51 @@ async function processRegularSeason(
 
   const groupsSnap = await db.collection("groups").get();
 
-  // One batch per group keeps each commit under the 500-write limit and isolates
-  // a bad group from the rest.
   for (const groupDoc of groupsSnap.docs) {
     const gid = groupDoc.id;
     const slateRef = db.collection("groups").doc(gid).collection("slates").doc(slateId);
     const slateData = (await slateRef.get()).data() as Slate | undefined;
     if (!slateData) continue; // this group has no slate for this week
 
-    const batch = db.batch();
+    await gradeSlateForGroup(db, gid, slateRef, slateData, year, freshGames);
+  }
+}
 
-    // Update the group's slate with the latest scores.
-    batch.set(slateRef, {
-      ...slateData,
-      games: slateData.games.map((sgm) => {
-        const fresh = freshGames.find((g) => g.id === sgm.id);
-        return {
-          ...sgm,
-          homePoints: fresh?.homePoints ?? sgm.homePoints ?? 0,
-          awayPoints: fresh?.awayPoints ?? sgm.awayPoints ?? 0,
-          completed: fresh?.completed ?? sgm.completed ?? false,
-        };
-      }),
-    });
+/**
+ * Grade each group's postseason slate. There is only one postseason slate per
+ * group, but its id carries a client-driven week (`w{week}-{year}POST`), so we
+ * find it by the `POST` suffix rather than reconstructing the id. Runs alongside
+ * `processCFP` — the postseason bowl slate and the CFP bracket are distinct docs.
+ */
+async function processPostseasonSlates(
+  db: ReturnType<typeof getFirestore>,
+  year: number,
+  postseasonGames: Awaited<ReturnType<typeof getGames>>["data"]
+): Promise<void> {
+  const groupsSnap = await db.collection("groups").get();
 
-    await gradeGroupMembers(db, gid, slateId, year, slateData.games, freshGames, batch);
-    await batch.commit();
+  for (const groupDoc of groupsSnap.docs) {
+    const gid = groupDoc.id;
+    const slatesSnap = await db.collection("groups").doc(gid).collection("slates").get();
+    const postSlates = slatesSnap.docs.filter((d) => d.id.endsWith("POST"));
+
+    for (const slateDoc of postSlates) {
+      await gradeSlateForGroup(
+        db,
+        gid,
+        slateDoc.ref,
+        slateDoc.data() as Slate,
+        year,
+        postseasonGames
+      );
+    }
   }
 }
 
 async function processCFP(
   db: ReturnType<typeof getFirestore>,
-  year: number
+  year: number,
+  postseasonGames: Awaited<ReturnType<typeof getGames>>["data"]
 ): Promise<void> {
   const bracketId = `cfp-${year}`;
   const bracketRef = db.collection("cfpBracket").doc(bracketId);
@@ -233,10 +259,7 @@ async function processCFP(
 
   const bracketGameIds = new Set<number>(bracketData.games.map((gm) => gm.id));
 
-  const freshGamesResp = await getGames({
-    query: { year, seasonType: "postseason" as SeasonType },
-  });
-  const cfpFreshGames = (freshGamesResp?.data ?? []).filter(
+  const cfpFreshGames = (postseasonGames ?? []).filter(
     (gm) =>
       bracketGameIds.has(gm.id) &&
       (gm.notes as string)?.includes("College Football Playoff")

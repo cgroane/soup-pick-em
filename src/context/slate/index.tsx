@@ -6,6 +6,7 @@ import { usePickContext } from '../pick';
 import { useGlobalContext } from '../user';
 import { useGroupContext } from '../group';
 import { UserRoles } from '../../utils/constants';
+import { arePicksLocked } from '../../utils/pickLock';
 import { GamesAPIResult } from '../../model';
 
 export type SlateValueProps = {
@@ -50,14 +51,12 @@ export default function CreateSlateContext({ children }: ContextProp) {
     setSelectedGames(slate?.games ?? []);
   }, [slate, setSelectedGames])
 
+  const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
   const canEdit = useMemo(() => {
-    const today = new Date();
-    const earliestGame = Date.parse(games?.sort((a, b) => Date.parse(a?.startDate) - Date.parse(b?.startDate))[0]?.startDate)
-    const now = Date.parse(today.toDateString())
-    const pastDate = now > earliestGame;
+    // "Slate can be changed up until the first game of the week has started."
     // Group slate-picker/owner can edit before kickoff; a global admin always can.
-    return !!((!pastDate && isSlatePicker) || user?.roles?.includes(UserRoles.ADMIN))
-  }, [games, user?.roles, isSlatePicker])
+    return (isSlatePicker && !arePicksLocked(games, isAdmin)) || isAdmin;
+  }, [games, isAdmin, isSlatePicker])
   /**
    * update fetchMatchups to accept a week param
    */

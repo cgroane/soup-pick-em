@@ -66,6 +66,7 @@
     "migrate:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/migrate-groups.js",
     "verify:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/verify-groups.js",
     "seed:auth:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=soup-pick-em node scripts/seed-emulator-auth.js",
+    "test:review": "tsx test/run.ts",
     "prepare": "husky",
     "lint": "eslint --ext .js,.ts . --fix",
     "fb:build": "npm --prefix functions run build",
@@ -101,6 +102,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@firebase/rules-unit-testing": "^3.0.4",
     "@types/cors": "^2.8.19",
     "@types/react-router-dom": "^5.3.3",
     "concurrently": "^10.0.4",

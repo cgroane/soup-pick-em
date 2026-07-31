@@ -1,13 +1,12 @@
 rules_version = '2';
 
 // ============================================================================
-// STAGED GROUP-SCOPED PRODUCTION RULES — NOT YET ACTIVE.
+// GROUP-SCOPED PRODUCTION RULES — ACTIVE (F1 resolved).
 //
-// firebase.json points at `firestore.rules` (permissive dev rules). These are
-// the real rules for the groups feature. They are kept inert here because the
-// current client still does global reads (users / collectionGroup('picks'));
-// activating them now would break the app until Step 2 makes reads
-// group-scoped. Activation = copy this over firestore.rules once Step 2 lands.
+// This file is the canonical source; its contents are mirrored into
+// `firestore.rules` (the file firebase.json points at, used by both the
+// emulator and `firebase deploy`). Keep the two in sync — the rules test loads
+// both and asserts they behave identically.
 //
 // Design notes:
 //  - The Admin SDK (migration scripts + cron + Express API) BYPASSES these
@@ -86,6 +85,16 @@ service cloud.firestore {
         allow read:  if isMember(gid);
         allow write: if isGroupSlatePicker(gid);
       }
+    }
+
+    // --- CFP bracket -------------------------------------------------------
+    // The playoff bracket is global (one real playoff), so any signed-in user
+    // can read it to pick/view. Writes come from the admin-gated AdminCFP page
+    // (a global-admin claim) and from the cron via the Admin SDK (bypasses
+    // rules). Group-scoping of CFP happens on the pick docs, not the bracket.
+    match /cfpBracket/{year} {
+      allow read:  if signedIn();
+      allow write: if isGlobalAdmin();
     }
   }
 }

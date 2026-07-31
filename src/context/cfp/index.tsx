@@ -4,7 +4,8 @@ import { FirebaseCFPInstance } from '../../firebase/cfp/cfp';
 import { getCFPGames } from '../../api/getGames';
 import { useGlobalContext } from '../user';
 import { useUIContext } from '../ui';
-import FirebaseUsersClassInstance from '../../firebase/user/user';
+import { useGroupContext } from '../group';
+import FirebaseGroupsInstance from '../../firebase/group/group';
 import { PickHistory } from '../../pages/Picks/PicksTable';
 
 export type CFPContextValue = {
@@ -36,6 +37,7 @@ export const cfpRound = (game: GamesAPIResult): CFPRound => {
 export default function CFPContextProvider({ children }: ContextProp) {
   const { user } = useGlobalContext();
   const { seasonData } = useUIContext();
+  const { activeGroupId } = useGroupContext();
   const [bracket, setBracket] = useState<CFPBracket | null>(null);
   const [cfpPicks, setCfpPicks] = useState<{ slateId: string; picks: Picks[] }>({
     slateId: '',
@@ -78,25 +80,23 @@ export default function CFPContextProvider({ children }: ContextProp) {
   }, []);
 
   const saveCfpPicks = useCallback(async () => {
-    if (!user?.uid || !cfpPicks.slateId) return;
+    // CFP picks are group-scoped and must land on the same group path the cron
+    // grader and Picks page read from (groups/{gid}/members/{uid}/picks/{cfp-year}).
+    if (!user?.uid || !activeGroupId || !cfpPicks.slateId) return;
     setIsSaving(true);
     try {
-      await FirebaseUsersClassInstance.addDocument(
-        {
-          name: `${user.fName} ${user.lName}`,
-          slateId: cfpPicks.slateId,
-          week: 1,
-          year: seasonData?.Season,
-          picks: cfpPicks.picks,
-          userId: user.uid,
-        },
-        user.uid,
-        ['picks', cfpPicks.slateId]
-      );
+      await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, cfpPicks.slateId, {
+        name: `${user.fName} ${user.lName}`,
+        slateId: cfpPicks.slateId,
+        week: 1,
+        year: seasonData?.Season as number,
+        picks: cfpPicks.picks,
+        userId: user.uid,
+      });
     } finally {
       setIsSaving(false);
     }
-  }, [user, cfpPicks, seasonData?.Season]);
+  }, [user, activeGroupId, cfpPicks, seasonData?.Season]);
 
   // Load existing picks from user's pick history
   useEffect(() => {
