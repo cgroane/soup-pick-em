@@ -42,9 +42,6 @@ const MakePicks: React.FC = () => {
             matchup: game.id,
             isCorrect: false,
             userId: user?.uid,
-            // Canonical PUSH outcome (GamesAPIResponseOutcome). `id: 0` is what the
-            // grader keys on for a push; the legacy {point,price} shape has no id
-            // and was mis-graded as an away-team pick against a 0 spread.
             selection: { name: 'PUSH', point: '0', pointValue: 0, id: 0 },
             week: seasonData?.ApiWeek,
           })),
@@ -55,7 +52,7 @@ const MakePicks: React.FC = () => {
   );
 
   const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
-  // Picks lock the moment the earliest game in the slate kicks off (admin exempt).
+
   const locked = useMemo(
     () => arePicksLocked(slate?.games, isAdmin),
     [slate?.games, isAdmin]

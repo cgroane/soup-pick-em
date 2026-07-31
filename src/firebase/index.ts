@@ -33,19 +33,13 @@ const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG as strin
 export const app = initializeApp(firebaseConfig);
 
 export const analytics = getAnalytics(app);
-// ignoreUndefinedProperties drops `undefined` fields on write instead of
-// throwing "Unsupported field value: undefined". Game data carries optional
-// ranks (apRank/playoffRank/coachesRank) that are undefined for unranked teams,
-// so slate writes (and any other optional-field writes) would otherwise fail.
+
 export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Point the client SDK at the local emulator when explicitly opted in via
-// REACT_APP_USE_EMULATOR=true. Lets us run the real UI against migrated
-// emulator data (the "eyeball" step of the migration dry-run loop) without
-// depending on NODE_ENV. Ports match firebase.json (firestore 8080, auth 9099).
+/** use emulator if true for local development */
 if (process.env.REACT_APP_USE_EMULATOR === 'true') {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });

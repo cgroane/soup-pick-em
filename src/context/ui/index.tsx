@@ -32,7 +32,6 @@ type ContextProp = {
 
 export const UiContext = React.createContext({} as UIValueProp); //create the context API
 
-//function body
 export default function Context({ children }: ContextProp) {
   const [seasonData, setSeasonData] = useState<SeasonDetailsData | undefined>({} as SeasonDetailsData);
   const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
