@@ -141,7 +141,9 @@ const Groups: React.FC = () => {
                 )}
               >
                 <span className="truncate">{m.name}</span>
-                <span className="ml-2 text-xs opacity-80">{m.role}</span>
+                <span className="ml-2 text-xs opacity-80">
+                  {m.roles?.filter((r) => r !== 'member').join(', ') || 'member'}
+                </span>
               </button>
             ))
           ) : (

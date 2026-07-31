@@ -73,8 +73,13 @@ async function seed(env: RulesTestEnvironment) {
     await setDoc(doc(db, 'groups', G_PUB), {
       id: G_PUB, name: 'Public', visibility: 'public', inviteCode: 'PUB123', ownerUid: OWNER,
     });
-    for (const [uid, role] of [[OWNER, 'owner'], [MEMBER, 'member'], [PICKER, 'slate-picker']] as const) {
-      await setDoc(doc(db, 'groups', G_PRIV, 'members', uid), { uid, role });
+    const seededRoles: [string, string[]][] = [
+      [OWNER, ['member', 'owner']],
+      [MEMBER, ['member']],
+      [PICKER, ['member', 'slate-picker']],
+    ];
+    for (const [uid, roles] of seededRoles) {
+      await setDoc(doc(db, 'groups', G_PRIV, 'members', uid), { uid, roles });
     }
     await setDoc(doc(db, 'groups', G_PRIV, 'slates', 'w5-2024'), { uniqueWeek: 'w5-2024', games: [] });
     await setDoc(doc(db, 'users', MEMBER), { id: MEMBER, email: 'm@x.com' });
@@ -118,8 +123,14 @@ function register() {
     await assertSucceeds(setDoc(doc(asUser(PICKER), 'groups', G_PRIV, 'slates', 'w6-2024'), { uniqueWeek: 'w6-2024', games: [] }));
   });
 
-  test('A7  owner writes slate → allowed', async () => {
-    await assertSucceeds(setDoc(doc(asUser(OWNER), 'groups', G_PRIV, 'slates', 'w7-2024'), { uniqueWeek: 'w7-2024', games: [] }));
+  // Owner ≠ slate-picker under the array role model: an owner who was not also
+  // granted slate-picker cannot write slates.
+  test('A7  owner (not slate-picker) writes slate → denied', async () => {
+    await assertFails(setDoc(doc(asUser(OWNER), 'groups', G_PRIV, 'slates', 'w7-2024'), { uniqueWeek: 'w7-2024', games: [] }));
+  });
+
+  test('A7b global admin writes slate → allowed', async () => {
+    await assertSucceeds(setDoc(doc(asUser(ADMIN, { admin: true }), 'groups', G_PRIV, 'slates', 'w7-2024'), { uniqueWeek: 'w7-2024', games: [] }));
   });
 
   test('A8  member A writes B’s picks → denied', async () => {
@@ -131,7 +142,7 @@ function register() {
   });
 
   test('A10 signed-in user writes roster member doc → denied (server-owned)', async () => {
-    await assertFails(setDoc(doc(asUser(OWNER), 'groups', G_PRIV, 'members', MEMBER), { uid: MEMBER, role: 'owner' }));
+    await assertFails(setDoc(doc(asUser(OWNER), 'groups', G_PRIV, 'members', MEMBER), { uid: MEMBER, roles: ['member', 'owner'] }));
   });
 
   test('A11 public group readable by non-member → allowed', async () => {
@@ -147,7 +158,7 @@ function register() {
   });
 
   test('A14 user writes own membership mirror → allowed', async () => {
-    await assertSucceeds(setDoc(doc(asUser(MEMBER), 'users', MEMBER, 'memberships', G_PRIV), { gid: G_PRIV, role: 'member' }));
+    await assertSucceeds(setDoc(doc(asUser(MEMBER), 'users', MEMBER, 'memberships', G_PRIV), { gid: G_PRIV, roles: ['member'] }));
   });
 
   test('A15 global admin reads any user doc → allowed', async () => {

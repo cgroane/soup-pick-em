@@ -1,0 +1,42 @@
+name: Deploy Firestore rules
+
+# Manual trigger only, on purpose. The strict group-scoped rules must NOT go live
+# until the group-aware client is also deployed — publishing them while the old
+# client is live would break prod (old client does global reads the rules forbid).
+#
+# AFTER the client cutover is done and stable, you can enable automatic deploys by
+# uncommenting the `push` block below (path-filtered so only rules/index changes deploy).
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - firestore.rules
+  #     - firestore.indexes.json
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Authenticate the Firebase CLI with a service account (no interactive login).
+      # Add the same JSON you use locally (FIREBASE_SERVICE_ACCOUNT) as a repo secret.
+      - name: Write service account key
+        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Deploy Firestore rules
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: npx firebase-tools@latest deploy --only firestore:rules --project soup-pick-em --non-interactive

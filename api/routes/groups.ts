@@ -1,5 +1,5 @@
 import express from "express";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireGroupRole } from "../middlware";
 
 const groupsRouter = express.Router();
@@ -17,13 +17,13 @@ function genInviteCode(len = 6): string {
 async function buildMemberDoc(
   db: ReturnType<typeof getFirestore>,
   uid: string,
-  role: string
+  roles: string[]
 ) {
   const userSnap = await db.collection("users").doc(uid).get();
   const u = (userSnap.data() ?? {}) as { fName?: string; lName?: string; email?: string };
   return {
     uid,
-    role,
+    roles,
     record: [] as unknown[],
     trophyCase: [] as unknown[],
     fName: u.fName ?? "",
@@ -56,11 +56,11 @@ groupsRouter.post("/", async (req: express.Request, res: express.Response) => {
 
     const batch = db.batch();
     batch.set(groupRef, group);
-    batch.set(groupRef.collection("members").doc(uid), await buildMemberDoc(db, uid, "owner"));
+    batch.set(groupRef.collection("members").doc(uid), await buildMemberDoc(db, uid, ["member", "owner"]));
     batch.set(db.collection("users").doc(uid).collection("memberships").doc(gid), {
       gid,
       name: group.name,
-      role: "owner",
+      roles: ["member", "owner"],
       joinedAt: group.createdAt,
     });
     await batch.commit();
@@ -113,11 +113,11 @@ groupsRouter.post("/join", async (req: express.Request, res: express.Response) =
     }
 
     const batch = db.batch();
-    batch.set(memberRef, await buildMemberDoc(db, uid, "member"));
+    batch.set(memberRef, await buildMemberDoc(db, uid, ["member"]));
     batch.set(db.collection("users").doc(uid).collection("memberships").doc(gid), {
       gid,
       name: group.name,
-      role: "member",
+      roles: ["member"],
       joinedAt: new Date().toISOString(),
     });
     await batch.commit();
@@ -183,9 +183,10 @@ groupsRouter.patch(
 /**
  * Assign the slate-picker role within a group. Only the group owner (or a
  * global admin) may call this. There is at most one slate-picker per group, so
- * any existing slate-picker is demoted to member. The owner's role is never
- * changed. Member docs are server-owned (client writes are denied by the rules),
- * so this runs with Admin privileges.
+ * the role is removed from any current holder and granted to the target. Roles
+ * are an additive array, so this never touches a member's `owner`/`member`
+ * roles — the owner may also hold slate-picker. Member docs are server-owned
+ * (client writes are denied by the rules), so this runs with Admin privileges.
  */
 groupsRouter.post(
   "/:gid/slate-picker",
@@ -210,19 +211,17 @@ groupsRouter.post(
       const membershipRef = (memberUid: string) =>
         db.collection("users").doc(memberUid).collection("memberships").doc(gid);
 
-      // Demote the current slate-picker (never the owner, never the new pick).
+      // Strip slate-picker from any current holder other than the target.
       membersSnap.docs.forEach((m) => {
-        if (m.data().role === "slate-picker" && m.id !== uid) {
-          batch.update(m.ref, { role: "member" });
-          batch.update(membershipRef(m.id), { role: "member" });
+        if ((m.data().roles as string[] | undefined)?.includes("slate-picker") && m.id !== uid) {
+          batch.update(m.ref, { roles: FieldValue.arrayRemove("slate-picker") });
+          batch.update(membershipRef(m.id), { roles: FieldValue.arrayRemove("slate-picker") });
         }
       });
 
-      // Promote the target (leave an owner as owner).
-      if (target.data().role !== "owner") {
-        batch.update(target.ref, { role: "slate-picker" });
-        batch.update(membershipRef(uid), { role: "slate-picker" });
-      }
+      // Grant slate-picker to the target (arrayUnion is a no-op if already set).
+      batch.update(target.ref, { roles: FieldValue.arrayUnion("slate-picker") });
+      batch.update(membershipRef(uid), { roles: FieldValue.arrayUnion("slate-picker") });
 
       await batch.commit();
       return res.json({ message: `slate-picker set to ${uid} for group ${gid}` });

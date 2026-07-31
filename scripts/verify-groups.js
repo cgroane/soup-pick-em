@@ -78,34 +78,39 @@ async function main() {
     `members=${membersSnap.size} users=${usersSnap.size}`);
 
   const memberById = new Map(membersSnap.docs.map((d) => [d.id, d.data()]));
-  const owners = membersSnap.docs.filter((d) => d.data().role === 'owner');
+  const rolesOf = (m) => (m && m.roles) || [];
+  const owners = membersSnap.docs.filter((d) => rolesOf(d.data()).includes('owner'));
   check('3. exactly one owner', owners.length === 1, `owners=${owners.length}`);
   check('3. owner member === group.ownerUid',
     owners.length === 1 && owners[0].id === group.ownerUid);
+  check('3. every member has base member role',
+    membersSnap.docs.every((d) => rolesOf(d.data()).includes('member')));
 
-  // every global slate-picker is at least slate-picker in-group
+  // every global slate-picker also holds slate-picker in-group
   let slatePickerOk = true;
   for (const u of usersSnap.docs) {
     if ((u.data().roles || []).includes('slate-picker')) {
       const m = memberById.get(u.id);
-      if (!m || !['slate-picker', 'owner'].includes(m.role)) slatePickerOk = false;
+      if (!rolesOf(m).includes('slate-picker')) slatePickerOk = false;
     }
   }
   check('3. global slate-pickers preserved in-group', slatePickerOk);
 
-  // membership mirrors
+  // membership mirrors — roles array matches the member doc (order-insensitive)
+  const sameRoles = (a, b) =>
+    a.length === b.length && [...a].sort().join(',') === [...b].sort().join(',');
   let mirrorsOk = true;
   let mirrorDetail = '';
   for (const u of usersSnap.docs) {
     const mm = await db.collection('users').doc(u.id).collection('memberships').doc(LEGACY_GID).get();
     const member = memberById.get(u.id);
-    if (!mm.exists || mm.data().role !== (member && member.role)) {
+    if (!mm.exists || !sameRoles(rolesOf(mm.data()), rolesOf(member))) {
       mirrorsOk = false;
-      mirrorDetail = `uid=${u.id} mirror=${mm.exists ? mm.data().role : 'MISSING'} member=${member && member.role}`;
+      mirrorDetail = `uid=${u.id} mirror=${mm.exists ? JSON.stringify(rolesOf(mm.data())) : 'MISSING'} member=${JSON.stringify(rolesOf(member))}`;
       break;
     }
   }
-  check('4. membership mirrors present + role-matched', mirrorsOk, mirrorDetail);
+  check('4. membership mirrors present + roles-matched', mirrorsOk, mirrorDetail);
 
   // slates
   const srcSlates = await db.collection('slates').get();

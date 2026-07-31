@@ -65,6 +65,8 @@
     "migrate:groups:dry": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/migrate-groups.js --dry-run",
     "migrate:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/migrate-groups.js",
     "verify:groups": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/verify-groups.js",
+    "backfill:group-roles:dry": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/backfill-group-roles.js --dry-run",
+    "backfill:group-roles": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em node scripts/backfill-group-roles.js",
     "seed:auth:emu": "FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 GCLOUD_PROJECT=soup-pick-em node scripts/seed-emulator-auth.js",
     "test:review": "tsx test/run.ts",
     "prepare": "husky",
