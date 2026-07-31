@@ -286,3 +286,13 @@ Fixed and covered by `npm run test:review` (0 hard failures):
 
 **F8** resolved as working-as-intended (on-the-number side pick = loss; confirmed by product
 owner; B1g is now a 🟢 guard). Still open: **F17** (Profile stale mirror), **F9–F16**.
+
+**Post-activation follow-on (pre-auth read race).** Activating F1 surfaced a latent bug the
+open rules had masked: `GroupContext` seeded `activeGroupId` synchronously from `localStorage`,
+so on a cold load a group id reached the slate/pick/bracket fetchers *before* auth resolved,
+firing **unauthenticated** reads that the rules (correctly) reject — the "evaluation error at
+L85 for 'get'" (that signature = `uid()` deref on a null `request.auth`, the slate-read path).
+Fix: `activeGroupId` now inits `undefined` and is hydrated from the stored preference inside
+`refreshMemberships` *after* a uid exists, validated against real memberships (also closes E3);
+`CFPContext.fetchBracket` is gated on `user?.uid`. General rule: every client Firestore read
+must be gated on an authenticated uid, since the group-scoped rules deny anonymous access.

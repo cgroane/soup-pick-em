@@ -32,9 +32,12 @@ export const GroupContext = createContext({} as GroupValueProp);
 const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [uid, setUid] = useState<string | undefined>(getAuth(app).currentUser?.uid);
   const [memberships, setMemberships] = useState<GroupMembership[]>([]);
-  const [activeGroupId, setActiveGroupId] = useState<string | undefined>(
-    () => localStorage.getItem(ACTIVE_GROUP_KEY) ?? undefined
-  );
+  // Intentionally NOT seeded from localStorage: doing so exposes a group id to
+  // downstream readers (slate/pick fetches) before auth resolves on a cold load,
+  // firing UNAUTHENTICATED Firestore reads that the group-scoped rules reject.
+  // The stored preference is applied in refreshMemberships once we have a uid and
+  // can validate it against the user's real memberships.
+  const [activeGroupId, setActiveGroupId] = useState<string | undefined>(undefined);
   const [activeGroup, setActiveGroupData] = useState<Group | undefined>(undefined);
 
   // Track the authenticated uid independently of the user context so this
@@ -46,12 +49,20 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   const refreshMemberships = useCallback(async () => {
     if (!uid) {
       setMemberships([]);
+      setActiveGroupId(undefined);
       return;
     }
     const m = await FirebaseGroupsInstance.getUserMemberships(uid);
     setMemberships(m);
-    // Keep the stored active group if still valid, else default to the first.
-    setActiveGroupId((prev) => (prev && m.some((x) => x.gid === prev) ? prev : m[0]?.gid));
+    // Resolve the active group now that we're authed and know the real
+    // memberships: prefer an in-session selection, then the stored preference,
+    // and only accept it if it's still a group the user belongs to (E3);
+    // otherwise fall back to the first membership.
+    const stored = localStorage.getItem(ACTIVE_GROUP_KEY) ?? undefined;
+    setActiveGroupId((prev) => {
+      const candidate = prev ?? stored;
+      return candidate && m.some((x) => x.gid === candidate) ? candidate : m[0]?.gid;
+    });
   }, [uid]);
 
   useEffect(() => {

@@ -109,11 +109,13 @@ export default function CFPContextProvider({ children }: ContextProp) {
     });
   }, [user?.uid, user?.pickHistory, seasonData?.Season]);
 
-  // Fetch bracket on mount when season is known
+  // Fetch bracket once season is known AND the user is authed — the cfpBracket
+  // read requires a signed-in request, so firing before auth resolves would be
+  // rejected by the rules.
   useEffect(() => {
-    if (!seasonData?.Season) return;
+    if (!seasonData?.Season || !user?.uid) return;
     fetchBracket(seasonData.Season);
-  }, [fetchBracket, seasonData?.Season]);
+  }, [fetchBracket, seasonData?.Season, user?.uid]);
 
   return (
     <CFPContext.Provider
