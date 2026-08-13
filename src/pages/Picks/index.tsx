@@ -10,6 +10,7 @@ import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import { useCFPContext } from '../../context/cfp';
 import { gradePick } from '../../utils/grade';
+import { usePickState } from 'context/pick/pick-state';
 
 export interface PicksColumnDef {
   user: { name: string; id: string };
@@ -38,7 +39,8 @@ const Picks: React.FC = () => {
   });
 
   const { fetchUsers, allPickHistories } = useGlobalContext();
-  const { slate, fetchSlate } = usePickContext();
+  const { fetchSlate } = usePickContext();
+  const { slate } = usePickState();
 
   useEffect(() => {
     fetchUsers();
@@ -50,6 +52,7 @@ const Picks: React.FC = () => {
         selectedWeek?.seasonType === 'postseason'
           ? selectedWeek?.year + 'POST'
           : selectedWeek?.year,
+      seasonType: selectedWeek?.seasonType
     });
   }, [fetchUsers, fetchSlate, selectedWeek]);
 

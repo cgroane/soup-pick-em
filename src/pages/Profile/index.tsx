@@ -10,13 +10,15 @@ import { LeaderBoardData } from '../../model';
 import Leaderboard from '../../components/Leaderboard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
+import { usePickState } from 'context/pick/pick-state';
 
-interface ProfileProps {}
+interface ProfileProps { }
 
 const Profile: React.FC<ProfileProps> = () => {
   const { seasonData, setStatus, status, usePostSeason, useOffSeason } = useUIContext();
   const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
-  const { slate, fetchSlate } = usePickContext();
+  const { fetchSlate } = usePickContext();
+  const { slate } = usePickState();
   const { canEdit } = useSlateContext();
 
   useEffect(() => {
@@ -24,7 +26,8 @@ const Profile: React.FC<ProfileProps> = () => {
       fetchUsers().then(() => null),
       fetchSlate({
         week: seasonData?.ApiWeek,
-        year: !usePostSeason ? seasonData?.Season?.toString() : `${seasonData?.Season}POST`,
+        year: seasonData?.Season?.toString(),
+        seasonType: !usePostSeason ? 'regular' : 'postseason' as 'regular' | 'postseason',
       }).then(() => null),
     ]).then(() => setStatus(LoadingState.IDLE));
   }, [fetchSlate, fetchUsers, setStatus, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);

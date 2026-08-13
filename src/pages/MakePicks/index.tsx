@@ -12,16 +12,23 @@ import { useGroupContext } from '../../context/group';
 import { Button } from '../../components/ui/button';
 import { UserRoles } from '../../utils/constants';
 import { arePicksLocked } from '../../utils/pickLock';
+import { usePickState } from 'context/pick/pick-state';
 
 const MakePicks: React.FC = () => {
-  const { picks, slate, fetchSlate, getUserPicks } = usePickContext();
+  const { fetchSlate, getUserPicks } = usePickContext();
+  const { picks, slate } = usePickState();
   const { user, setUser } = useGlobalContext();
   const { activeGroupId } = useGroupContext();
+  const { usePostSeason } = useUIContext();
   const navigate = useNavigate();
   const { modalOpen, setModalOpen, status, setStatus, seasonData } = useUIContext();
 
   const getDataForPage = useCallback(async () => {
-    const compoundRequest = Promise.all([await fetchSlate({}), await getUserPicks()]);
+    const compoundRequest = Promise.all([await fetchSlate({
+      week: seasonData?.ApiWeek,
+      year: seasonData?.Season?.toString(),
+      seasonType: !usePostSeason ? 'regular' : 'postseason',
+    }), await getUserPicks()]);
     const [slateResult] = await compoundRequest;
     if (slateResult) setStatus(LoadingState.IDLE);
   }, [fetchSlate, setStatus, getUserPicks]);

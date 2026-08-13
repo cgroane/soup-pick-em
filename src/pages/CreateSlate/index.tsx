@@ -8,7 +8,7 @@ import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { useGroupContext } from '../../context/group';
 import { UserCollectionData } from '../../model';
-import { usePickContext } from '../../context/pick';
+import { usePickState } from '../../context/pick/pick-state';
 import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
@@ -16,16 +16,18 @@ import SelectWeek from '../../components/SelectWeek';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { usePickContext } from 'context/pick';
 
 const CreateSlate: React.FC = () => {
   const [textFilter, setTextFilter] = useState('');
 
   const { games, selectedGames, filteredGames, setFilteredGames, fetchMatchups, deletions, canEdit } =
     useSlateContext();
-  const { fetchSlate } = usePickContext();
   const { setModalOpen, modalOpen, seasonData, setStatus, status, useOffSeason } = useUIContext();
   const { user, users } = useGlobalContext();
   const { activeGroupId, isSlatePicker } = useGroupContext();
+  const { fetchSlate } = usePickContext();
+  const { status: slateStatus } = usePickState()
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
@@ -46,22 +48,23 @@ const CreateSlate: React.FC = () => {
   );
 
   useEffect(() => {
-    Promise.all([
-      fetchSlate({
-        week: parseInt(selectedWeek?.week as string),
-        year:
-          selectedWeek?.seasonType === 'postseason'
-            ? selectedWeek?.year + 'POST'
-            : selectedWeek?.year,
-      }).then((result) => result),
-      fetchMatchups({
+    const matchupGetter = async () => {
+      setStatus(LoadingState.LOADING);
+      await fetchMatchups({
         weekNumber:
           selectedWeek.seasonType === 'postseason' ? 1 : parseInt(selectedWeek?.week as string),
         year: parseInt(selectedWeek?.year as string),
         seasonType: selectedWeek?.seasonType,
-      }),
-    ]).then(() => setStatus(LoadingState.IDLE));
-  }, [fetchMatchups, fetchSlate, setStatus, selectedWeek]);
+      });
+      await fetchSlate({
+        week: parseInt(selectedWeek?.week as string),
+        year: selectedWeek?.year as string,
+        seasonType: selectedWeek?.seasonType
+      })
+      setStatus(LoadingState.IDLE);
+    }
+    matchupGetter();
+  }, [fetchMatchups, setStatus, selectedWeek]);
 
   useEffect(() => {
     if (textFilter) {
@@ -78,9 +81,8 @@ const CreateSlate: React.FC = () => {
   const submitSlate = useCallback(async () => {
     setStatus(LoadingState.LOADING);
     setModalOpen(true);
-    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${
-      selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
-    }`;
+    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
+      }`;
     if (!activeGroupId) return;
     await FBSlateClassInstance.addSlate(
       activeGroupId,
@@ -100,7 +102,7 @@ const CreateSlate: React.FC = () => {
     () => selectedGames?.length >= 10 || !canEdit,
     [selectedGames, canEdit]
   );
-
+  const isLoading = status === LoadingState.LOADING || slateStatus === LoadingState.LOADING;
   return (
     <>
       <div>
@@ -127,7 +129,7 @@ const CreateSlate: React.FC = () => {
           onChange={setSelectedWeek}
         />
 
-        {status === LoadingState.LOADING ? (
+        {isLoading ? (
           <Loading iterations={3} type="gameCard" />
         ) : (
           <>

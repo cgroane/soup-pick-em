@@ -2,12 +2,12 @@
 import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getGames } from '../../api/getGames';
 import { LoadingState, useUIContext } from '../ui';
-import { usePickContext } from '../pick';
 import { useGlobalContext } from '../user';
 import { useGroupContext } from '../group';
 import { UserRoles } from '../../utils/constants';
 import { arePicksLocked } from '../../utils/pickLock';
 import { GamesAPIResult } from '../../model';
+import { usePickState } from 'context/pick/pick-state';
 
 export type SlateValueProps = {
   games: GamesAPIResult[];
@@ -33,7 +33,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
 
   const {
     slate
-  } = usePickContext();
+  } = usePickState();
   const {
     setStatus
   } = useUIContext();
