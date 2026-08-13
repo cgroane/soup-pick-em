@@ -41,9 +41,7 @@ jobs:
           CI: true
         run: npm test -- --watch=false --passWithNoTests
 
-  # Compile-check the Firestore rules so a syntax/compile error fails the PR
-  # instead of blowing up the auto-deploy on merge to main. `--dry-run` runs the
-  # exact same server-side compile as a real deploy but never releases.
+
   validate-firestore-rules:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -56,8 +54,6 @@ jobs:
         with:
           node-version: 20
 
-      # Same service-account secret the deploy workflow uses (repo secret
-      # FIREBASE_SERVICE_ACCOUNT). PRs from within this repo can read it.
       - name: Write service account key
         run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
         env:

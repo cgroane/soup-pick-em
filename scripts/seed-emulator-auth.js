@@ -1,21 +1,5 @@
-#!/usr/bin/env node
 /**
- * Seed the Auth emulator with accounts that match the Firestore user docs.
- *
- * The Firestore snapshot in emulator-data/ is a Firestore-only export — it has
- * no auth_export — so the Auth emulator boots empty and Google sign-in fails
- * with "no google.com accounts exist in the auth emulator".
- *
- * For every users/{uid} doc this imports an Auth user with:
- *   - the SAME uid (so it lines up with users/{uid} and groups/legacy/members/{uid})
- *   - a google.com provider (so the emulator's Google popup lists the account)
- *   - a dev password (so email/password sign-in also works)
- *
- * EMULATOR ONLY. Refuses to run unless FIREBASE_AUTH_EMULATOR_HOST is set, so it
- * can never touch production auth.
- *
- * Usage (emulator running):
- *   npm run seed:auth:emu
+ * seeding emulator to match req'd types with groups and auth for testing.
  */
 
 const admin = require('firebase-admin');

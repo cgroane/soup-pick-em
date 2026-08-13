@@ -1,31 +1,6 @@
-#!/usr/bin/env node
 /**
- * Groups Migration: backfill the "legacy" group from pre-groups data.
- *
- * Non-destructive COPY. Reads the existing global collections and writes the
- * group-centric shape alongside them. Original `users/*`, `slates/*`, and
- * `users/{uid}/picks/*` are left untouched so this is safe to re-run and safe
- * to roll back. A separate, deliberate cleanup step removes old data later,
- * only after Steps 2-4 prove the new model in the app.
- *
- * Writes:
- *   groups/legacy                              (group doc)
- *   groups/legacy/members/{uid}                (per-group state: role, record, trophyCase, name)
- *   groups/legacy/members/{uid}/picks/{slateId}(copied from users/{uid}/picks)
- *   groups/legacy/slates/{uniqueWeek}          (copied from slates)
- *   users/{uid}/memberships/legacy             (mirror)
- *
- * Target selection (safety):
- *   Default (emulator): FIRESTORE_EMULATOR_HOST MUST be set, else refuse.
- *   Prod (--prod):      FIRESTORE_EMULATOR_HOST must be UNSET, creds required,
- *                       and --yes must be passed to confirm.
- *
- * Usage:
- *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em \
- *     node scripts/migrate-groups.js --dry-run
- *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em \
- *     node scripts/migrate-groups.js
- *   node scripts/migrate-groups.js --prod --yes      # against real Firebase
+ * migrates the original user set into a group and copies their picks to the group.
+ * one time
  */
 
 const admin = require('firebase-admin');

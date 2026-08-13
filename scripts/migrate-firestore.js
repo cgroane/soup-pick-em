@@ -1,21 +1,5 @@
-#!/usr/bin/env node
 /**
- * Firestore Migration Script: Old Types → New CFBD-based Types
- *
- * Migrates slate and pick documents from the old Matchup/Outcome shape
- * to the new GamesAPIResult/GamesAPIResponseOutcome shape.
- *
- * Usage:
- *   node migrate-firestore.js --dry-run     # Preview changes without writing
- *   node migrate-firestore.js               # Execute migration
- *
- * Prerequisites:
- *   - Firebase Admin SDK: npm install firebase-admin
- *   - Service account key file at ./serviceAccountKey.json
- *     (or set GOOGLE_APPLICATION_CREDENTIALS env var)
- *
- * IMPORTANT: Back up Firestore before running without --dry-run.
- * Run slate migration first, then picks migration (or use this script which does both in order).
+ * migrate db from old types to match new data model from CFBD api only
  */
 
 const admin = require('firebase-admin');

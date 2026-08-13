@@ -1,29 +1,7 @@
-#!/usr/bin/env node
 /**
- * Backfill: convert the per-group single `role` string to a `roles` array.
- *
- * The groups feature originally stored one role per member
- * (`role: 'owner' | 'slate-picker' | 'member'`). It now stores an additive
- * array (`roles: string[]`) where every member has `member` and the same person
- * may also hold `owner` and/or `slate-picker`. This walks every group's member
- * docs AND the users/{uid}/memberships mirrors and rewrites them in place.
- *
- * Structural only + idempotent: a doc that already has a `roles` array is left
- * alone, and the old scalar `role` field is deleted once converted. It does NOT
- * consult global user roles — for the legacy group, re-running
- * migrate-groups.js additively re-derives owner+slate-picker from the global
- * roles if a user held both (something a string→array conversion can't know).
- *
- * Target selection matches migrate-groups.js:
- *   Default (emulator): FIRESTORE_EMULATOR_HOST MUST be set.
- *   Prod (--prod):      FIRESTORE_EMULATOR_HOST unset, creds required, --yes.
- *
- * Usage:
- *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em \
- *     node scripts/backfill-group-roles.js --dry-run
- *   node --env-file=.env.local scripts/backfill-group-roles.js --prod --yes
+ * adds req'd roles to existing users for migration and testing
+ * runs once
  */
-
 const admin = require('firebase-admin');
 
 const BATCH_SIZE = 400;

@@ -1,9 +1,5 @@
 name: Deploy Firestore rules
 
-# Auto-deploys on push to main when the rules/index files change, plus a manual
-# trigger. Auto-deploy was enabled 2026-07-31 after the group-aware client + the
-# strict group-scoped rules both went live in prod (the earlier hazard — publishing
-# strict rules while the old global-read client was live — no longer applies).
 on:
   workflow_dispatch:
   push:
@@ -27,8 +23,6 @@ jobs:
         with:
           node-version: 20
 
-      # Authenticate the Firebase CLI with a service account (no interactive login).
-      # Add the same JSON you use locally (FIREBASE_SERVICE_ACCOUNT) as a repo secret.
       - name: Write service account key
         run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
         env:

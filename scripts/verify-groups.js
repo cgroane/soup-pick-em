@@ -1,19 +1,6 @@
-#!/usr/bin/env node
 /**
- * Verify the groups migration. Read-only. Exits non-zero if any invariant fails.
- *
- * Invariants:
- *   1. groups/legacy exists, is private, has an inviteCode + an owner that is a global admin.
- *   2. member count === users count.
- *   3. exactly one 'owner' (=== group.ownerUid); every global slate-picker is >= slate-picker in-group.
- *   4. every user has users/{uid}/memberships/legacy with a role matching their member doc.
- *   5. slate ids under groups/legacy/slates === slate ids under top-level slates.
- *   6. per user: pick-doc count under the membership === count under users/{uid}/picks,
- *      and a sampled pick doc is byte-equal (no data loss).
- *
- * Usage:
- *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=soup-pick-em \
- *     node scripts/verify-groups.js
+ * reads only 
+ * confirms valid group migration (legacy group doc, members, membership mirrors, picks, slates)
  */
 
 const admin = require('firebase-admin');
