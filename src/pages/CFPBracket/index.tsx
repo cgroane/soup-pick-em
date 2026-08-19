@@ -1,16 +1,16 @@
 import React, { useCallback } from 'react';
 import { useCFPContext } from '../../context/cfp';
 import { useGlobalContext } from '../../context/user';
-import { useUIContext } from '../../context/ui';
 import BracketDisplay from '../../components/BracketDisplay';
 import { Picks } from '../../model';
 import { Button } from '../../components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 const CFPBracket: React.FC = () => {
   const { bracket, cfpPicks, addCfpPick, saveCfpPicks, isSaving } = useCFPContext();
   const { user } = useGlobalContext();
-  const { seasonData } = useUIContext();
+  const { seasonData } = useUIStateContext();
 
   const handlePick = useCallback(
     (pick: Picks) => {

@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model';
 import { useGetTeamData } from '../../hooks/useGetTeamData';
 import { useGlobalContext } from '../../context/user';
-import { useUIContext } from '../../context/ui';
 import { Lock } from 'lucide-react';
 import { cn } from 'lib/utils';
 import { usePickDispatch } from 'context/pick/pick-dispatch';
 import { usePickState } from 'context/pick/pick-state';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 interface PickCardProps {
   game: GamesAPIResult;
@@ -17,7 +17,7 @@ const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
   const { rankings, dateTime } = useGetTeamData(game);
   const dispatch = usePickDispatch();
   const { slate } = usePickState()
-  const { seasonData } = useUIContext();
+  const { seasonData } = useUIStateContext();
 
   const [choice, setChoice] = useState<GamesAPIResponseOutcome>({
     name: 'PUSH',

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/user';
 import FirebaseUsersClassInstance from '../firebase/user/user';
 import { UserRoles } from '../utils/constants';
-import { useUIContext } from '../context/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +14,7 @@ import {
 import { Button } from './ui/button';
 import { Menu } from 'lucide-react';
 import GroupSwitcher from './GroupSwitcher';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const Navigation: React.FC = () => {
     FirebaseUsersClassInstance.logout().then(() => navigate('/'));
   }, [navigate]);
   const { user } = useGlobalContext();
-  const { usePostSeason } = useUIContext();
+  const { usePostSeason } = useUIStateContext();
 
   const menuItems = useMemo(() => {
     const loggedInItems: { label: string; onClick: () => void }[] = [

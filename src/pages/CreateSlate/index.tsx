@@ -3,7 +3,7 @@ import Game from '../../components/Game';
 import { Search } from 'lucide-react';
 import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
-import { LoadingState, useUIContext } from '../../context/ui';
+import { LoadingState } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { useGlobalContext } from '../../context/user';
 import { useGroupContext } from '../../context/group';
@@ -17,13 +17,21 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePickContext } from 'context/pick';
+import { useUIDispatchContext } from 'context/ui/ui-dispatch';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 const CreateSlate: React.FC = () => {
   const [textFilter, setTextFilter] = useState('');
 
   const { games, selectedGames, filteredGames, setFilteredGames, fetchMatchups, deletions, canEdit } =
     useSlateContext();
-  const { setModalOpen, modalOpen, seasonData, setStatus, status, useOffSeason } = useUIContext();
+  const dispatch = useUIDispatchContext();
+  const {
+    status,
+    seasonData,
+    modalOpen,
+    useOffSeason
+  } = useUIStateContext();
   const { user, users } = useGlobalContext();
   const { activeGroupId, isSlatePicker } = useGroupContext();
   const { fetchSlate } = usePickContext();
@@ -49,7 +57,7 @@ const CreateSlate: React.FC = () => {
 
   useEffect(() => {
     const matchupGetter = async () => {
-      setStatus(LoadingState.LOADING);
+      dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
       await fetchMatchups({
         weekNumber:
           selectedWeek.seasonType === 'postseason' ? 1 : parseInt(selectedWeek?.week as string),
@@ -61,10 +69,10 @@ const CreateSlate: React.FC = () => {
         year: selectedWeek?.year as string,
         seasonType: selectedWeek?.seasonType
       })
-      setStatus(LoadingState.IDLE);
+      dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
     }
     matchupGetter();
-  }, [fetchMatchups, setStatus, selectedWeek, fetchSlate]);
+  }, [fetchMatchups, dispatch, selectedWeek, fetchSlate]);
 
   useEffect(() => {
     if (textFilter) {
@@ -79,8 +87,8 @@ const CreateSlate: React.FC = () => {
   }, [games, setFilteredGames, textFilter]);
 
   const submitSlate = useCallback(async () => {
-    setStatus(LoadingState.LOADING);
-    setModalOpen(true);
+    dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
+    dispatch({ type: "SET_MODAL", payload: true });
     const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
       }`;
     if (!activeGroupId) return;
@@ -95,8 +103,8 @@ const CreateSlate: React.FC = () => {
       },
       users,
       deletions.length ? deletions : undefined
-    ).then(() => setStatus(LoadingState.IDLE));
-  }, [selectedWeek, user, setStatus, selectedGames, setModalOpen, deletions, users, activeGroupId]);
+    ).then(() => dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE }));
+  }, [selectedWeek, user, selectedGames, dispatch, deletions, users, activeGroupId]);
 
   const disableSelection = useMemo(
     () => selectedGames?.length >= 10 || !canEdit,
@@ -184,7 +192,7 @@ const CreateSlate: React.FC = () => {
               label: 'Make your picks',
               onClick: () => {
                 navigate('/pick');
-                setModalOpen(false);
+                dispatch({ type: "SET_MODAL", payload: false });
               },
             },
           ]}

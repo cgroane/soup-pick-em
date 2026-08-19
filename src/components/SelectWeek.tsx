@@ -1,5 +1,4 @@
 import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
-import { useUIContext } from '../context/ui';
 import {
   Select,
   SelectContent,
@@ -7,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 interface SelectWeekProps {
   onChange: Dispatch<SetStateAction<{ week?: string; year?: string; seasonType: 'regular' | 'postseason' }>>;
@@ -15,7 +15,7 @@ interface SelectWeekProps {
 }
 
 const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: SelectWeekProps) => {
-  const { seasonData, usePostSeason } = useUIContext();
+  const { seasonData, usePostSeason } = useUIStateContext();
 
   const handlePostSeasonEdge = (val: { label: string; value: string }, propName: string) => {
     if (val.label === 'Post Season') {

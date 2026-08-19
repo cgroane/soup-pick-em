@@ -1,78 +1,66 @@
-import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { PropsWithChildren, useCallback, useEffect, useReducer } from "react";
 import { getCurrentWeek } from "../../api/getGames";
 import { SeasonDetailsData } from "../../api/schema/sportsDataIO";
+import { initialUIState, LoadingState, UIState, UIStateContext } from "./ui-state";
+import { UIDispatchActions, UIDispatchContext } from "./ui-dispatch";
 
+export { LoadingState, SeasonTypes } from "./ui-state";
 
-export enum LoadingState {
-  IDLE = 'IDLE',
-  ERROR = 'ERROR',
-  LOADING = 'LOADING',
+const uiReducer = (state: UIState, action: UIDispatchActions): UIState => {
+  switch (action.type) {
+    case "SET_MODAL":
+      return { ...state, modalOpen: action.payload }
+    case "SET_SEASON_CONTEXT":
+      return { ...state, [action.payload.target]: action.payload.val }
+    case "SET_SEASON_DATA":
+      return { ...state, seasonData: action.payload }
+    case "SET_STATUS":
+      return { ...state, status: action.payload }
+    default:
+      return state;
+  }
 };
 
-export enum SeasonTypes {
-  POST = 'POST',
-  REGULAR = 'REGULAR',
-  OFF = 'OFF',
-  PRE = 'PRE'
-}
-
-export type UIValueProp = {
-  modalOpen: boolean;
-  setModalOpen: Dispatch<SetStateAction<boolean>>;
-  seasonData?: SeasonDetailsData;
-  status: keyof typeof LoadingState;
-  setStatus: Dispatch<SetStateAction<keyof typeof LoadingState>>;
-  usePostSeason: boolean;
-  useOffSeason: boolean;
-}
-
-type ContextProp = {
-  children: React.ReactNode
-}
-
-export const UiContext = React.createContext({} as UIValueProp); //create the context API
-
-export default function Context({ children }: ContextProp) {
-  const [seasonData, setSeasonData] = useState<SeasonDetailsData | undefined>({} as SeasonDetailsData);
-  const [status, setStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const usePostSeason = useMemo(() => {
-    return !!(seasonData?.ApiSeason?.includes(SeasonTypes.POST))
-  }, [seasonData?.ApiSeason]);
-
-  const useOffSeason = useMemo(() => !!seasonData?.isOffseason, [seasonData?.isOffseason]);
+const UIProvider: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChildren) => {
+  const [state, dispatch] = useReducer(uiReducer, initialUIState);
 
   const getSeasonData = useCallback(async () => {
-    const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
-    const isOff = data.isOffseason;
-    const offseasonAdjustment = isOff ? {
-      Season: data.Season - 1,
-      EndYear: data.EndYear - 1,
-      ApiWeek: 1,
-      Description: (parseInt(data.Description) - 1)?.toString(),
-      seasonType: 'offseason' as const
-    } : {};
+    try {
+      const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
+      const isOff = data.isOffseason;
+      const offseasonAdjustment = isOff ? {
+        Season: data.Season - 1,
+        EndYear: data.EndYear - 1,
+        ApiWeek: 1,
+        Description: (parseInt(data.Description) - 1)?.toString(),
+        seasonType: 'offseason' as const
+      } : {};
 
-    setSeasonData({
-      ...data,
-      ...offseasonAdjustment,
-    });
-  }, [setSeasonData]);
+      dispatch({
+        type: 'SET_SEASON_DATA',
+        payload: {
+          ...data,
+          ...offseasonAdjustment,
+        }
+      });
+    } catch (e) {
+      dispatch({ type: "SET_STATUS", payload: LoadingState.ERROR })
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     getSeasonData()
   }, [getSeasonData]);
 
 
-
   return (
-    <UiContext.Provider value={{ modalOpen, setModalOpen, seasonData, status, setStatus, usePostSeason, useOffSeason }}>
-      {children}
-    </UiContext.Provider>
+    <UIDispatchContext.Provider value={dispatch}>
+      <UIStateContext.Provider value={state}>
+        {children}
+      </UIStateContext.Provider>
+    </UIDispatchContext.Provider>
   )
-}
+};
 
-export const useUIContext = (): UIValueProp => {
-  return useContext(UiContext);
-}
+
+export default UIProvider;

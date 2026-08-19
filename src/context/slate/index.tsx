@@ -1,13 +1,15 @@
 
 import React, { Dispatch, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getGames } from '../../api/getGames';
-import { LoadingState, useUIContext } from '../ui';
+import { LoadingState } from '../ui';
 import { useGlobalContext } from '../user';
 import { useGroupContext } from '../group';
 import { UserRoles } from '../../utils/constants';
 import { arePicksLocked } from '../../utils/pickLock';
 import { GamesAPIResult } from '../../model';
 import { usePickState } from 'context/pick/pick-state';
+import { useUIDispatchContext } from 'context/ui/ui-dispatch';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 export type SlateValueProps = {
   games: GamesAPIResult[];
@@ -34,9 +36,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const {
     slate
   } = usePickState();
-  const {
-    setStatus
-  } = useUIContext();
+  const dispatch = useUIDispatchContext();
   const {
     user
   } = useGlobalContext()
@@ -45,7 +45,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
   const [filteredGames, setFilteredGames] = useState<GamesAPIResult[]>([]);
   const [selectedGames, setSelectedGames] = useState<GamesAPIResult[]>([]);
   const [deletions, setDeletions] = useState<number[]>([])
-  const { seasonData } = useUIContext();
+  const { seasonData } = useUIStateContext();
 
   useEffect(() => {
     setSelectedGames(slate?.games ?? []);
@@ -62,7 +62,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
    */
   const fetchMatchups = useCallback(async ({ weekNumber, seasonType, year }: { weekNumber?: number; year?: number; seasonType: 'postseason' | 'regular' }) => {
     try {
-      setStatus(LoadingState.LOADING);
+      dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
       const week = weekNumber ? weekNumber?.toString() : seasonData?.ApiWeek ? seasonData.ApiWeek?.toString() : '1';
       const results = await getGames({
         weekNumber: week,
@@ -81,7 +81,7 @@ export default function CreateSlateContext({ children }: ContextProp) {
       console.error(err);
       return;
     }
-  }, [setGames, seasonData?.ApiWeek, setStatus]);
+  }, [setGames, seasonData?.ApiWeek, dispatch]);
 
 
   const addAndRemove = useCallback((game: GamesAPIResult) => {

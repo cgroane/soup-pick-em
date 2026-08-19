@@ -4,7 +4,7 @@ import PickCard from './PickCard';
 import { Picks } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
-import { LoadingState, useUIContext } from '../../context/ui';
+import { LoadingState } from '../../context/ui';
 import Modal from '../../components/Modal';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import FirebaseGroupsInstance from '../../firebase/group/group';
@@ -13,15 +13,18 @@ import { Button } from '../../components/ui/button';
 import { UserRoles } from '../../utils/constants';
 import { arePicksLocked } from '../../utils/pickLock';
 import { usePickState } from 'context/pick/pick-state';
+import { useUIStateContext } from 'context/ui/ui-state';
+import { useUIDispatchContext } from 'context/ui/ui-dispatch';
 
 const MakePicks: React.FC = () => {
   const { fetchSlate, getUserPicks } = usePickContext();
   const { picks, slate } = usePickState();
   const { user, setUser } = useGlobalContext();
   const { activeGroupId } = useGroupContext();
-  const { usePostSeason } = useUIContext();
+  const { usePostSeason } = useUIStateContext();
   const navigate = useNavigate();
-  const { modalOpen, setModalOpen, status, setStatus, seasonData } = useUIContext();
+  const { modalOpen, status, seasonData } = useUIStateContext();
+  const dispatch = useUIDispatchContext();
 
   const getDataForPage = useCallback(async () => {
     const compoundRequest = Promise.all([await fetchSlate({
@@ -30,8 +33,8 @@ const MakePicks: React.FC = () => {
       seasonType: !usePostSeason ? 'regular' : 'postseason',
     }), await getUserPicks()]);
     const [slateResult] = await compoundRequest;
-    if (slateResult) setStatus(LoadingState.IDLE);
-  }, [fetchSlate, setStatus, getUserPicks]);
+    if (slateResult) dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
+  }, [fetchSlate, dispatch, getUserPicks, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
 
   useEffect(() => {
     getDataForPage();
@@ -68,8 +71,8 @@ const MakePicks: React.FC = () => {
   const submitPicks = useCallback(async () => {
     if (!user) navigate('/');
     if (!activeGroupId || !user?.uid || locked) return;
-    setStatus(LoadingState.LOADING);
-    setModalOpen(true);
+    dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
+    dispatch({ type: "SET_MODAL", payload: true });
     await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, picks.slateId, {
       name: `${user?.fName} ${user?.lName}`,
       slateId: picks?.slateId,
@@ -81,8 +84,8 @@ const MakePicks: React.FC = () => {
     // Refresh the current user's group picks so the UI reflects the save.
     const refreshed = await FirebaseGroupsInstance.getMemberPicks(activeGroupId, user.uid);
     setUser((prev) => (prev ? { ...prev, pickHistory: refreshed } : prev));
-    setStatus(LoadingState.IDLE);
-  }, [navigate, setModalOpen, picks, user, setUser, setStatus, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
+    dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
+  }, [navigate, dispatch, picks, user, setUser, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
 
   const picksCount = picks.picks.filter((p) => !!p.selection).length;
 
@@ -118,7 +121,7 @@ const MakePicks: React.FC = () => {
               label: 'PROFILE',
               onClick: () => {
                 navigate('/profile');
-                setModalOpen(false);
+                dispatch({ type: "SET_MODAL", payload: false });
               },
             },
           ]}

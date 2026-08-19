@@ -6,11 +6,11 @@ import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
 import { GamesAPIResponseOutcome, GamesAPIResult } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
-import { useUIContext } from '../../context/ui';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import { useCFPContext } from '../../context/cfp';
 import { gradePick } from '../../utils/grade';
 import { usePickState } from 'context/pick/pick-state';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 export interface PicksColumnDef {
   user: { name: string; id: string };
@@ -28,7 +28,7 @@ const HeaderCell = ({ children }: React.PropsWithChildren) => (
 const columnHelper = createColumnHelper<PicksColumnDef>();
 
 const Picks: React.FC = () => {
-  const { seasonData, useOffSeason, usePostSeason } = useUIContext();
+  const { seasonData, useOffSeason, usePostSeason } = useUIStateContext();
   const { bracket } = useCFPContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({

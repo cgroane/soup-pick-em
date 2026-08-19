@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { useCFPContext, cfpRound } from '../../context/cfp';
-import { useUIContext } from '../../context/ui';
 import { CFPRound, GamesAPIResult } from '../../model';
 import { Button } from '../../components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 const ROUND_LABELS: Record<CFPRound, string> = {
   firstRound: 'First Round',
@@ -16,7 +16,7 @@ const ROUND_ORDER: CFPRound[] = ['firstRound', 'quarterfinal', 'semifinal', 'cha
 
 const AdminCFP: React.FC = () => {
   const { bracket, refreshAndSaveBracket, isRefreshing } = useCFPContext();
-  const { seasonData } = useUIContext();
+  const { seasonData } = useUIStateContext();
   const year = seasonData?.Season ?? new Date().getFullYear();
 
   const gamesByRound = useMemo(() => {

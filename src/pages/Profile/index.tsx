@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import WinPercentage from '../../components/WinPercentage';
-import { LoadingState, useUIContext } from '../../context/ui';
+import { LoadingState } from '../../context/ui';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import Loading from '../../components/Loading';
@@ -11,11 +11,14 @@ import Leaderboard from '../../components/Leaderboard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { usePickState } from 'context/pick/pick-state';
+import { useUIStateContext } from 'context/ui/ui-state';
+import { useUIDispatchContext } from 'context/ui/ui-dispatch';
 
 interface ProfileProps { }
 
 const Profile: React.FC<ProfileProps> = () => {
-  const { seasonData, setStatus, status, usePostSeason, useOffSeason } = useUIContext();
+  const { seasonData, status, usePostSeason, useOffSeason } = useUIStateContext();
+  const dispatch = useUIDispatchContext();
   const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
   const { fetchSlate } = usePickContext();
   const { slate } = usePickState();
@@ -29,8 +32,8 @@ const Profile: React.FC<ProfileProps> = () => {
         year: seasonData?.Season?.toString(),
         seasonType: !usePostSeason ? 'regular' : 'postseason' as 'regular' | 'postseason',
       }).then(() => null),
-    ]).then(() => setStatus(LoadingState.IDLE));
-  }, [fetchSlate, fetchUsers, setStatus, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
+    ]).then(() => dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE }));
+  }, [fetchSlate, fetchUsers, dispatch, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
 
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory

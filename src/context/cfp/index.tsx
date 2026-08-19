@@ -3,10 +3,10 @@ import { CFPBracket, CFPRound, GamesAPIResult, Picks } from '../../model';
 import { FirebaseCFPInstance } from '../../firebase/cfp/cfp';
 import { getCFPGames } from '../../api/getGames';
 import { useGlobalContext } from '../user';
-import { useUIContext } from '../ui';
 import { useGroupContext } from '../group';
 import FirebaseGroupsInstance from '../../firebase/group/group';
 import { PickHistory } from '../../pages/Picks/PicksTable';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 export type CFPContextValue = {
   bracket: CFPBracket | null;
@@ -36,7 +36,7 @@ export const cfpRound = (game: GamesAPIResult): CFPRound => {
 
 export default function CFPContextProvider({ children }: ContextProp) {
   const { user } = useGlobalContext();
-  const { seasonData } = useUIContext();
+  const { seasonData } = useUIStateContext();
   const { activeGroupId } = useGroupContext();
   const [bracket, setBracket] = useState<CFPBracket | null>(null);
   const [cfpPicks, setCfpPicks] = useState<{ slateId: string; picks: Picks[] }>({
