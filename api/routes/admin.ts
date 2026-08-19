@@ -20,7 +20,8 @@ adminRouter.get('/impersonate', async (req: express.Request, res: express.Respon
 adminRouter.post('/set-role', async (req: express.Request, res: express.Response) => {
   try {
     const { userId, role } = req.body;
-    await fbApp.auth().setCustomUserClaims(userId, { [role]: true });
+    const { customClaims } = await fbApp.auth().getUser(userId);
+    await fbApp.auth().setCustomUserClaims(userId, { ...customClaims, [role]: true });
     res.json({ message: `Role ${role} set for user ${userId}` });
   }
   catch (err) {

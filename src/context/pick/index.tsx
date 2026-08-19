@@ -3,7 +3,7 @@ import { Slate } from "../../model"
 import { useGlobalContext } from "../user";
 import FirebaseGroupsInstance from "../../firebase/group/group";
 import { useGroupContext } from "../group";
-import { LoadingState, useUIContext } from "../ui";
+import { LoadingState } from "../ui";
 import { PickHistory } from "../../pages/Picks/PicksTable";
 import { initialPickState, PicksState, PickStateContext } from "./pick-state";
 import { PickAction, PickDispatchContext } from "./pick-dispatch";
@@ -59,7 +59,6 @@ const PickProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(pickReducer, initialPickState);
   const { user } = useGlobalContext();
   const { activeGroupId } = useGroupContext();
-  const { usePostSeason } = useUIContext();
 
   const getUserPicks = useCallback(() => {
     if (!user?.pickHistory || !state.slate?.uniqueWeek) return;
@@ -86,7 +85,7 @@ const PickProvider = ({ children }: { children: React.ReactNode }) => {
       dispatch({ type: 'SET_STATUS', payload: LoadingState.IDLE });
       return;
     }
-  }, [activeGroupId, usePostSeason]);
+  }, [activeGroupId]);
   return (
     <PickContext.Provider value={{
       fetchSlate,

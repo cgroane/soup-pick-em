@@ -6,10 +6,9 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { getAuth } from 'firebase/auth';
 import { Group, GroupMembership, GroupRole } from '../../model';
 import FirebaseGroupsInstance from '../../firebase/group/group';
-import { app } from '../../firebase';
+import { useAuthStateContext } from 'context/auth/auth-state';
 
 const ACTIVE_GROUP_KEY = 'activeGroupId';
 
@@ -30,7 +29,7 @@ export type GroupValueProp = {
 export const GroupContext = createContext({} as GroupValueProp);
 
 const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [uid, setUid] = useState<string | undefined>(getAuth(app).currentUser?.uid);
+  const { uid } = useAuthStateContext();
   const [memberships, setMemberships] = useState<GroupMembership[]>([]);
   // Intentionally NOT seeded from localStorage: doing so exposes a group id to
   // downstream readers (slate/pick fetches) before auth resolves on a cold load,
@@ -39,12 +38,6 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   // can validate it against the user's real memberships.
   const [activeGroupId, setActiveGroupId] = useState<string | undefined>(undefined);
   const [activeGroup, setActiveGroupData] = useState<Group | undefined>(undefined);
-
-  // Track the authenticated uid independently of the user context so this
-  // provider can sit above it and feed the active group id downward.
-  useEffect(() => {
-    return getAuth(app).onAuthStateChanged((u) => setUid(u?.uid ?? undefined));
-  }, []);
 
   const refreshMemberships = useCallback(async () => {
     if (!uid) {

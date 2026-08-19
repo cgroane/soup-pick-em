@@ -71,6 +71,7 @@
     "test:review": "tsx test/run.ts",
     "prepare": "husky",
     "lint": "eslint --ext .js,.ts . --fix",
+    "lint:react": "eslint --ext .ts,.tsx .",
     "fb:build": "npm --prefix functions run build",
     "fb:build:watch": "npm --prefix functions run build:watch",
     "fb:serve": "npm --prefix functions run build && firebase emulators:start --import=./emulator-data/dev-seed --only auth,functions,firestore",

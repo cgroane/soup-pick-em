@@ -64,7 +64,7 @@ const CreateSlate: React.FC = () => {
       setStatus(LoadingState.IDLE);
     }
     matchupGetter();
-  }, [fetchMatchups, setStatus, selectedWeek]);
+  }, [fetchMatchups, setStatus, selectedWeek, fetchSlate]);
 
   useEffect(() => {
     if (textFilter) {
