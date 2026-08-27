@@ -30,3 +30,4 @@ firebaseCert.json
 emulator-data
 firestore-debug.log
 Firestore-export.overall_export_metadata
+firebase-debug.log

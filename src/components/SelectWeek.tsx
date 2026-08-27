@@ -1,5 +1,4 @@
 import React, { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
-import { useUIContext } from '../context/ui';
 import {
   Select,
   SelectContent,
@@ -7,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 interface SelectWeekProps {
   onChange: Dispatch<SetStateAction<{ week?: string; year?: string; seasonType: 'regular' | 'postseason' }>>;
@@ -15,7 +15,7 @@ interface SelectWeekProps {
 }
 
 const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: SelectWeekProps) => {
-  const { seasonData, usePostSeason } = useUIContext();
+  const { seasonData, usePostSeason } = useUIStateContext();
 
   const handlePostSeasonEdge = (val: { label: string; value: string }, propName: string) => {
     if (val.label === 'Post Season') {
@@ -49,8 +49,11 @@ const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: Sele
     return yearsOptions;
   }, [seasonData?.Season]);
 
+  // Clamp a week that outruns the season. `weeks` always ends with the Post
+  // Season entry, so the last real week is at length - 2 — which only exists
+  // once seasonData has loaded and produced at least one week.
   useEffect(() => {
-    if (parseInt(vals.week) > weeks.length) {
+    if (weeks.length > 1 && parseInt(vals.week) > weeks.length) {
       onChange((prev) => ({ ...prev, week: weeks[weeks.length - 2].value }));
     }
   }, [weeks, onChange, vals?.week]);
@@ -62,7 +65,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: Sele
     <div className="px-4 py-6 flex flex-wrap gap-3 items-center justify-between">
       {heading}
       <Select
-        value={currentWeek?.value ?? defaultWeek?.value}
+        value={currentWeek?.value ?? defaultWeek?.value ?? ''}
         onValueChange={(value) => {
           const option = weeks.find((w) => w.value === value);
           if (option) handlePostSeasonEdge(option, 'week');
@@ -80,7 +83,7 @@ const SelectWeek: React.FC<SelectWeekProps> = ({ onChange, heading, vals }: Sele
         </SelectContent>
       </Select>
       <Select
-        value={currentYear?.value}
+        value={currentYear?.value ?? ''}
         onValueChange={(value) => onChange((prev) => ({ ...prev, year: value }))}
       >
         <SelectTrigger className="flex-1 min-w-[120px]">

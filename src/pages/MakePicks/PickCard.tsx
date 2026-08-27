@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model';
 import { useGetTeamData } from '../../hooks/useGetTeamData';
-import { usePickContext } from '../../context/pick';
 import { useGlobalContext } from '../../context/user';
-import { useUIContext } from '../../context/ui';
 import { Lock } from 'lucide-react';
 import { cn } from 'lib/utils';
+import { usePickDispatch } from 'context/pick/pick-dispatch';
+import { usePickState } from 'context/pick/pick-state';
+import { useUIStateContext } from 'context/ui/ui-state';
 
 interface PickCardProps {
   game: GamesAPIResult;
@@ -14,8 +15,9 @@ interface PickCardProps {
 const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
   const { user } = useGlobalContext();
   const { rankings, dateTime } = useGetTeamData(game);
-  const { addPick, slate } = usePickContext();
-  const { seasonData } = useUIContext();
+  const dispatch = usePickDispatch();
+  const { slate } = usePickState()
+  const { seasonData } = useUIStateContext();
 
   const [choice, setChoice] = useState<GamesAPIResponseOutcome>({
     name: 'PUSH',
@@ -53,10 +55,10 @@ const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
         week: seasonData?.ApiWeek as number,
         selection: outcome as GamesAPIResponseOutcome,
       };
-      addPick(pick);
+      dispatch({ type: 'ADD_PICK', payload: pick });
       setChoice(outcome);
     },
-    [addPick, game.id, user?.uid, seasonData?.ApiWeek]
+    [dispatch, game.id, user?.uid, seasonData?.ApiWeek]
   );
 
   return (

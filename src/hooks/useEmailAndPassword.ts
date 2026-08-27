@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGlobalContext } from "../context/user";
 import FirebaseUsersClassInstance from "../firebase/user/user";
 import { UserCollectionData } from "../model";
+import { useAuthContext } from "../context/auth";
 
 export const useEmailAndPassword = () => {
   const [loginInfo, setLoginInfo] = useState({
@@ -16,6 +17,7 @@ export const useEmailAndPassword = () => {
   const {
     setUser
   } = useGlobalContext();
+  const { signIn } = useAuthContext();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLoginInfo((prev) => ({
@@ -25,20 +27,19 @@ export const useEmailAndPassword = () => {
   }, [setLoginInfo]);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
-    console.log(loginInfo);
     e.preventDefault()
     if (newUser) {
+      // No register action on the auth context yet, so this path still calls the
+      // singleton directly.
       FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.fName, loginInfo.lName, loginInfo.email, loginInfo.password).then((res) => {
         navigate('/profile')
-        if(res) setUser(res as UserCollectionData);
+        if (res) setUser(res as UserCollectionData);
       });
     } else {
-      FirebaseUsersClassInstance.logInWithEmailAndPassword(loginInfo.email, loginInfo.password).then((res) => {
-        navigate('/profile')
-        if(res) setUser(res);
-      });
+      // signIn navigates on success and records failures on the auth state.
+      signIn(loginInfo.email, loginInfo.password);
     }
-  }, [loginInfo, newUser, navigate, setUser])
+  }, [loginInfo, newUser, navigate, setUser, signIn])
   return {
     loginInfo,
     handleChange,

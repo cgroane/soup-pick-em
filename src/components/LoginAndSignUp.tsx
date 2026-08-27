@@ -1,26 +1,15 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useEmailAndPassword } from '../hooks/useEmailAndPassword';
-import { useNavigate } from 'react-router-dom';
-import { useGlobalContext } from '../context/user';
-import { UserCollectionData } from '../model';
-import FirebaseUsersClassInstance from '../firebase/user/user';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { useAuthContext } from '../context/auth';
+import { useAuthStateContext } from '../context/auth/auth-state';
 // import { getAuth, signInWithCustomToken } from 'firebase/auth';
 
 const LoginAndSignUp: React.FC = () => {
   const { handleChange, handleSubmit, newUser, setNewUser } = useEmailAndPassword();
-  const { setUser } = useGlobalContext();
-  const navigate = useNavigate();
-
-  const googleAuth = useCallback(async () => {
-    FirebaseUsersClassInstance.loginWithGoogle()
-      .then((res) => {
-        navigate('/profile');
-        if (res) setUser(res as UserCollectionData);
-      })
-      .catch((err) => alert(err.message));
-  }, [setUser, navigate]);
+  const { signInWithGoogle } = useAuthContext();
+  const { pending, error } = useAuthStateContext();
   /**
    * 
    * @param userId 
@@ -51,13 +40,20 @@ const LoginAndSignUp: React.FC = () => {
           <Input onChange={handleChange} name="email" placeholder="Email" type="email" />
           <Input onChange={handleChange} name="password" placeholder="Password" type="password" />
           <div className="flex flex-col gap-2 mt-2">
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={pending}>
               {newUser ? 'Register' : 'Login'}
             </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={() => googleAuth()}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={pending}
+              onClick={() => signInWithGoogle()}
+            >
               {newUser ? 'Register with Google' : 'Sign In with Google'}
             </Button>
           </div>
+          {error && <p className="text-sm text-destructive text-center">{error}</p>}
         </form>
         <p
           className="mt-4 text-center text-sm text-muted-foreground cursor-pointer hover:text-foreground"

@@ -1,7 +1,7 @@
 import React from "react";
-import {  Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom"
 import Profile from "./pages/Profile";
-import Picks from "./pages/Picks";import Login from "./pages/Login";
+import Picks from "./pages/Picks"; import Login from "./pages/Login";
 import { PropsWithChildren } from "react";
 import { UserRoles } from "./utils/constants";
 import ChoosePicker from "./pages/ChoosePicker";
@@ -13,6 +13,7 @@ import MakePicks from "./pages/MakePicks";
 import CFPBracket from "./pages/CFPBracket";
 import AdminCFP from "./pages/AdminCFP";
 import Groups from "./pages/Groups";
+import { useAuthStateContext } from "context/auth/auth-state";
 
 /**
  * admin has all routes, but must be logged in.
@@ -30,18 +31,13 @@ const RoleGuardedRoutes: React.FC<PropsWithChildren & { hasPermission: boolean }
   )
 };
 
-const PrivateRoutes: React.FC<PropsWithChildren & {authenticated: boolean}> = ({
-  authenticated,
+const PrivateRoutes: React.FC<PropsWithChildren> = ({
   children
 }) => {
-
-  return (
-    <>
-      {
-        authenticated && children 
-      }
-    </>
-  )
+  const { status } = useAuthStateContext();
+  if (status === 'initializing') return null;
+  if (status === 'unauthenticated') return <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 
@@ -55,52 +51,52 @@ const Router = () => {
       <Route path="/" element={<Login />} />
       <Route path="/colors" element={<Colors />} />
       <Route
-        path="/profile" 
+        path="/profile"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
-              <Profile/>
+              <Profile />
             </RoleGuardedRoutes>
           </PrivateRoutes>
-      }
+        }
       />
       {/* 
         * page for showing a table of everyone's choices
        */}
-      <Route 
-        path="/picks" 
+      <Route
+        path="/picks"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <Picks />
             </RoleGuardedRoutes>
           </PrivateRoutes>
-      }
+        }
       />
-      <Route 
+      <Route
         path="/choose-picker"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={!!user?.roles?.includes(UserRoles.ADMIN) || isGroupOwner} >
               <ChoosePicker />
             </RoleGuardedRoutes>
           </PrivateRoutes>
-      }
+        }
       />
-      <Route 
-        path="/choose-matchups" 
+      <Route
+        path="/choose-matchups"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={!!user?.roles?.includes(UserRoles.BASIC)} >
               <CreateSlate />
             </RoleGuardedRoutes>
           </PrivateRoutes>
-      }
+        }
       />
       <Route
         path="/pick"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean} >
               <MakePicks />
             </RoleGuardedRoutes>
@@ -110,7 +106,7 @@ const Router = () => {
       <Route
         path="/groups"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated} >
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={!!user?.roles?.includes(UserRoles.BASIC)} >
               <Groups />
             </RoleGuardedRoutes>
@@ -120,7 +116,7 @@ const Router = () => {
       <Route
         path="/cfp-bracket"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated}>
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.BASIC) as boolean}>
               <CFPBracket />
             </RoleGuardedRoutes>
@@ -130,7 +126,7 @@ const Router = () => {
       <Route
         path="/admin-cfp"
         element={
-          <PrivateRoutes authenticated={!!user?.isAuthenticated}>
+          <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean}>
               <AdminCFP />
             </RoleGuardedRoutes>
