@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import Context from './context/user';
 import CreateSlateContext from './context/slate';
-import UiContext from './context/ui';
+import UIProvider from './context/ui';
 import PickContext from './context/pick';
 import CFPContextProvider from './context/cfp';
 import GroupContextProvider from './context/group';
@@ -18,7 +18,7 @@ const root = ReactDOM.createRoot(
 root.render(
   <BrowserRouter>
     <AuthContextProvider>
-      <UiContext>
+      <UIProvider>
         <GroupContextProvider>
           <Context>
             <PickContext>
@@ -30,7 +30,7 @@ root.render(
             </PickContext>
           </Context>
         </GroupContextProvider>
-      </UiContext>
+      </UIProvider>
     </AuthContextProvider>
   </BrowserRouter>
 );

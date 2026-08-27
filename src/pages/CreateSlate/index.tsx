@@ -5,26 +5,27 @@ import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState } from '../../context/ui';
 import Modal from '../../components/Modal';
-import { useGlobalContext } from '../../context/user';
 import { useGroupContext } from '../../context/group';
-import { UserCollectionData } from '../../model';
 import { usePickState } from '../../context/pick/pick-state';
-import FBSlateClassInstance from '../../firebase/slate/slate';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
 import SelectWeek from '../../components/SelectWeek';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePickContext } from 'context/pick';
 import { useUIDispatchContext } from 'context/ui/ui-dispatch';
 import { useUIStateContext } from 'context/ui/ui-state';
+import { useSlateDispatchContext } from 'context/slate/slate-dispatch';
+import { useSlateStateContext } from 'context/slate/slate-state';
 
 const CreateSlate: React.FC = () => {
-  const [textFilter, setTextFilter] = useState('');
 
-  const { games, selectedGames, filteredGames, setFilteredGames, fetchMatchups, deletions, canEdit } =
-    useSlateContext();
+  const { selectedGames, filteredGames, filterText, canEdit, status: matchupStatus } =
+    useSlateStateContext();
+  const slateDispatch = useSlateDispatchContext();
+  const { fetchMatchups, submitSlate } = useSlateContext();
+
   const dispatch = useUIDispatchContext();
   const {
     status,
@@ -32,10 +33,11 @@ const CreateSlate: React.FC = () => {
     modalOpen,
     useOffSeason
   } = useUIStateContext();
-  const { user, users } = useGlobalContext();
-  const { activeGroupId, isSlatePicker } = useGroupContext();
+
+  const { isSlatePicker } = useGroupContext();
+
   const { fetchSlate } = usePickContext();
-  const { status: slateStatus } = usePickState()
+  const { status: pickStatus } = usePickState()
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
@@ -47,17 +49,8 @@ const CreateSlate: React.FC = () => {
   });
 
   const navigate = useNavigate();
-
-  const filterGames = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setTextFilter(e.target.value);
-    },
-    [setTextFilter]
-  );
-
   useEffect(() => {
     const matchupGetter = async () => {
-      dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
       await fetchMatchups({
         weekNumber:
           selectedWeek.seasonType === 'postseason' ? 1 : parseInt(selectedWeek?.week as string),
@@ -69,48 +62,38 @@ const CreateSlate: React.FC = () => {
         year: selectedWeek?.year as string,
         seasonType: selectedWeek?.seasonType
       })
-      dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
     }
     matchupGetter();
-  }, [fetchMatchups, dispatch, selectedWeek, fetchSlate]);
+  }, [fetchMatchups, selectedWeek, fetchSlate]);
 
-  useEffect(() => {
-    if (textFilter) {
-      setFilteredGames(() => {
-        return games.filter((game) =>
-          JSON.stringify(Object.values(game)).toLowerCase().includes(textFilter.toLowerCase())
-        );
-      });
-    } else {
-      setFilteredGames(games);
-    }
-  }, [games, setFilteredGames, textFilter]);
 
-  const submitSlate = useCallback(async () => {
-    dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
+  // Submit progress is page UI: nothing outside this screen observes it, and
+  // sharing a context flag would tie the modal to the game-list skeleton.
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const onSubmit = useCallback(async () => {
+    setSubmitState('saving');
     dispatch({ type: "SET_MODAL", payload: true });
-    const uniqueId = `w${selectedWeek.week}-${selectedWeek.year}${selectedWeek?.seasonType === 'postseason' ? 'POST' : ''
-      }`;
-    if (!activeGroupId) return;
-    await FBSlateClassInstance.addSlate(
-      activeGroupId,
-      {
-        week: parseInt(selectedWeek?.week as string),
-        uniqueWeek: uniqueId,
-        providedBy: user as UserCollectionData,
-        processed: false,
-        games: selectedGames,
-      },
-      users,
-      deletions.length ? deletions : undefined
-    ).then(() => dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE }));
-  }, [selectedWeek, user, selectedGames, dispatch, deletions, users, activeGroupId]);
+    try {
+      await submitSlate({
+        week: selectedWeek?.week,
+        year: selectedWeek?.year,
+        seasonType: selectedWeek?.seasonType,
+      });
+      setSubmitState('saved');
+    } catch {
+      setSubmitState('error');
+    }
+  }, [submitSlate, dispatch, selectedWeek]);
 
   const disableSelection = useMemo(
     () => selectedGames?.length >= 10 || !canEdit,
     [selectedGames, canEdit]
   );
-  const isLoading = status === LoadingState.LOADING || slateStatus === LoadingState.LOADING;
+  const isLoading =
+    status === LoadingState.LOADING ||
+    pickStatus === LoadingState.LOADING ||
+    matchupStatus === LoadingState.LOADING;
   return (
     <>
       <div>
@@ -119,7 +102,8 @@ const CreateSlate: React.FC = () => {
           <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Input
             className="border-0 bg-transparent focus-visible:ring-0 px-0 h-10"
-            onChange={filterGames}
+            value={filterText}
+            onChange={(e) => slateDispatch({ type: "SET_FILTER_TEXT", payload: e.target.value })}
             placeholder="Search games..."
           />
         </div>
@@ -150,6 +134,7 @@ const CreateSlate: React.FC = () => {
                     hideCheckbox={!isSlatePicker}
                     key={game.id}
                     game={game}
+                    canEdit={canEdit}
                   />
                 ))
               ) : (
@@ -172,8 +157,8 @@ const CreateSlate: React.FC = () => {
                     Reset Slate
                   </Button>
                   <Button
-                    onClick={() => submitSlate()}
-                    disabled={selectedGames?.length < 10}
+                    onClick={onSubmit}
+                    disabled={selectedGames?.length < 10 || submitState === 'saving'}
                     className="flex-1"
                   >
                     Submit Slate
@@ -187,21 +172,33 @@ const CreateSlate: React.FC = () => {
 
       {modalOpen && (
         <Modal
-          actions={[
-            {
-              label: 'Make your picks',
-              onClick: () => {
-                navigate('/pick');
-                dispatch({ type: "SET_MODAL", payload: false });
-              },
-            },
-          ]}
+          actions={
+            submitState === 'saved'
+              ? [
+                {
+                  label: 'Make your picks',
+                  onClick: () => {
+                    navigate('/pick');
+                    dispatch({ type: "SET_MODAL", payload: false });
+                  },
+                },
+              ]
+              : []
+          }
         >
-          <div className="flex items-center justify-center py-4">
-            {status === LoadingState.LOADING && (
+          <div className="flex flex-col items-center justify-center gap-2 py-4">
+            {submitState === 'saving' && (
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             )}
-            {status === LoadingState.IDLE && <CheckCircle2 className="h-12 w-12 text-success" />}
+            {submitState === 'saved' && <CheckCircle2 className="h-12 w-12 text-success" />}
+            {submitState === 'error' && (
+              <>
+                <AlertCircle className="h-12 w-12 text-destructive" />
+                <p className="text-sm text-muted-foreground">
+                  Could not save the slate. Please try again.
+                </p>
+              </>
+            )}
           </div>
         </Modal>
       )}

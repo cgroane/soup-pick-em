@@ -1,6 +1,6 @@
-import React, { createContext, PropsWithChildren, useCallback, useEffect, useMemo, useReducer } from "react"
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer } from "react"
 import { AuthAction, AuthDispatchContext } from "./auth-dispatch"
-import { AuthState, AuthStateContext, initialAuthState } from "./auth-state"
+import { AuthState, AuthStateContext, initialAuthState, signedOutAuthState } from "./auth-state"
 import { getAuth } from "firebase/auth"
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
     case 'SET_AUTH':
       return { ...state, ...action.payload, pending: false, error: undefined }
     case "AUTH_PENDING":
-      return { ...state }
+      return { ...state, pending: true, error: undefined }
     case "AUTH_FAILED":
       return { ...state, error: action.payload, pending: false }
     default:
@@ -24,7 +24,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 }
 
-const AuthContext = createContext({} as AuthContextType);
+export const AuthContext = createContext({} as AuthContextType);
 
 
 const AuthContextProvider = ({ children }: PropsWithChildren) => {
@@ -35,7 +35,7 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     const unSub = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((cu) => {
       if (!cu) {
-        dispatch({ type: "SET_AUTH", payload: { status: "unauthenticated" } })
+        dispatch({ type: "SET_AUTH", payload: signedOutAuthState })
         return;
       }
       dispatch({
@@ -49,13 +49,17 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
       })
     });
     return unSub;
-  }, [navToProfile]);
+  }, []);
 
+  // Both sign-in helpers THROW on failure. Their resolved value is the user's
+  // Firestore doc, which is legitimately undefined on paths that only write it
+  // (a first-time Google user goes through addDocument, which returns void), so
+  // a falsy result must not be read as a failed login.
   const signIn = useCallback(async (email: string, password: string) => {
     dispatch({ type: "AUTH_PENDING" });
     try {
-      const res = await FirebaseUsersClassInstance.logInWithEmailAndPassword(email, password);
-      if (res) navToProfile();
+      await FirebaseUsersClassInstance.logInWithEmailAndPassword(email, password);
+      navToProfile();
     } catch (e) {
       dispatch({
         type: "AUTH_FAILED",
@@ -65,21 +69,17 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
   }, [navToProfile]);
 
   const signInWithGoogle = useCallback(async () => {
+    dispatch({ type: "AUTH_PENDING" });
     try {
-      dispatch({ type: "AUTH_PENDING" });
-      const res = await FirebaseUsersClassInstance.loginWithGoogle();
-      if (res) navToProfile();
-      else {
-        dispatch({ type: "AUTH_FAILED", payload: 'Failed to login' })
-        navigate('/');
-      }
+      await FirebaseUsersClassInstance.loginWithGoogle();
+      navToProfile();
     } catch (e) {
       dispatch({
         type: "AUTH_FAILED",
         payload: String(e)
       })
     }
-  }, [navigate, navToProfile]);
+  }, [navToProfile]);
 
   const signOut = useCallback(async () => {
     try {
@@ -108,3 +108,4 @@ const AuthContextProvider = ({ children }: PropsWithChildren) => {
 }
 
 export default AuthContextProvider;
+export const useAuthContext = () => useContext(AuthContext);

@@ -1,21 +1,20 @@
 import React, { useMemo } from 'react';
-import { useSlateContext } from '../context/slate';
 import { useGetTeamData } from '../hooks/useGetTeamData';
-import { useGroupContext } from '../context/group';
 import { GamesAPIResult } from '../model';
 import { Checkbox } from './ui/checkbox';
 import { cn } from 'lib/utils';
+import { useSlateDispatchContext } from 'context/slate/slate-dispatch';
 
 interface GameProps {
   game: GamesAPIResult;
   disable?: boolean;
   addedToSlate: boolean;
   hideCheckbox: boolean;
+  canEdit: boolean;
 }
 
-const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox }: GameProps) => {
-  const { addAndRemove, canEdit } = useSlateContext();
-  const { isSlatePicker } = useGroupContext();
+const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox, canEdit }: GameProps) => {
+  const dispatch = useSlateDispatchContext();
   const { rankings, dateTime } = useGetTeamData(game);
   const final = useMemo(() => game?.completed, [game?.completed]);
 
@@ -74,12 +73,12 @@ const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox }
       </div>
 
       {/* Checkbox footer */}
-      {isSlatePicker && !hideCheckbox && (
+      {canEdit && !hideCheckbox && (
         <div className="flex items-center justify-center mt-3 gap-2">
           <Checkbox
             id={`game-${game.id}`}
             checked={addedToSlate}
-            onCheckedChange={() => addAndRemove(game)}
+            onCheckedChange={() => dispatch({ type: "ADD_REMOVE", payload: game })}
             disabled={(disable && !addedToSlate) || !canEdit}
           />
           <label htmlFor={`game-${game.id}`} className="text-sm text-foreground cursor-pointer">

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useReducer, useRef } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useReducer, useRef } from "react";
 import { Slate } from "../../model"
 import { useGlobalContext } from "../user";
 import FirebaseGroupsInstance from "../../firebase/group/group";
@@ -82,15 +82,15 @@ const PickProvider = ({ children }: { children: React.ReactNode }) => {
       return slate;
     } catch (error) {
       console.error("Error fetching slate:", error);
-      dispatch({ type: 'SET_STATUS', payload: LoadingState.IDLE });
+      dispatch({ type: 'SET_STATUS', payload: LoadingState.ERROR });
       return;
     }
   }, [activeGroupId]);
+
+  const value = useMemo(() => ({ fetchSlate, getUserPicks }), [fetchSlate, getUserPicks]);
+
   return (
-    <PickContext.Provider value={{
-      fetchSlate,
-      getUserPicks,
-    }}>
+    <PickContext.Provider value={value}>
       <PickDispatchContext.Provider value={dispatch}>
         <PickStateContext.Provider value={state}>
           {children}

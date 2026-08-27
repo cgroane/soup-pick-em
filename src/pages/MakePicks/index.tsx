@@ -1,12 +1,11 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Picks } from '../../model';
 import { useGlobalContext } from '../../context/user';
 import { useNavigate } from 'react-router-dom';
-import { LoadingState } from '../../context/ui';
 import Modal from '../../components/Modal';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import FirebaseGroupsInstance from '../../firebase/group/group';
 import { useGroupContext } from '../../context/group';
 import { Button } from '../../components/ui/button';
@@ -21,20 +20,19 @@ const MakePicks: React.FC = () => {
   const { picks, slate } = usePickState();
   const { user, setUser } = useGlobalContext();
   const { activeGroupId } = useGroupContext();
-  const { usePostSeason } = useUIStateContext();
   const navigate = useNavigate();
-  const { modalOpen, status, seasonData } = useUIStateContext();
+  const { modalOpen, seasonData, usePostSeason } = useUIStateContext();
   const dispatch = useUIDispatchContext();
 
+  // fetchSlate reports its own progress on the pick context; this page only reads it.
   const getDataForPage = useCallback(async () => {
-    const compoundRequest = Promise.all([await fetchSlate({
+    await fetchSlate({
       week: seasonData?.ApiWeek,
       year: seasonData?.Season?.toString(),
       seasonType: !usePostSeason ? 'regular' : 'postseason',
-    }), await getUserPicks()]);
-    const [slateResult] = await compoundRequest;
-    if (slateResult) dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
-  }, [fetchSlate, dispatch, getUserPicks, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
+    });
+    getUserPicks();
+  }, [fetchSlate, getUserPicks, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
 
   useEffect(() => {
     getDataForPage();
@@ -68,23 +66,32 @@ const MakePicks: React.FC = () => {
     [slate?.games, isAdmin]
   );
 
+  // Submit progress is page UI: nothing outside this screen observes it, and a
+  // shared flag would let an unrelated fetch resolve the modal.
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   const submitPicks = useCallback(async () => {
     if (!user) navigate('/');
     if (!activeGroupId || !user?.uid || locked) return;
-    dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
+    setSubmitState('saving');
     dispatch({ type: "SET_MODAL", payload: true });
-    await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, picks.slateId, {
-      name: `${user?.fName} ${user?.lName}`,
-      slateId: picks?.slateId,
-      week: slate?.week as number,
-      year: seasonData?.Season as number,
-      picks: ifMissingGames(picks?.picks) as Picks[],
-      userId: user?.uid,
-    });
-    // Refresh the current user's group picks so the UI reflects the save.
-    const refreshed = await FirebaseGroupsInstance.getMemberPicks(activeGroupId, user.uid);
-    setUser((prev) => (prev ? { ...prev, pickHistory: refreshed } : prev));
-    dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
+    try {
+      await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, picks.slateId, {
+        name: `${user?.fName} ${user?.lName}`,
+        slateId: picks?.slateId,
+        week: slate?.week as number,
+        year: seasonData?.Season as number,
+        picks: ifMissingGames(picks?.picks) as Picks[],
+        userId: user?.uid,
+      });
+      // Refresh the current user's group picks so the UI reflects the save.
+      const refreshed = await FirebaseGroupsInstance.getMemberPicks(activeGroupId, user.uid);
+      setUser((prev) => (prev ? { ...prev, pickHistory: refreshed } : prev));
+      setSubmitState('saved');
+    } catch (err) {
+      console.error('Error saving picks:', err);
+      setSubmitState('error');
+    }
   }, [navigate, dispatch, picks, user, setUser, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
 
   const picksCount = picks.picks.filter((p) => !!p.selection).length;
@@ -107,7 +114,7 @@ const MakePicks: React.FC = () => {
         </p>
         <Button
           onClick={() => submitPicks()}
-          disabled={picksCount < 10 || locked}
+          disabled={picksCount < 10 || locked || submitState === 'saving'}
           className="w-full max-w-xs"
         >
           {locked ? 'Picks Locked' : 'Submit Picks'}
@@ -116,22 +123,32 @@ const MakePicks: React.FC = () => {
 
       {modalOpen && (
         <Modal
-          actions={[
-            {
-              label: 'PROFILE',
-              onClick: () => {
-                navigate('/profile');
-                dispatch({ type: "SET_MODAL", payload: false });
-              },
-            },
-          ]}
+          actions={
+            submitState === 'saved'
+              ? [
+                {
+                  label: 'PROFILE',
+                  onClick: () => {
+                    navigate('/profile');
+                    dispatch({ type: "SET_MODAL", payload: false });
+                  },
+                },
+              ]
+              : []
+          }
         >
-          <div className="flex items-center justify-center py-4">
-            {status === LoadingState.LOADING && (
+          <div className="flex flex-col items-center justify-center gap-2 py-4">
+            {submitState === 'saving' && (
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             )}
-            {status === LoadingState.IDLE && (
-              <CheckCircle2 className="h-12 w-12 text-success" />
+            {submitState === 'saved' && <CheckCircle2 className="h-12 w-12 text-success" />}
+            {submitState === 'error' && (
+              <>
+                <AlertCircle className="h-12 w-12 text-destructive" />
+                <p className="text-sm text-muted-foreground">
+                  Could not save your picks. Please try again.
+                </p>
+              </>
             )}
           </div>
         </Modal>

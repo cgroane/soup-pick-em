@@ -20,13 +20,11 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
        * returns games that ARE deleted
        * return games where statement is true
        */
-      const overWrittenGames = existingSlate?.games.filter((_, index) => !!deletions?.includes(index)).map((g) => (g.id))
       /**
        * returns games from existing slate that will not be deleted
        * return all games where statement is false
        */
       const keptGames = existingSlate?.games.filter((_, index) => !deletions?.includes(index)).map((g) => (g.id))
-      console.log(overWrittenGames, keptGames);
       // what is goiung to represent the new games? data that is not already in pick game list to update
       /**
        * delete from each user the games included in overwritten games
@@ -36,44 +34,45 @@ export class FirebaseSlatesClass extends FirebaseDB<Slate> {
       const batch = writeBatch(this.db);
 
       users.forEach((userData) => {
-          /**
-          * find pick history that needs to be updated using slateid
-          * keep old picks that weren't deleted
-          */
-          const pickHToUpdate = userData.pickHistory.find((pH) => pH.slateId === data?.uniqueWeek);
-          const docRef = doc(this.db, 'groups', gid, 'members', userData.uid, 'picks', data.uniqueWeek);
-          /** below needs to set doc data equal to the unique weeks pick history */
-          /**
-           * find each game that is in keptgames == games to copy over
-           * picks.filter
-           
-           */
-          const usersKept = pickHToUpdate?.picks.filter((pH) => keptGames?.includes(pH.matchup)) as [];
+        /**
+        * find pick history that needs to be updated using slateid
+        * keep old picks that weren't deleted
+        */
+        const pickHToUpdate = userData.pickHistory.find((pH) => pH.slateId === data?.uniqueWeek);
+        const docRef = doc(this.db, 'groups', gid, 'members', userData.uid, 'picks', data.uniqueWeek);
+        /** below needs to set doc data equal to the unique weeks pick history */
+        /**
+         * find each game that is in keptgames == games to copy over
+         * picks.filter
+         
+         */
+        const usersKept = pickHToUpdate?.picks.filter((pH) => keptGames?.includes(pH.matchup)) as [];
 
-          /**
-           * filter data.games for games NOT in picks
-           * pick.find data.games game.id === pick.id
-           */
-          const newMatchups = (data.games.filter((g) => !pickHToUpdate?.picks.map((p) => p.matchup)?.includes(g.id)) as GamesAPIResult[])
-            ?.map((matchup) => {
-              return {
-                isCorrect: false,
-                matchup: matchup.id,
-                selection: null,
-                userId: null,
-                week: matchup.week
-              }
-            })
-          if (pickHToUpdate) {
-            batch.set(docRef, { ...pickHToUpdate, picks: [
+        /**
+         * filter data.games for games NOT in picks
+         * pick.find data.games game.id === pick.id
+         */
+        const newMatchups = (data.games.filter((g) => !pickHToUpdate?.picks.map((p) => p.matchup)?.includes(g.id)) as GamesAPIResult[])
+          ?.map((matchup) => {
+            return {
+              isCorrect: false,
+              matchup: matchup.id,
+              selection: null,
+              userId: null,
+              week: matchup.week
+            }
+          })
+        if (pickHToUpdate) {
+          batch.set(docRef, {
+            ...pickHToUpdate, picks: [
               ...usersKept,
               ...newMatchups
             ]
           })
-          }
+        }
       })
       batch.commit();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       throw new Error('Could not update slate to the database')
     }

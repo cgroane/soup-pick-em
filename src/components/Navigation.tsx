@@ -1,8 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalContext } from '../context/user';
-import FirebaseUsersClassInstance from '../firebase/user/user';
 import { UserRoles } from '../utils/constants';
 import {
   DropdownMenu,
@@ -15,12 +14,11 @@ import { Button } from './ui/button';
 import { Menu } from 'lucide-react';
 import GroupSwitcher from './GroupSwitcher';
 import { useUIStateContext } from 'context/ui/ui-state';
+import { useAuthContext } from 'context/auth';
 
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
-  const signOut = useCallback(() => {
-    FirebaseUsersClassInstance.logout().then(() => navigate('/'));
-  }, [navigate]);
+  const { signOut } = useAuthContext();
   const { user } = useGlobalContext();
   const { usePostSeason } = useUIStateContext();
 

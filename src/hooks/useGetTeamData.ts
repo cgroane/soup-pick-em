@@ -19,10 +19,12 @@ export const useGetTeamData = (game: GamesAPIResult) => {
     }
   }, [game.startDate]);
 
+  // `homeTeamData`/`awayTeamData` are typed as required but arrive unvalidated
+  // from the CFBD matchups response, so a malformed game must not crash render.
   const rankings = useMemo(() => {
     return {
-      awayRank: game.awayTeamData.playoffRank ? game.awayTeamData.playoffRank : game.awayTeamData.apRank,
-      homeRank: game.homeTeamData.playoffRank ? game.homeTeamData.playoffRank : game.homeTeamData.apRank,
+      awayRank: game.awayTeamData?.playoffRank ? game.awayTeamData.playoffRank : game.awayTeamData?.apRank,
+      homeRank: game.homeTeamData?.playoffRank ? game.homeTeamData.playoffRank : game.homeTeamData?.apRank,
     }
   }, [game.awayTeamData, game.homeTeamData]);
   return {

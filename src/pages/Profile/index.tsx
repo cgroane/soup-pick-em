@@ -5,35 +5,35 @@ import { LoadingState } from '../../context/ui';
 import { useGlobalContext } from '../../context/user';
 import { usePickContext } from '../../context/pick';
 import Loading from '../../components/Loading';
-import { useSlateContext } from '../../context/slate';
 import { LeaderBoardData } from '../../model';
 import Leaderboard from '../../components/Leaderboard';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { usePickState } from 'context/pick/pick-state';
 import { useUIStateContext } from 'context/ui/ui-state';
-import { useUIDispatchContext } from 'context/ui/ui-dispatch';
+import { useSlateStateContext } from 'context/slate/slate-state';
 
 interface ProfileProps { }
 
 const Profile: React.FC<ProfileProps> = () => {
-  const { seasonData, status, usePostSeason, useOffSeason } = useUIStateContext();
-  const dispatch = useUIDispatchContext();
-  const { user, users, fetchUsers, userOverallRecord } = useGlobalContext();
+  const { seasonData, status: seasonStatus, usePostSeason, useOffSeason } = useUIStateContext();
+  const { user, users, fetchUsers, usersStatus, userOverallRecord } = useGlobalContext();
   const { fetchSlate } = usePickContext();
-  const { slate } = usePickState();
-  const { canEdit } = useSlateContext();
+  const { slate, status: pickStatus } = usePickState();
+  const { canEdit } = useSlateStateContext();
+
+  // Each fetch reports its own progress; this page only reads them.
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   useEffect(() => {
-    Promise.all([
-      fetchUsers().then(() => null),
-      fetchSlate({
-        week: seasonData?.ApiWeek,
-        year: seasonData?.Season?.toString(),
-        seasonType: !usePostSeason ? 'regular' : 'postseason' as 'regular' | 'postseason',
-      }).then(() => null),
-    ]).then(() => dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE }));
-  }, [fetchSlate, fetchUsers, dispatch, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
+    fetchSlate({
+      week: seasonData?.ApiWeek,
+      year: seasonData?.Season?.toString(),
+      seasonType: !usePostSeason ? 'regular' : 'postseason' as 'regular' | 'postseason',
+    });
+  }, [fetchSlate, seasonData?.ApiWeek, seasonData?.Season, usePostSeason]);
 
   const hasPicksThisWeek = useMemo(() => {
     const allValid = user?.pickHistory
@@ -69,7 +69,12 @@ const Profile: React.FC<ProfileProps> = () => {
     }[key];
   }, [seasonData?.ApiWeek, seasonData?.Season, canEdit, usePostSeason, useOffSeason]);
 
-  if (status === LoadingState.LOADING) {
+  const isLoading =
+    seasonStatus === LoadingState.LOADING ||
+    usersStatus === LoadingState.LOADING ||
+    pickStatus === LoadingState.LOADING;
+
+  if (isLoading) {
     return <Loading iterations={4} type="profileCard" />;
   }
 

@@ -10,8 +10,6 @@ const uiReducer = (state: UIState, action: UIDispatchActions): UIState => {
   switch (action.type) {
     case "SET_MODAL":
       return { ...state, modalOpen: action.payload }
-    case "SET_SEASON_CONTEXT":
-      return { ...state, [action.payload.target]: action.payload.val }
     case "SET_SEASON_DATA":
       return { ...state, seasonData: action.payload }
     case "SET_STATUS":
@@ -24,7 +22,10 @@ const uiReducer = (state: UIState, action: UIDispatchActions): UIState => {
 const UIProvider: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChildren) => {
   const [state, dispatch] = useReducer(uiReducer, initialUIState);
 
+  // `status` describes this fetch and nothing else — getSeasonData is its only
+  // writer. Everything downstream of seasonData gates on it read-only.
   const getSeasonData = useCallback(async () => {
+    dispatch({ type: "SET_STATUS", payload: LoadingState.LOADING });
     try {
       const data: SeasonDetailsData = await getCurrentWeek() as SeasonDetailsData;
       const isOff = data.isOffseason;
@@ -43,7 +44,9 @@ const UIProvider: React.FC<PropsWithChildren> = ({ children }: React.PropsWithCh
           ...offseasonAdjustment,
         }
       });
+      dispatch({ type: "SET_STATUS", payload: LoadingState.IDLE });
     } catch (e) {
+      console.error(e);
       dispatch({ type: "SET_STATUS", payload: LoadingState.ERROR })
     }
   }, [dispatch]);
