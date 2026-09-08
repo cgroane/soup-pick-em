@@ -19,7 +19,7 @@ const getSeasonData = async (): Promise<SeasonDetails> => {
    * returns NEXT SAT or prev SAT
    * I THINK prev
    */
-  const url = `${process.env.REACT_APP_API_URL}/api/current-week`;
+  const url = `${process.env.REACT_APP_API_URL}api/current-week`;
   const response = await axios.get(url);
   return response.data;
 };
