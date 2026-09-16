@@ -1,52 +1,49 @@
-import React, { Dispatch, PropsWithChildren, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import FirebaseUsersClassInstance from "../../firebase/user/user";
 import { LoadingState } from "../ui";
-import { PickHistory } from "../../pages/Picks/PicksTable";
-import { useGroupContext } from "../group";
+import { useGroupStateContext } from "../group/group-state";
 import FirebaseGroupsInstance from "../../firebase/group/group";
+import { UserActions, UserDispatchContext } from "./user-dispatch";
+import { initialUserState, UserState, UserStateContext } from "./user-state";
 
-export type UserValueProp = {
-  user: UserCollectionData | null;
-  setUser: Dispatch<React.SetStateAction<UserCollectionData | null>>;
-  users: UserCollectionData[];
-  setUsers: Dispatch<SetStateAction<UserCollectionData[]>>;
+export const userReducer = (state: UserState, action: UserActions): UserState => {
+  switch (action.type) {
+    case "SET_USER":
+      return { ...state, user: action.payload };
+    case "PATCH_USER":
+      return state.user ? { ...state, user: { ...state.user, ...action.payload } } : state;
+    case "SET_MEMBERS":
+      return { ...state, users: action.payload.users, allPickHistories: action.payload.allPickHistories };
+    case "SET_USERS_STATUS":
+      return { ...state, usersStatus: action.payload };
+    default:
+      return state;
+  }
+};
+
+export type UserProviderValue = {
   fetchUsers: () => Promise<void>;
-  /** Tracks `fetchUsers` only. Read-only to consumers. */
-  usersStatus: keyof typeof LoadingState;
-  isSlatePicker: boolean;
-  allPickHistories: PickHistory[];
-  userOverallRecord: { wins: number, losses: number };
-}
+};
 
-export const AppContext = React.createContext({} as UserValueProp); //create the context API
+export const UserContext = createContext({} as UserProviderValue);
 
-//function body
 const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChildren) => {
-
-  const { activeGroupId, isSlatePicker } = useGroupContext();
-
-  const [user, setUser] = useState<UserCollectionData | null>({} as UserCollectionData);
-  const [users, setUsers] = useState<UserCollectionData[]>([]);
-  const [usersPicks, setUsersPicks] = useState<PickHistory[]>([] as PickHistory[]);
-  const [usersStatus, setUsersStatus] = useState<keyof typeof LoadingState>(LoadingState.IDLE);
-
-  const userOverallRecord = useMemo(() => {
-    return user?.record?.reduce<{ wins: number; losses: number }>((acc, cur) => {
-      return {
-        wins: acc.wins + cur.wins,
-        losses: acc.losses + cur.losses
-      }
-    }, { wins: 0, losses: 0 }) ?? { wins: 0, losses: 0 }
-  }, [user?.record]);
+  const [state, dispatch] = useReducer(userReducer, initialUserState);
+  const { activeGroupId } = useGroupStateContext();
+  const uid = state.user?.uid;
 
   // Owns `usersStatus`: this is the only writer, and it always lands on a
   // terminal value so consumers gating on it can't hang.
   const fetchUsers = useCallback(async () => {
-    if (!activeGroupId) { setUsers([]); setUsersPicks([]); setUsersStatus(LoadingState.IDLE); return; }
-    setUsersStatus(LoadingState.LOADING);
+    if (!activeGroupId) {
+      dispatch({ type: "SET_MEMBERS", payload: { users: [], allPickHistories: [] } });
+      dispatch({ type: "SET_USERS_STATUS", payload: LoadingState.IDLE });
+      return;
+    }
+    dispatch({ type: "SET_USERS_STATUS", payload: LoadingState.LOADING });
     try {
       // Group-scoped: only this group's members + their picks. Replaces the old
       // global getCollection('users') + collectionGroup('picks') that read everyone.
@@ -54,18 +51,17 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
         FirebaseGroupsInstance.getMembers(activeGroupId),
         FirebaseGroupsInstance.getAllPicks(activeGroupId),
       ]);
-      const results = members.map((m) => ({
+      const users = members.map((m) => ({
         ...m,
         // consumers (Leaderboard/Profile) expect `id`; the member doc keys on `uid`.
         id: m.uid,
         pickHistory: allPickHistories.filter((p) => p.userId === m.uid),
       })) as unknown as UserCollectionData[];
-      setUsers(results);
-      setUsersPicks(allPickHistories);
-      setUsersStatus(LoadingState.IDLE);
+      dispatch({ type: "SET_MEMBERS", payload: { users, allPickHistories } });
+      dispatch({ type: "SET_USERS_STATUS", payload: LoadingState.IDLE });
     } catch (e) {
       console.error("Error fetching group members:", e);
-      setUsersStatus(LoadingState.ERROR);
+      dispatch({ type: "SET_USERS_STATUS", payload: LoadingState.ERROR });
     }
   }, [activeGroupId]);
 
@@ -75,7 +71,7 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
     const unsubscribe = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((currUser) => {
       if (!!currUser) {
         FirebaseUsersClassInstance.getDocumentInCollection(currUser.uid).then((res) => {
-          setUser(res ? { ...(res as UserCollectionData) } : null);
+          dispatch({ type: "SET_USER", payload: res ? { ...(res as UserCollectionData) } : null });
         })
       } else {
         navigate('/');
@@ -87,44 +83,39 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
   // The user's per-group state (picks, record, trophyCase) now lives on their
   // membership doc — load it for the active group whenever either changes.
   useEffect(() => {
-    const uid = user?.uid;
     if (!uid || !activeGroupId) return;
     Promise.all([
       FirebaseGroupsInstance.getMemberPicks(activeGroupId, uid),
       FirebaseGroupsInstance.getMember(activeGroupId, uid),
     ]).then(([picks, member]) => {
-      setUser((prev) => prev ? {
-        ...prev,
-        pickHistory: picks,
-        record: member?.record ?? [],
-        trophyCase: member?.trophyCase ?? prev.trophyCase,
-      } : prev);
+      dispatch({
+        type: "PATCH_USER",
+        payload: {
+          pickHistory: picks,
+          record: member?.record ?? [],
+          ...(member?.trophyCase ? { trophyCase: member.trophyCase } : {}),
+        },
+      });
     });
-  }, [user?.uid, activeGroupId]);
+  }, [uid, activeGroupId]);
 
   useEffect(() => {
-    if (user?.uid) {
+    if (uid) {
       fetchUsers();
     }
-  }, [fetchUsers, user?.uid]);
+  }, [fetchUsers, uid]);
 
-  const value = useMemo<UserValueProp>(() => ({
-    user,
-    setUser,
-    users,
-    setUsers,
-    fetchUsers,
-    usersStatus,
-    isSlatePicker,
-    userOverallRecord,
-    allPickHistories: usersPicks,
-  }), [user, users, fetchUsers, usersStatus, isSlatePicker, userOverallRecord, usersPicks]);
+  const value = useMemo<UserProviderValue>(() => ({ fetchUsers }), [fetchUsers]);
 
   return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
+    <UserContext.Provider value={value}>
+      <UserDispatchContext.Provider value={dispatch}>
+        <UserStateContext.Provider value={state}>
+          {children}
+        </UserStateContext.Provider>
+      </UserDispatchContext.Provider>
+    </UserContext.Provider>
   )
 }
 export default Context;
-export const useGlobalContext = (): UserValueProp => useContext(AppContext);
+export const useUserContext = (): UserProviderValue => useContext(UserContext);

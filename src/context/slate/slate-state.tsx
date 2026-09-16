@@ -1,7 +1,7 @@
-import { useGroupContext } from "context/group";
+import { useGroupStateContext } from "context/group/group-state";
 import { usePickState } from "context/pick/pick-state";
 import { LoadingState } from "context/ui";
-import { useGlobalContext } from "context/user";
+import { useUserStateContext } from "context/user/user-state";
 import { GamesAPIResult } from "model";
 import { createContext, useContext, useMemo } from "react";
 import { UserRoles } from "utils/constants";
@@ -39,8 +39,8 @@ export const computeDeletions = (slateGames: GamesAPIResult[] = [], selected: Ga
 export const useSlateStateContext = () => {
   const { slate } = usePickState();
   const s = useContext(SlateStateContext);
-  const { user } = useGlobalContext();
-  const { isSlatePicker } = useGroupContext();
+  const { user } = useUserStateContext();
+  const { isSlatePicker } = useGroupStateContext();
 
   const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
   const canEdit = useMemo(() => {

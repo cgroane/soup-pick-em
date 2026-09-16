@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useGlobalContext } from '../context/user';
+import { useUserStateContext } from '../context/user/user-state';
 import { cn } from 'lib/utils';
 
 interface LeaderboardProps {
@@ -7,7 +7,7 @@ interface LeaderboardProps {
 }
 
 const Leaderboard = ({ items }: LeaderboardProps) => {
-  const { user } = useGlobalContext();
+  const { user } = useUserStateContext();
   const curUser = useMemo(() => items.findIndex((u) => u.uid === user?.id), [user?.id, items]);
 
   return (

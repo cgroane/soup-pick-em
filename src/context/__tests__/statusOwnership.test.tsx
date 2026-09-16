@@ -9,7 +9,7 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AllProviders, TEST_GID, TEST_UID, membership, userDoc, makeGames, makeSlate, seasonData } from '../../test-utils/harness';
 import { useUIStateContext } from '../ui/ui-state';
-import { useGlobalContext } from '../user';
+import { useUserStateContext } from '../user/user-state';
 import { usePickState } from '../pick/pick-state';
 
 jest.mock('firebase/auth');
@@ -26,7 +26,7 @@ const getGamesApi = require('../../api/getGames');
 
 const Probe: React.FC = () => {
   const { status: seasonStatus } = useUIStateContext();
-  const { usersStatus } = useGlobalContext();
+  const { usersStatus } = useUserStateContext();
   const { status: pickStatus } = usePickState();
   return (
     <>

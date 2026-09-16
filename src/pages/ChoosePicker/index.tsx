@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GroupMember } from '../../model';
-import { useGlobalContext } from '../../context/user';
-import { useGroupContext } from '../../context/group';
+import { useUserContext } from '../../context/user';
+import { useUserStateContext } from '../../context/user/user-state';
+import { useGroupStateContext } from '../../context/group/group-state';
 import { assignSlatePicker } from '../../api/groups';
 
 interface ChoosePickerProps {}
 
 const ChoosePicker: React.FC<ChoosePickerProps> = () => {
-  const { users, fetchUsers } = useGlobalContext();
-  const { activeGroupId, activeGroup, isGroupOwner } = useGroupContext();
+  const { users } = useUserStateContext();
+  const { fetchUsers } = useUserContext();
+  const { activeGroupId, activeGroup, isGroupOwner } = useGroupStateContext();
   const [selectedUid, setSelectedUid] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
 

@@ -5,7 +5,7 @@ import { useSlateContext } from '../../context/slate';
 import { useNavigate } from 'react-router-dom';
 import { LoadingState } from '../../context/ui';
 import Modal from '../../components/Modal';
-import { useGroupContext } from '../../context/group';
+import { useGroupStateContext } from '../../context/group/group-state';
 import { usePickState } from '../../context/pick/pick-state';
 import Loading from '../../components/Loading';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
@@ -34,7 +34,7 @@ const CreateSlate: React.FC = () => {
     useOffSeason
   } = useUIStateContext();
 
-  const { isSlatePicker } = useGroupContext();
+  const { isSlatePicker } = useGroupStateContext();
 
   const { fetchSlate } = usePickContext();
   const { status: pickStatus } = usePickState()

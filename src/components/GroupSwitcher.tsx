@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, Check, Users } from 'lucide-react';
 import { useGroupContext } from '../context/group';
+import { useGroupStateContext } from '../context/group/group-state';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,8 @@ import { Button } from './ui/button';
  * (leaderboard, slate, picks) to that group's members.
  */
 const GroupSwitcher: React.FC = () => {
-  const { memberships, activeGroupId, activeGroup, setActiveGroup } = useGroupContext();
+  const { memberships, activeGroupId, activeGroup } = useGroupStateContext();
+  const { setActiveGroup } = useGroupContext();
 
   if (!memberships.length) return null;
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react"
 import { useNavigate } from "react-router-dom";
-import { useGlobalContext } from "../context/user";
+import { useUserDispatchContext } from "../context/user/user-dispatch";
 import FirebaseUsersClassInstance from "../firebase/user/user";
 import { UserCollectionData } from "../model";
 import { useAuthContext } from "../context/auth";
@@ -14,9 +14,7 @@ export const useEmailAndPassword = () => {
   });
   const navigate = useNavigate()
   const [newUser, setNewUser] = useState(false);
-  const {
-    setUser
-  } = useGlobalContext();
+  const dispatch = useUserDispatchContext();
   const { signIn } = useAuthContext();
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,13 +31,13 @@ export const useEmailAndPassword = () => {
       // singleton directly.
       FirebaseUsersClassInstance.registerWithEmailAndPassword(`${loginInfo.fName} ${loginInfo.lName}`, loginInfo.fName, loginInfo.lName, loginInfo.email, loginInfo.password).then((res) => {
         navigate('/profile')
-        if (res) setUser(res as UserCollectionData);
+        if (res) dispatch({ type: 'SET_USER', payload: res as UserCollectionData });
       });
     } else {
       // signIn navigates on success and records failures on the auth state.
       signIn(loginInfo.email, loginInfo.password);
     }
-  }, [loginInfo, newUser, navigate, setUser, signIn])
+  }, [loginInfo, newUser, navigate, dispatch, signIn])
   return {
     loginInfo,
     handleChange,

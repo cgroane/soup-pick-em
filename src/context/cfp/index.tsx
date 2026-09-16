@@ -1,58 +1,61 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { CFPBracket, CFPRound, GamesAPIResult, Picks } from '../../model';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
+import { CFPBracket } from '../../model';
 import { FirebaseCFPInstance } from '../../firebase/cfp/cfp';
 import { getCFPGames } from '../../api/getGames';
-import { useGlobalContext } from '../user';
-import { useGroupContext } from '../group';
+import { useUserStateContext } from '../user/user-state';
+import { useGroupStateContext } from '../group/group-state';
 import FirebaseGroupsInstance from '../../firebase/group/group';
 import { PickHistory } from '../../pages/Picks/PicksTable';
 import { useUIStateContext } from 'context/ui/ui-state';
+import { CFPActions, CFPDispatchContext } from './cfp-dispatch';
+import { CFPState, CFPStateContext, initialCFPState } from './cfp-state';
 
-export type CFPContextValue = {
-  bracket: CFPBracket | null;
-  cfpPicks: { slateId: string; picks: Picks[] };
+export { cfpRound } from './cfp-state';
+
+export const cfpReducer = (state: CFPState, action: CFPActions): CFPState => {
+  switch (action.type) {
+    case 'SET_BRACKET':
+      return { ...state, bracket: action.payload };
+    case 'SET_CFP_PICKS':
+      return { ...state, cfpPicks: action.payload };
+    case 'ADD_CFP_PICK': {
+      const idx = state.cfpPicks.picks.findIndex((p) => p.matchup === action.payload.matchup);
+      const picks = idx >= 0
+        ? state.cfpPicks.picks.map((p, i) => i === idx ? action.payload : p)
+        : [...state.cfpPicks.picks, action.payload];
+      return { ...state, cfpPicks: { ...state.cfpPicks, picks } };
+    }
+    case 'SET_REFRESHING':
+      return { ...state, isRefreshing: action.payload };
+    case 'SET_SAVING':
+      return { ...state, isSaving: action.payload };
+    default:
+      return state;
+  }
+};
+
+export type CFPProviderValue = {
   fetchBracket: (year: number) => Promise<void>;
   refreshAndSaveBracket: (year: number) => Promise<void>;
-  addCfpPick: (pick: Picks) => void;
   saveCfpPicks: () => Promise<void>;
-  cfpRound: (game: GamesAPIResult) => CFPRound;
-  isRefreshing: boolean;
-  isSaving: boolean;
 };
 
-type ContextProp = {
-  children: React.ReactNode;
-};
+export const CFPContext = createContext({} as CFPProviderValue);
 
-export const CFPContext = createContext({} as CFPContextValue);
-
-export const cfpRound = (game: GamesAPIResult): CFPRound => {
-  const notes = (game.notes as string) ?? '';
-  if (notes.includes('First Round')) return 'firstRound';
-  if (notes.includes('Quarterfinal')) return 'quarterfinal';
-  if (notes.includes('Semifinal')) return 'semifinal';
-  return 'championship';
-};
-
-export default function CFPContextProvider({ children }: ContextProp) {
-  const { user } = useGlobalContext();
+export default function CFPContextProvider({ children }: React.PropsWithChildren) {
+  const [state, dispatch] = useReducer(cfpReducer, initialCFPState);
+  const { user } = useUserStateContext();
   const { seasonData } = useUIStateContext();
-  const { activeGroupId } = useGroupContext();
-  const [bracket, setBracket] = useState<CFPBracket | null>(null);
-  const [cfpPicks, setCfpPicks] = useState<{ slateId: string; picks: Picks[] }>({
-    slateId: '',
-    picks: [],
-  });
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const { activeGroupId } = useGroupStateContext();
+  const { cfpPicks } = state;
 
   const fetchBracket = useCallback(async (year: number) => {
     const data = await FirebaseCFPInstance.getBracket(year);
-    setBracket(data ?? null);
+    dispatch({ type: 'SET_BRACKET', payload: data ?? null });
   }, []);
 
   const refreshAndSaveBracket = useCallback(async (year: number) => {
-    setIsRefreshing(true);
+    dispatch({ type: 'SET_REFRESHING', payload: true });
     try {
       const games = await getCFPGames(year);
       const newBracket: CFPBracket = {
@@ -61,29 +64,17 @@ export default function CFPContextProvider({ children }: ContextProp) {
         updatedAt: new Date().toISOString(),
       };
       await FirebaseCFPInstance.saveBracket(newBracket);
-      setBracket(newBracket);
+      dispatch({ type: 'SET_BRACKET', payload: newBracket });
     } finally {
-      setIsRefreshing(false);
+      dispatch({ type: 'SET_REFRESHING', payload: false });
     }
-  }, []);
-
-  const addCfpPick = useCallback((pick: Picks) => {
-    setCfpPicks((prev) => {
-      const idx = prev.picks.findIndex((p) => p.matchup === pick.matchup);
-      if (idx >= 0) {
-        const updated = [...prev.picks];
-        updated.splice(idx, 1, pick);
-        return { ...prev, picks: updated };
-      }
-      return { ...prev, picks: [...prev.picks, pick] };
-    });
   }, []);
 
   const saveCfpPicks = useCallback(async () => {
     // CFP picks are group-scoped and must land on the same group path the cron
     // grader and Picks page read from (groups/{gid}/members/{uid}/picks/{cfp-year}).
     if (!user?.uid || !activeGroupId || !cfpPicks.slateId) return;
-    setIsSaving(true);
+    dispatch({ type: 'SET_SAVING', payload: true });
     try {
       await FirebaseGroupsInstance.saveMemberPicks(activeGroupId, user.uid, cfpPicks.slateId, {
         name: `${user.fName} ${user.lName}`,
@@ -94,7 +85,7 @@ export default function CFPContextProvider({ children }: ContextProp) {
         userId: user.uid,
       });
     } finally {
-      setIsSaving(false);
+      dispatch({ type: 'SET_SAVING', payload: false });
     }
   }, [user, activeGroupId, cfpPicks, seasonData?.Season]);
 
@@ -103,10 +94,7 @@ export default function CFPContextProvider({ children }: ContextProp) {
     if (!user?.uid || !seasonData?.Season) return;
     const slateId = `cfp-${seasonData.Season}`;
     const existing = user.pickHistory?.find((p: PickHistory) => p.slateId === slateId);
-    setCfpPicks({
-      slateId,
-      picks: existing?.picks ?? [],
-    });
+    dispatch({ type: 'SET_CFP_PICKS', payload: { slateId, picks: existing?.picks ?? [] } });
   }, [user?.uid, user?.pickHistory, seasonData?.Season]);
 
   // Fetch bracket once season is known AND the user is authed — the cfpBracket
@@ -117,23 +105,20 @@ export default function CFPContextProvider({ children }: ContextProp) {
     fetchBracket(seasonData.Season);
   }, [fetchBracket, seasonData?.Season, user?.uid]);
 
+  const value = useMemo<CFPProviderValue>(
+    () => ({ fetchBracket, refreshAndSaveBracket, saveCfpPicks }),
+    [fetchBracket, refreshAndSaveBracket, saveCfpPicks]
+  );
+
   return (
-    <CFPContext.Provider
-      value={{
-        bracket,
-        cfpPicks,
-        fetchBracket,
-        refreshAndSaveBracket,
-        addCfpPick,
-        saveCfpPicks,
-        cfpRound,
-        isRefreshing,
-        isSaving,
-      }}
-    >
-      {children}
+    <CFPContext.Provider value={value}>
+      <CFPDispatchContext.Provider value={dispatch}>
+        <CFPStateContext.Provider value={state}>
+          {children}
+        </CFPStateContext.Provider>
+      </CFPDispatchContext.Provider>
     </CFPContext.Provider>
   );
 }
 
-export const useCFPContext = (): CFPContextValue => useContext(CFPContext);
+export const useCFPContext = (): CFPProviderValue => useContext(CFPContext);

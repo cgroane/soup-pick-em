@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import { useCFPContext } from '../../context/cfp';
-import { useGlobalContext } from '../../context/user';
+import { useCFPStateContext } from '../../context/cfp/cfp-state';
+import { useCFPDispatchContext } from '../../context/cfp/cfp-dispatch';
+import { useUserStateContext } from '../../context/user/user-state';
 import BracketDisplay from '../../components/BracketDisplay';
 import { Picks } from '../../model';
 import { Button } from '../../components/ui/button';
@@ -8,15 +10,17 @@ import { Loader2 } from 'lucide-react';
 import { useUIStateContext } from 'context/ui/ui-state';
 
 const CFPBracket: React.FC = () => {
-  const { bracket, cfpPicks, addCfpPick, saveCfpPicks, isSaving } = useCFPContext();
-  const { user } = useGlobalContext();
+  const { bracket, cfpPicks, isSaving } = useCFPStateContext();
+  const { saveCfpPicks } = useCFPContext();
+  const cfpDispatch = useCFPDispatchContext();
+  const { user } = useUserStateContext();
   const { seasonData } = useUIStateContext();
 
   const handlePick = useCallback(
     (pick: Picks) => {
-      addCfpPick(pick);
+      cfpDispatch({ type: 'ADD_CFP_PICK', payload: pick });
     },
-    [addCfpPick]
+    [cfpDispatch]
   );
 
   if (!bracket?.games?.length) {

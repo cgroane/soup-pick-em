@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useGlobalContext } from '../context/user';
+import { useUserStateContext } from '../context/user/user-state';
 import { UserRoles } from '../utils/constants';
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ import { useAuthContext } from 'context/auth';
 const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const { signOut } = useAuthContext();
-  const { user } = useGlobalContext();
+  const { user } = useUserStateContext();
   const { usePostSeason } = useUIStateContext();
 
   const menuItems = useMemo(() => {
