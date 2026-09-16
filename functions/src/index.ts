@@ -4,4 +4,7 @@ import UpdateScores from "./UpdateScores";
 
 initializeApp();
 
-exports.updateScores = onSchedule("00 12 * * TUE", UpdateScores.updateScores);
+exports.updateScores = onSchedule(
+  {schedule: "00 22 * * TUE", timeZone: "America/Chicago"},
+  UpdateScores.updateScores
+);
