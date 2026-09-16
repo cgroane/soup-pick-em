@@ -13,6 +13,8 @@ middleware.
 | `api/mcp/server.ts` | Builds a per-request `McpServer` with the caller's uid |
 | `api/mcp/tools/cfbd.ts` | Read-only CFBD analytics tools |
 | `api/mcp/tools/app.ts` | Group-scoped reads of slates, picks, leaderboards |
+| `api/mcp/tools/write.ts` | `set_slate`, registered only with the `write` scope |
+| `api/slates/setSlate.ts` | Slate write: authz, validation, pick reconciliation |
 | `api/mcp/auth.ts` | `requireMcpAuth` — opaque bearer token verification |
 | `api/mcp/tokenStore.ts` | Token mint/verify/revoke, SHA-256 digests only |
 | `api/mcp/oauth.ts` | OAuth 2.1 authorization server + discovery documents |
@@ -49,9 +51,17 @@ the user in with the same Firebase web SDK the app uses and posts the resulting
 ID token to `/approve`, which verifies it with the Admin SDK and then discards
 it.
 
-Set `PUBLIC_BASE_URL` in production. Behind Railway's proxy the request host is
-the internal address, and every discovery document and redirect must advertise
-the public origin.
+The token endpoint accepts `application/x-www-form-urlencoded`, which RFC 6749
+requires and every real client sends. `bodyParser.json()` alone leaves `req.body`
+empty for those requests, so `grant_type` reads as `undefined` and the exchange
+fails with `unsupported_grant_type` — hence the `express.urlencoded` on
+`oauthRouter`. A JSON-only test will not catch this.
+
+Set `PUBLIC_BASE_URL` to the service's own public origin (e.g.
+`https://soup-pick-em-production.up.railway.app`). Behind Railway's proxy the
+request host is the internal address, and every discovery document and redirect
+advertises this value — point it at localhost and clients are told the
+authorization server lives on their own machine.
 
 ### Personal access tokens
 
@@ -82,9 +92,14 @@ exactly once; only its SHA-256 digest is stored.
 
 ## Scopes
 
-`read` grants the group-scoped tools; `write` is defined but no tool consumes
-it yet. Submitting picks is a consequential action and stays behind an
-explicitly granted scope — a read-only token can never reach it.
+`read` grants the group-scoped read tools. `write` grants `set_slate` and
+nothing else; a read-only token never sees the tool, because `buildMcpServer`
+registers it only when the scope is present.
+
+**A scope is not a role.** `write` only means the token may *attempt* a write —
+`setSlate` still requires the caller to hold `slate-picker` in that group (or the
+global admin claim), checked server-side on every call. A member who grants
+`write` at consent still cannot set a slate.
 
 ## Tools
 
@@ -105,6 +120,66 @@ so a CFBD question never fails on an unrelated outage.
 
 `list_my_groups` · `get_slate` · `get_group_leaderboard` · `get_my_picks` ·
 `get_my_record`
+
+**Writes** (`write` scope + `slate-picker` role)
+
+`set_slate` — replaces a group's slate for one week.
+
+## Setting a slate
+
+`POST /api/groups/:gid/slates` is the one way a slate is written. The `set_slate`
+tool is a client of it, not a parallel path:
+
+```
+set_slate
+  -> POST /api/groups/:gid/slates          (requireAuth + requireGroupRole)
+       -> GET /api/game-data/matchups      (same bearer token)
+            -> CFBD
+```
+
+The tool holds a uid, not a Firebase ID token, so it mints one with
+`createCustomToken` and exchanges it through Identity Toolkit before calling the
+endpoint. The request therefore passes `requireAuth` and
+`requireGroupRole(["slate-picker"])` exactly as a browser request does, and the
+tool reports whatever the endpoint returns — including its error `message`.
+Custom claims (the global `admin` flag) survive that exchange, so admin
+behaviour is unchanged.
+
+`setSlate` gets the week's games by calling `/api/game-data/matchups`, passing
+the caller's token through, so the games/lines/rankings merge lives only in
+`api/routes/matchups.ts`.
+
+The service repeats the slate-picker check that `requireGroupRole` already
+performed. That is deliberate: it keeps `setSlate` safe to call from anywhere,
+and it needs the global-admin answer regardless, to decide whether the kickoff
+lock is overridden.
+
+```
+POST /api/groups/:gid/slates
+{ "week": 3, "year": 2026, "seasonType": "regular", "gameIds": [401858225, ...] }
+```
+
+Rejections come back as `{ code, message }`: `not_slate_picker` (403),
+`wrong_game_count` / `duplicate_games` / `unknown_games` (400), `slate_locked`
+(409), `group_not_found` (404).
+
+Rules enforced, all matching the app:
+
+- Exactly 10 games, no duplicates, each present in that week's priced games — a
+  game with no point spread is not selectable, since there is nothing to cover.
+- Locked once the week's **first game** kicks off, via `arePicksLocked` from
+  `src/utils/pickLock.ts` — the same helper the UI's `canEdit` uses, applied to
+  the whole week's games rather than the slate's. A global admin is never locked
+  out.
+- The write replaces the slate. Member picks on surviving games are kept; picks
+  on dropped games are discarded and replaced with unpicked placeholders
+  (`selection: null`), which `gradePick` treats as ungradeable. The response
+  reports `added`, `removed` and `membersWithCancelledPicks`.
+
+The web app does **not** use this endpoint yet — `CreateSlate` still writes
+Firestore directly through `FirebaseSlatesClass.addSlate`, so none of the above
+validation applies to it. Migrating the client would make this the single slate
+write path.
 
 Every group-scoped tool routes through `resolveGroup`, which proves the caller
 belongs to the `gid` before any read. A token authenticates a user; it does not

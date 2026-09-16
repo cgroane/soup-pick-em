@@ -1,6 +1,8 @@
 import express from "express";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireGroupRole } from "../middlware";
+import { setSlate, SeasonPhase } from "../slates/setSlate";
+import { publicBaseUrl } from "../mcp/auth";
 
 const groupsRouter = express.Router();
 
@@ -225,6 +227,47 @@ groupsRouter.post(
 
       await batch.commit();
       return res.json({ message: `slate-picker set to ${uid} for group ${gid}` });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+groupsRouter.post(
+  "/:gid/slates",
+  requireGroupRole(["slate-picker"]),
+  async (req: express.Request, res: express.Response) => {
+    const uid = (req as express.Request & { user?: { uid: string } }).user!.uid;
+    const { week, year, seasonType, gameIds } = req.body as {
+      week?: number;
+      year?: number;
+      seasonType?: SeasonPhase;
+      gameIds?: number[];
+    };
+
+    if (typeof week !== "number" || typeof year !== "number") {
+      return res.status(400).json({ message: "week and year are required numbers" });
+    }
+    if (!Array.isArray(gameIds) || gameIds.some((id) => typeof id !== "number")) {
+      return res.status(400).json({ message: "gameIds must be an array of numbers" });
+    }
+
+    try {
+      const result = await setSlate({
+        gid: req.params.gid,
+        uid,
+        baseUrl: publicBaseUrl(req),
+        authorization: req.headers.authorization ?? "",
+        week,
+        year,
+        seasonType: seasonType === "postseason" ? "postseason" : "regular",
+        gameIds,
+      });
+      if (!result.ok) {
+        return res.status(result.status).json({ code: result.code, message: result.message });
+      }
+      return res.status(200).json(result);
     } catch (err) {
       console.error(err);
       return res.status(500).json({ message: "Server error" });
