@@ -38,6 +38,7 @@ const redirectAllowed = (client: OAuthClient, uri: string) =>
   client.redirectUris.some((u) => u === uri);
 
 export const oauthRouter = express.Router();
+oauthRouter.use(express.urlencoded({ extended: false }));
 
 oauthRouter.post("/register", async (req: express.Request, res: express.Response) => {
   const body = req.body as {
@@ -173,6 +174,7 @@ oauthRouter.post("/approve", async (req: express.Request, res: express.Response)
 });
 
 oauthRouter.post("/token", async (req: express.Request, res: express.Response) => {
+  res.set("Cache-Control", "no-store");
   const grantType = (req.body as Record<string, string>)?.grant_type;
   if (grantType === "authorization_code") return exchangeCode(req, res);
   if (grantType === "refresh_token") return refreshGrant(req, res);
