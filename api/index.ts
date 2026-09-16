@@ -11,8 +11,9 @@ import matchupsRouter from "./routes/matchups";
 import admin from "firebase-admin";
 import adminRouter from './routes/admin';
 import groupsRouter from './routes/groups';
-import axios from 'axios';
-import { SeasonDetailsData } from 'api/schema/sportsDataIO';
+import mcpRouter from './routes/mcp';
+import { wellKnownRouter } from './mcp/oauth';
+import { getCurrentSeasonDetails } from './currentWeek';
 // import { theOddsInstance } from '@/api';
 
 export interface CFBDRequestQuery {
@@ -63,50 +64,23 @@ client.setConfig({
 })
 
 const app = express();
-app.use(cors());
+// `WWW-Authenticate` carries the OAuth discovery pointer for MCP clients, and a
+// browser-based client cannot read it cross-origin unless it is exposed.
+app.use(cors({ exposedHeaders: ["WWW-Authenticate", "Mcp-Session-Id", "MCP-Protocol-Version"] }));
 app.use(bodyParser.json());
 app.use("/api/cron", updateScores);
 app.use("/api/betting", oddsRouter);
 app.use("/api/game-data", matchupsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/groups", groupsRouter);
+app.use("/api/mcp", mcpRouter);
+// RFC 8414 / RFC 9728 define these relative to the origin, so they are
+// mounted at the root rather than under /api — a client looks nowhere else.
+app.use(wellKnownRouter);
 
 app.get(`/api/current-week`, async (_req: express.Request, res: express.Response) => {
   try {
-    const currentSeasonDetails = await axios.get<SeasonDetailsData>(`https://api.sportsdata.io/v3/cfb/scores/json/CurrentSeasonDetails`, {
-      headers: {
-        'Ocp-Apim-Subscription-Key': process.env.REACT_APP_MATCHUPS_API_KEY ?? '',
-      }
-    });
-    const data = currentSeasonDetails.data;
-    // Canonical seasonType is the lowercase CFBD vocabulary ('regular' |
-    // 'postseason' | 'offseason') declared on SeasonDetailsData. Preseason is
-    // collapsed into 'offseason'. Downstream consumers (CFBD queries,
-    // SelectWeek, fetchMatchups, Profile) all compare against these lowercase
-    // words, so returning the uppercase SeasonTypes enum here silently breaks
-    // every one of them (e.g. CFBD returns no games for seasonType=REGULAR).
-    const seasonType: SeasonDetailsData['seasonType'] =
-      data.ApiSeason.includes('OFF') || data?.ApiSeason?.includes('PRE')
-        ? 'offseason'
-        : data.ApiSeason.includes('POST')
-          ? 'postseason'
-          : 'regular';
-    res.status(200).json({
-      ...data,
-      /**
-       * local mock data
-      ApiWeek: 5,
-      Season: 2024,
-      EndYear: 2025,
-      StartYear: 2024,
-      ApiSeason: "2024",
-      Description: "2024",
-      isOffseason: true,
-      seasonType: "regular",
-       */
-      isOffseason: seasonType === 'offseason',
-      seasonType,
-    });
+    res.status(200).json(await getCurrentSeasonDetails());
     return;
   } catch (err) {
     res.status(500).send(err)
