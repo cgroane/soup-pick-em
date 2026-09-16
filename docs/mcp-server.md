@@ -13,7 +13,7 @@ middleware.
 | `api/mcp/server.ts` | Builds a per-request `McpServer` with the caller's uid |
 | `api/mcp/tools/cfbd.ts` | Read-only CFBD analytics tools |
 | `api/mcp/tools/app.ts` | Group-scoped reads of slates, picks, leaderboards |
-| `api/mcp/tools/write.ts` | `set_slate`, registered only with the `write` scope |
+| `api/mcp/tools/write.ts` | `submit_picks` and `set_slate`, registered only with the `write` scope |
 | `api/slates/setSlate.ts` | Slate write: authz, validation, pick reconciliation |
 | `api/mcp/auth.ts` | `requireMcpAuth` — opaque bearer token verification |
 | `api/mcp/tokenStore.ts` | Token mint/verify/revoke, SHA-256 digests only |
@@ -121,9 +121,10 @@ so a CFBD question never fails on an unrelated outage.
 `list_my_groups` · `get_slate` · `get_group_leaderboard` · `get_my_picks` ·
 `get_my_record`
 
-**Writes** (`write` scope + `slate-picker` role)
+**Writes** (`write` scope)
 
-`set_slate` — replaces a group's slate for one week.
+`submit_picks` — records the caller's own picks (any member).
+`set_slate` — replaces a group's slate for one week (slate-picker only).
 
 ## Setting a slate
 
@@ -175,6 +176,46 @@ Rules enforced, all matching the app:
   on dropped games are discarded and replaced with unpicked placeholders
   (`selection: null`), which `gradePick` treats as ungradeable. The response
   reports `added`, `removed` and `membersWithCancelledPicks`.
+
+## Submitting picks
+
+`POST /api/groups/:gid/picks`, behind `requireGroupRole(["member"])`. The
+`submit_picks` tool calls it the same way `set_slate` calls the slate endpoint —
+mint an ID token, POST, report back what the endpoint returned. Unlike
+`setSlate` there is no service module: the logic has one caller and lives in the
+route.
+
+```
+POST /api/groups/:gid/picks
+{ "week": 3, "year": 2026, "seasonType": "regular",
+  "picks": [ { "gameId": 401858225, "selection": "home" } ] }
+```
+
+`selection` is only ever `"home"`, `"away"` or `"push"`. The server materialises
+the stored outcome from the slate's own spread, so a caller cannot submit a pick
+against a line that was never offered — there is no field through which to pass
+one. A push is `{ name: "PUSH", point: "0", pointValue: 0, id: 0 }`, matching
+what `PickCard` writes.
+
+Rejections: `403` (not a member), `no_slate` (404), `picks_locked` (409),
+`unknown_game` / `bad_selection` / `duplicate_game` (400).
+
+Other behaviour:
+
+- Picks **merge**. Sending three games leaves the other seven as they were, so
+  an agent can work through a slate incrementally. The response returns
+  `submitted`, `complete` and `unpickedGameIds`.
+- Locked once the **slate's** first game kicks off (`arePicksLocked` against
+  `slate.games`, per that helper's contract — the slate's games for picks, the
+  week's games for slate edits). Global admins are exempt. This is the kickoff
+  lock the `/pick` page is missing (architecture review F5); adding it here does
+  not fix that page.
+- A caller can only ever write their own `members/{uid}/picks` document — the
+  uid comes from the verified token, never from the request body.
+- Unlike `MakePicks`, unpicked games are **not** auto-filled with PUSH. The UI
+  does that on submit; here they stay `selection: null` and the response reports
+  them as incomplete, so an agent never silently places bets the user did not
+  ask for.
 
 The web app does **not** use this endpoint yet — `CreateSlate` still writes
 Firestore directly through `FirebaseSlatesClass.addSlate`, so none of the above

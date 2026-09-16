@@ -1,7 +1,10 @@
 import express from "express";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { requireAuth, requireGroupRole } from "../middlware";
-import { setSlate, SeasonPhase } from "../slates/setSlate";
+import { setSlate, SeasonPhase, slateIdFor } from "../slates/setSlate";
+import { GamesAPIResult, GamesAPIResponseOutcome } from "model";
+import { PickHistory } from "pages/Picks/PicksTable";
+import { arePicksLocked } from "utils/pickLock";
 import { publicBaseUrl } from "../mcp/auth";
 
 const groupsRouter = express.Router();
@@ -268,6 +271,133 @@ groupsRouter.post(
         return res.status(result.status).json({ code: result.code, message: result.message });
       }
       return res.status(200).json(result);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+groupsRouter.post(
+  "/:gid/picks",
+  requireGroupRole(["member"]),
+  async (req: express.Request, res: express.Response) => {
+    const uid = (req as express.Request & { user?: { uid: string; admin?: boolean } }).user!.uid;
+    const isAdmin = !!(req as express.Request & { user?: { admin?: boolean } }).user?.admin;
+    const { week, year, seasonType, picks } = req.body as {
+      week?: number;
+      year?: number;
+      seasonType?: SeasonPhase;
+      picks?: Array<{ gameId?: number; selection?: string }>;
+    };
+
+    if (typeof week !== "number" || typeof year !== "number") {
+      return res.status(400).json({ code: "bad_request", message: "week and year are required numbers" });
+    }
+    if (!Array.isArray(picks) || !picks.length) {
+      return res.status(400).json({ code: "bad_request", message: "picks must be a non-empty array" });
+    }
+
+    const gid = req.params.gid;
+    const slateId = slateIdFor(week, year, seasonType === "postseason" ? "postseason" : "regular");
+    const db = getFirestore();
+
+    try {
+      const slateSnap = await db.collection("groups").doc(gid).collection("slates").doc(slateId).get();
+      if (!slateSnap.exists) {
+        return res.status(404).json({ code: "no_slate", message: `No slate ${slateId} for this group.` });
+      }
+      const slate = slateSnap.data() as { week?: number; games?: GamesAPIResult[] };
+      const games = slate.games ?? [];
+
+      if (arePicksLocked(games, isAdmin)) {
+        return res.status(409).json({
+          code: "picks_locked",
+          message: `Picks for ${slateId} are locked — the first game has already kicked off.`,
+        });
+      }
+
+      const byId = new Map(games.map((g) => [g.id, g]));
+      const seen = new Set<number>();
+      const resolved: Array<{ gameId: number; selection: GamesAPIResponseOutcome }> = [];
+
+      for (const entry of picks) {
+        const gameId = entry?.gameId;
+        const choice = (entry?.selection ?? "").toLowerCase();
+        if (typeof gameId !== "number" || !byId.has(gameId)) {
+          return res.status(400).json({
+            code: "unknown_game",
+            message: `Game ${gameId} is not in slate ${slateId}.`,
+          });
+        }
+        if (seen.has(gameId)) {
+          return res.status(400).json({
+            code: "duplicate_game",
+            message: `Game ${gameId} was listed more than once.`,
+          });
+        }
+        seen.add(gameId);
+
+        const outcomes = byId.get(gameId)?.outcomes;
+        if (choice === "push") {
+          resolved.push({ gameId, selection: { name: "PUSH", point: "0", pointValue: 0, id: 0 } });
+        } else if (choice === "home" && outcomes?.home) {
+          resolved.push({ gameId, selection: outcomes.home });
+        } else if (choice === "away" && outcomes?.away) {
+          resolved.push({ gameId, selection: outcomes.away });
+        } else {
+          return res.status(400).json({
+            code: "bad_selection",
+            message: `selection for game ${gameId} must be "home", "away" or "push".`,
+          });
+        }
+      }
+
+      const pickRef = db
+        .collection("groups").doc(gid)
+        .collection("members").doc(uid)
+        .collection("picks").doc(slateId);
+      const existing = (await pickRef.get()).data() as PickHistory | undefined;
+      const existingById = new Map((existing?.picks ?? []).map((pk) => [pk.matchup, pk]));
+      const chosen = new Map(resolved.map((r) => [r.gameId, r.selection]));
+
+      const userSnap = await db.collection("users").doc(uid).get();
+      const u = (userSnap.data() ?? {}) as { fName?: string; lName?: string };
+
+      const merged = games.map((game) => {
+        const selection = chosen.get(game.id) ?? existingById.get(game.id)?.selection ?? null;
+        return {
+          matchup: game.id,
+          userId: selection ? uid : existingById.get(game.id)?.userId ?? null,
+          isCorrect: existingById.get(game.id)?.isCorrect ?? false,
+          week: game.week ?? slate.week ?? week,
+          selection,
+        };
+      });
+
+      await pickRef.set({
+        ...existing,
+        name: `${u.fName ?? ""} ${u.lName ?? ""}`.trim(),
+        slateId,
+        week: slate.week ?? week,
+        year,
+        userId: uid,
+        picks: merged,
+      });
+
+      const unpicked = merged.filter((pk) => !pk.selection).map((pk) => pk.matchup);
+      return res.status(200).json({
+        slateId,
+        submitted: resolved.length,
+        totalGames: games.length,
+        complete: unpicked.length === 0,
+        unpickedGameIds: unpicked,
+        picks: merged.map((pk) => ({
+          gameId: pk.matchup,
+          selection: pk.selection ? (pk.selection as GamesAPIResponseOutcome).name : null,
+          point: pk.selection ? (pk.selection as GamesAPIResponseOutcome).point : null,
+        })),
+      });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ message: "Server error" });

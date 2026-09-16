@@ -116,4 +116,70 @@ export const registerWriteTools = (server: McpServer, uid: string, baseUrl?: str
       }
     }
   );
+
+  server.registerTool(
+    "submit_picks",
+    {
+      title: "Submit picks",
+      description:
+        "Submit or change your own picks for a group's slate — which side of the spread you take in each game. Any member can do this, for themselves only, until the slate's first game kicks off. Call get_slate first to see the games and their spreads. Picks merge into what you already have, so you can send a few at a time; the response reports which games are still unpicked. Because these are real entries in a standing competition, confirm the exact selections with the user before calling.",
+      inputSchema: z.object({
+        gid: z.string().optional().describe("Group id. Optional when you belong to exactly one group."),
+        week: z.number().int().describe("Week number of the slate."),
+        year: z.number().int().describe("Season year of the slate."),
+        seasonType: z.enum(["regular", "postseason"]).default("regular"),
+        picks: z
+          .array(
+            z.object({
+              gameId: z.number().int().describe("A game id from the slate."),
+              selection: z
+                .enum(["home", "away", "push"])
+                .describe("Which side covers: the home team, the away team, or an exact push."),
+            })
+          )
+          .min(1)
+          .describe("One entry per game you are picking. Spreads are taken from the stored slate, never from you."),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    },
+    async (args: {
+      gid?: string;
+      week: number;
+      year: number;
+      seasonType: "regular" | "postseason";
+      picks: Array<{ gameId: number; selection: "home" | "away" | "push" }>;
+    }) => {
+      if (!baseUrl) {
+        return failed("Cannot reach the picks endpoint: set PUBLIC_BASE_URL on this server.");
+      }
+      const group = await resolveGroup(uid, args.gid);
+      if (!group.ok) return failed(group.message);
+
+      try {
+        const idToken = await idTokenFor(uid);
+        const res = await fetch(`${baseUrl}/api/groups/${group.gid}/picks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            week: args.week,
+            year: args.year,
+            seasonType: args.seasonType,
+            picks: args.picks,
+          }),
+        });
+        const body = (await res.json()) as Record<string, unknown>;
+        if (!res.ok) {
+          const message = (body.message as string) ?? `The picks endpoint returned ${res.status}.`;
+          return failed(
+            res.status === 403
+              ? `${message} — you must be a member of ${group.name} to pick.`
+              : message
+          );
+        }
+        return jsonResult({ group: group.name, ...body });
+      } catch (err) {
+        return failed(`Failed to submit picks: ${(err as Error).message}`);
+      }
+    }
+  );
 };

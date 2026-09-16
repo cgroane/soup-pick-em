@@ -10,7 +10,7 @@ type ConsentParams = {
 
 const SCOPE_COPY: Record<string, string> = {
   read: "Read your groups, slates, picks, and records",
-  write: "Set your group's weekly slate (slate-pickers only)",
+  write: "Submit your picks, and set your group's slate if you are its slate-picker",
 };
 
 const esc = (s: string) =>
