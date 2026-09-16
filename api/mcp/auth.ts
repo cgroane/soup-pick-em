@@ -27,6 +27,16 @@ export const publicBaseUrl = (req: Request): string => {
 
 export const resourceIdentifier = (req: Request): string => `${publicBaseUrl(req)}/api/mcp`;
 
+export const originFromFetchRequest = (request?: globalThis.Request): string | undefined => {
+  const configured = process.env.PUBLIC_BASE_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  if (!request) return undefined;
+  const parsed = new URL(request.url);
+  const proto = request.headers.get("x-forwarded-proto")?.split(",")[0] ?? parsed.protocol.replace(":", "");
+  const host = request.headers.get("x-forwarded-host")?.split(",")[0] ?? request.headers.get("host") ?? parsed.host;
+  return `${proto}://${host}`;
+};
+
 const challenge = (req: Request, res: Response, error: string, description: string) => {
   const metadata = `${publicBaseUrl(req)}/.well-known/oauth-protected-resource`;
   res.setHeader(

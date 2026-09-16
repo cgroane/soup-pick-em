@@ -2,7 +2,7 @@ import express from "express";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { requireAuth } from "../middlware";
-import { McpAuthenticatedRequest, requireMcpAuth } from "../mcp/auth";
+import { McpAuthenticatedRequest, originFromFetchRequest, requireMcpAuth } from "../mcp/auth";
 import { buildMcpServer } from "../mcp/server";
 import { oauthRouter } from "../mcp/oauth";
 import { listTokens, mintToken, normalizeScopes, revokeTokenByHash } from "../mcp/tokenStore";
@@ -57,7 +57,11 @@ const handler = createMcpHandler(
   (ctx) => {
     const extra = ctx.authInfo?.extra as { uid?: string } | undefined;
     if (!extra?.uid) throw new Error("MCP request reached the factory without an authenticated uid");
-    return buildMcpServer(extra.uid, (ctx.authInfo?.scopes ?? ["read"]) as ("read" | "write")[]);
+    return buildMcpServer(
+      extra.uid,
+      (ctx.authInfo?.scopes ?? ["read"]) as ("read" | "write")[],
+      originFromFetchRequest(ctx.requestInfo)
+    );
   },
   { onerror: (err) => console.error("[mcp]", err) }
 );
