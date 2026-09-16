@@ -51,6 +51,8 @@ updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: expres
       process.env.REACT_APP_SEASON_KEY === "postseason" ||
       seasonInfo.ApiSeason.includes("POST");
 
+    let slate: string;
+
     if (isCFP) {
       // Fetch the postseason games once and reuse for both graders: the CFP
       // bracket (cfp-{year}) and any group's postseason bowl slate (…POST).
@@ -60,11 +62,12 @@ updateScoresRouter.post("/update-scores", requireCronSecret, async (_req: expres
       const postseasonGames = freshGamesResp?.data ?? [];
       await processCFP(db, seasonInfo.Season, postseasonGames);
       await processPostseasonSlates(db, seasonInfo.Season, postseasonGames);
+      slate = `cfp-${seasonInfo.Season}`;
     } else {
-      await processRegularSeason(db, seasonInfo);
+      slate = await processRegularSeason(db, seasonInfo);
     }
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, slate });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: String(err) });
@@ -191,7 +194,7 @@ async function gradeSlateForGroup(
 async function processRegularSeason(
   db: ReturnType<typeof getFirestore>,
   seasonInfo: SeasonDetails
-): Promise<void> {
+): Promise<string> {
   const week = seasonInfo.ApiWeek - 1;
   const year = seasonInfo.Season;
   const slateId = `w${week}-${year}`;
@@ -212,6 +215,8 @@ async function processRegularSeason(
 
     await gradeSlateForGroup(db, gid, slateRef, slateData, year, freshGames);
   }
+
+  return slateId;
 }
 
 /**

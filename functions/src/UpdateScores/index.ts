@@ -27,7 +27,13 @@ export default {
         logger.error("update-scores failed", {url, status: res.status, body});
         return;
       }
-      logger.log("update-scores ok", {status: res.status, body});
+      let slate = "unknown";
+      try {
+        slate = JSON.parse(body).slate ?? "unknown";
+      } catch (err) {
+        slate = "unparsed";
+      }
+      logger.log(`update scores ${slate} ok`, {status: res.status, body});
       return;
     } catch (error) {
       logger.error("Error updating scores:", error);
