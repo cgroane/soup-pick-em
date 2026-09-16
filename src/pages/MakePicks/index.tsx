@@ -2,12 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePickContext } from '../../context/pick';
 import PickCard from './PickCard';
 import { Picks } from '../../model';
-import { useGlobalContext } from '../../context/user';
+import { useUserStateContext } from '../../context/user/user-state';
+import { useUserDispatchContext } from '../../context/user/user-dispatch';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../components/Modal';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import FirebaseGroupsInstance from '../../firebase/group/group';
-import { useGroupContext } from '../../context/group';
+import { useGroupStateContext } from '../../context/group/group-state';
 import { Button } from '../../components/ui/button';
 import { UserRoles } from '../../utils/constants';
 import { arePicksLocked } from '../../utils/pickLock';
@@ -18,8 +19,9 @@ import { useUIDispatchContext } from 'context/ui/ui-dispatch';
 const MakePicks: React.FC = () => {
   const { fetchSlate, getUserPicks } = usePickContext();
   const { picks, slate } = usePickState();
-  const { user, setUser } = useGlobalContext();
-  const { activeGroupId } = useGroupContext();
+  const { user } = useUserStateContext();
+  const userDispatch = useUserDispatchContext();
+  const { activeGroupId } = useGroupStateContext();
   const navigate = useNavigate();
   const { modalOpen, seasonData, usePostSeason } = useUIStateContext();
   const dispatch = useUIDispatchContext();
@@ -86,13 +88,13 @@ const MakePicks: React.FC = () => {
       });
       // Refresh the current user's group picks so the UI reflects the save.
       const refreshed = await FirebaseGroupsInstance.getMemberPicks(activeGroupId, user.uid);
-      setUser((prev) => (prev ? { ...prev, pickHistory: refreshed } : prev));
+      userDispatch({ type: 'PATCH_USER', payload: { pickHistory: refreshed } });
       setSubmitState('saved');
     } catch (err) {
       console.error('Error saving picks:', err);
       setSubmitState('error');
     }
-  }, [navigate, dispatch, picks, user, setUser, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
+  }, [navigate, dispatch, picks, user, userDispatch, seasonData?.Season, slate?.week, ifMissingGames, activeGroupId, locked]);
 
   const picksCount = picks.picks.filter((p) => !!p.selection).length;
 

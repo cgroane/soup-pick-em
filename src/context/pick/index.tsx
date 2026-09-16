@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer, useRef } from "react";
 import { Slate } from "../../model"
-import { useGlobalContext } from "../user";
+import { useUserStateContext } from "../user/user-state";
 import FirebaseGroupsInstance from "../../firebase/group/group";
-import { useGroupContext } from "../group";
+import { useGroupStateContext } from "../group/group-state";
 import { LoadingState } from "../ui";
 import { PickHistory } from "../../pages/Picks/PicksTable";
 import { initialPickState, PicksState, PickStateContext } from "./pick-state";
@@ -57,8 +57,8 @@ export const PickContext = createContext({} as PickValueProp);
 
 const PickProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(pickReducer, initialPickState);
-  const { user } = useGlobalContext();
-  const { activeGroupId } = useGroupContext();
+  const { user } = useUserStateContext();
+  const { activeGroupId } = useGroupStateContext();
 
   const getUserPicks = useCallback(() => {
     if (!user?.pickHistory || !state.slate?.uniqueWeek) return;

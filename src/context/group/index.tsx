@@ -4,57 +4,62 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useReducer,
 } from 'react';
-import { Group, GroupMembership, GroupRole } from '../../model';
 import FirebaseGroupsInstance from '../../firebase/group/group';
 import { useAuthStateContext } from 'context/auth/auth-state';
+import { GroupActions, GroupDispatchContext } from './group-dispatch';
+import { GroupState, GroupStateContext, initialGroupState } from './group-state';
 
 const ACTIVE_GROUP_KEY = 'activeGroupId';
 
-export type GroupValueProp = {
-  memberships: GroupMembership[];
-  activeGroupId: string | undefined;
-  activeGroup: Group | undefined;
-  activeRoles: GroupRole[];
-  /** True when the user holds the slate-picker role in the active group. */
-  isSlatePicker: boolean;
-  isGroupOwner: boolean;
+export const groupReducer = (state: GroupState, action: GroupActions): GroupState => {
+  switch (action.type) {
+    case 'SET_MEMBERSHIPS': {
+      const { memberships, storedGroupId } = action.payload;
+      // Resolve the active group now that we're authed and know the real
+      // memberships: prefer an in-session selection, then the stored preference,
+      // and only accept it if it's still a group the user belongs to (E3);
+      // otherwise fall back to the first membership.
+      const candidate = state.activeGroupId ?? storedGroupId;
+      return {
+        ...state,
+        memberships,
+        activeGroupId: candidate && memberships.some((m) => m.gid === candidate) ? candidate : memberships[0]?.gid,
+      };
+    }
+    case 'SET_ACTIVE_GROUP_ID':
+      return { ...state, activeGroupId: action.payload };
+    case 'SET_ACTIVE_GROUP':
+      return { ...state, activeGroup: action.payload };
+    default:
+      return state;
+  }
+};
+
+export type GroupProviderValue = {
   setActiveGroup: (gid: string) => void;
   refreshMemberships: () => Promise<void>;
   /** Re-fetch the active group doc (after an owner edits name/visibility). */
   refreshActiveGroup: () => Promise<void>;
 };
 
-export const GroupContext = createContext({} as GroupValueProp);
+export const GroupContext = createContext({} as GroupProviderValue);
 
 const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [state, dispatch] = useReducer(groupReducer, initialGroupState);
   const { uid } = useAuthStateContext();
-  const [memberships, setMemberships] = useState<GroupMembership[]>([]);
-  // Intentionally NOT seeded from localStorage: doing so exposes a group id to
-  // downstream readers (slate/pick fetches) before auth resolves on a cold load,
-  // firing UNAUTHENTICATED Firestore reads that the group-scoped rules reject.
-  // The stored preference is applied in refreshMemberships once we have a uid and
-  // can validate it against the user's real memberships.
-  const [activeGroupId, setActiveGroupId] = useState<string | undefined>(undefined);
-  const [activeGroup, setActiveGroupData] = useState<Group | undefined>(undefined);
+  const { activeGroupId } = state;
 
   const refreshMemberships = useCallback(async () => {
     if (!uid) {
-      setMemberships([]);
-      setActiveGroupId(undefined);
+      dispatch({ type: 'SET_MEMBERSHIPS', payload: { memberships: [] } });
       return;
     }
-    const m = await FirebaseGroupsInstance.getUserMemberships(uid);
-    setMemberships(m);
-    // Resolve the active group now that we're authed and know the real
-    // memberships: prefer an in-session selection, then the stored preference,
-    // and only accept it if it's still a group the user belongs to (E3);
-    // otherwise fall back to the first membership.
-    const stored = localStorage.getItem(ACTIVE_GROUP_KEY) ?? undefined;
-    setActiveGroupId((prev) => {
-      const candidate = prev ?? stored;
-      return candidate && m.some((x) => x.gid === candidate) ? candidate : m[0]?.gid;
+    const memberships = await FirebaseGroupsInstance.getUserMemberships(uid);
+    dispatch({
+      type: 'SET_MEMBERSHIPS',
+      payload: { memberships, storedGroupId: localStorage.getItem(ACTIVE_GROUP_KEY) ?? undefined },
     });
   }, [uid]);
 
@@ -64,44 +69,37 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   useEffect(() => {
     if (!activeGroupId) {
-      setActiveGroupData(undefined);
+      dispatch({ type: 'SET_ACTIVE_GROUP', payload: undefined });
       return;
     }
-    FirebaseGroupsInstance.getGroup(activeGroupId).then(setActiveGroupData);
+    FirebaseGroupsInstance.getGroup(activeGroupId).then((g) => dispatch({ type: 'SET_ACTIVE_GROUP', payload: g }));
   }, [activeGroupId]);
 
   const setActiveGroup = useCallback((gid: string) => {
     localStorage.setItem(ACTIVE_GROUP_KEY, gid);
-    setActiveGroupId(gid);
+    dispatch({ type: 'SET_ACTIVE_GROUP_ID', payload: gid });
   }, []);
 
   const refreshActiveGroup = useCallback(async () => {
     if (!activeGroupId) return;
-    setActiveGroupData(await FirebaseGroupsInstance.getGroup(activeGroupId));
+    dispatch({ type: 'SET_ACTIVE_GROUP', payload: await FirebaseGroupsInstance.getGroup(activeGroupId) });
   }, [activeGroupId]);
 
-  const activeRoles = useMemo<GroupRole[]>(
-    () => memberships.find((m) => m.gid === activeGroupId)?.roles ?? [],
-    [memberships, activeGroupId]
+  const value = useMemo<GroupProviderValue>(
+    () => ({ setActiveGroup, refreshMemberships, refreshActiveGroup }),
+    [setActiveGroup, refreshMemberships, refreshActiveGroup]
   );
 
-  const value = useMemo<GroupValueProp>(
-    () => ({
-      memberships,
-      activeGroupId,
-      activeGroup,
-      activeRoles,
-      isSlatePicker: activeRoles.includes('slate-picker'),
-      isGroupOwner: activeRoles.includes('owner'),
-      setActiveGroup,
-      refreshMemberships,
-      refreshActiveGroup,
-    }),
-    [memberships, activeGroupId, activeGroup, activeRoles, setActiveGroup, refreshMemberships, refreshActiveGroup]
+  return (
+    <GroupContext.Provider value={value}>
+      <GroupDispatchContext.Provider value={dispatch}>
+        <GroupStateContext.Provider value={state}>
+          {children}
+        </GroupStateContext.Provider>
+      </GroupDispatchContext.Provider>
+    </GroupContext.Provider>
   );
-
-  return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;
 };
 
 export default GroupContextProvider;
-export const useGroupContext = (): GroupValueProp => useContext(GroupContext);
+export const useGroupContext = (): GroupProviderValue => useContext(GroupContext);

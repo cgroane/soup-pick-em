@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { GamesAPIResponseOutcome, GamesAPIResult, Picks } from '../../model';
 import { useGetTeamData } from '../../hooks/useGetTeamData';
-import { useGlobalContext } from '../../context/user';
+import { useUserStateContext } from '../../context/user/user-state';
 import { Lock } from 'lucide-react';
 import { cn } from 'lib/utils';
 import { usePickDispatch } from 'context/pick/pick-dispatch';
@@ -13,7 +13,7 @@ interface PickCardProps {
 }
 
 const PickCard: React.FC<PickCardProps> = ({ game }: PickCardProps) => {
-  const { user } = useGlobalContext();
+  const { user } = useUserStateContext();
   const { rankings, dateTime } = useGetTeamData(game);
   const dispatch = usePickDispatch();
   const { slate } = usePickState()

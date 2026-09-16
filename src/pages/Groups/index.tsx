@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, Copy, Users } from 'lucide-react';
 import { useGroupContext } from '../../context/group';
+import { useGroupStateContext } from '../../context/group/group-state';
 import { GroupVisibility } from '../../model';
 import {
   createGroup,
@@ -16,15 +17,8 @@ import { cn } from 'lib/utils';
 type PublicGroup = { id: string; name: string; ownerUid: string };
 
 const Groups: React.FC = () => {
-  const {
-    memberships,
-    activeGroupId,
-    activeGroup,
-    isGroupOwner,
-    setActiveGroup,
-    refreshMemberships,
-    refreshActiveGroup,
-  } = useGroupContext();
+  const { memberships, activeGroupId, activeGroup, isGroupOwner } = useGroupStateContext();
+  const { setActiveGroup, refreshMemberships, refreshActiveGroup } = useGroupContext();
 
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<GroupVisibility>('private');

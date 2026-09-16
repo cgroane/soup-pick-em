@@ -7,9 +7,9 @@ import { useUIStateContext } from 'context/ui/ui-state';
 import { computeDeletions, initialSlateState, SlateState, SlateStateContext } from './slate-state';
 import { SlateActions, SlateDispatchContext } from './slate-dispatch';
 import { normalizeGame } from 'utils/normalizeGame';
-import { useGroupContext } from 'context/group';
+import { useGroupStateContext } from 'context/group/group-state';
 import FBSlateClassInstance from '../../firebase/slate/slate';
-import { useGlobalContext } from 'context/user';
+import { useUserStateContext } from 'context/user/user-state';
 import { usePickContext } from 'context/pick';
 
 export const slateReducer = (state: SlateState, action: SlateActions): SlateState => {
@@ -50,8 +50,8 @@ export default function CreateSlateContext({ children }: React.PropsWithChildren
   } = usePickState();
   const { fetchSlate } = usePickContext();
   const { seasonData } = useUIStateContext();
-  const { activeGroupId } = useGroupContext();
-  const { user, users, } = useGlobalContext();
+  const { activeGroupId } = useGroupStateContext();
+  const { user, users, } = useUserStateContext();
 
   useEffect(() => {
     dispatch({ type: "SET_SELECTED_GAMES", payload: slate?.games ?? [] });

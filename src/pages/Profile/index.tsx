@@ -2,7 +2,8 @@ import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import WinPercentage from '../../components/WinPercentage';
 import { LoadingState } from '../../context/ui';
-import { useGlobalContext } from '../../context/user';
+import { useUserContext } from '../../context/user';
+import { useUserStateContext } from '../../context/user/user-state';
 import { usePickContext } from '../../context/pick';
 import Loading from '../../components/Loading';
 import { LeaderBoardData } from '../../model';
@@ -17,7 +18,8 @@ interface ProfileProps { }
 
 const Profile: React.FC<ProfileProps> = () => {
   const { seasonData, status: seasonStatus, usePostSeason, useOffSeason } = useUIStateContext();
-  const { user, users, fetchUsers, usersStatus, userOverallRecord } = useGlobalContext();
+  const { user, users, usersStatus, userOverallRecord } = useUserStateContext();
+  const { fetchUsers } = useUserContext();
   const { fetchSlate } = usePickContext();
   const { slate, status: pickStatus } = usePickState();
   const { canEdit } = useSlateStateContext();

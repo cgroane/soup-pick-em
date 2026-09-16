@@ -6,8 +6,8 @@ import { PropsWithChildren } from "react";
 import { UserRoles } from "./utils/constants";
 import ChoosePicker from "./pages/ChoosePicker";
 import CreateSlate from "./pages/CreateSlate";
-import { useGlobalContext } from "./context/user";
-import { useGroupContext } from "./context/group";
+import { useUserStateContext } from "./context/user/user-state";
+import { useGroupStateContext } from "./context/group/group-state";
 import Colors from "./pages/Colors";
 import MakePicks from "./pages/MakePicks";
 import CFPBracket from "./pages/CFPBracket";
@@ -43,8 +43,8 @@ const PrivateRoutes: React.FC<PropsWithChildren> = ({
 
 
 const Router = () => {
-  const { user } = useGlobalContext();
-  const { isGroupOwner } = useGroupContext();
+  const { user } = useUserStateContext();
+  const { isGroupOwner } = useGroupStateContext();
 
   return (
     <Routes>

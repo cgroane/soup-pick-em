@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { useGlobalContext } from '../../context/user';
+import { useUserContext } from '../../context/user';
+import { useUserStateContext } from '../../context/user/user-state';
 import { usePickContext } from '../../context/pick';
 import PicksTable, { StyledCell } from './PicksTable';
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
@@ -7,7 +8,7 @@ import { GamesAPIResponseOutcome, GamesAPIResult } from '../../model';
 import SelectWeek from '../../components/SelectWeek';
 import GameCell, { StyledGameCell } from './GameCell';
 import { useSelectedWeek } from '../../hooks/useSelectedWeek';
-import { useCFPContext } from '../../context/cfp';
+import { useCFPStateContext } from '../../context/cfp/cfp-state';
 import { gradePick } from '../../utils/grade';
 import { usePickState } from 'context/pick/pick-state';
 import { useUIStateContext } from 'context/ui/ui-state';
@@ -29,7 +30,7 @@ const columnHelper = createColumnHelper<PicksColumnDef>();
 
 const Picks: React.FC = () => {
   const { seasonData, useOffSeason, usePostSeason } = useUIStateContext();
-  const { bracket } = useCFPContext();
+  const { bracket } = useCFPStateContext();
 
   const { selectedWeek, setSelectedWeek } = useSelectedWeek({
     week: seasonData?.ApiWeek?.toString(),
@@ -38,7 +39,8 @@ const Picks: React.FC = () => {
     seasonType: seasonData?.seasonType === 'postseason' ? 'postseason' : 'regular',
   });
 
-  const { fetchUsers, allPickHistories } = useGlobalContext();
+  const { allPickHistories } = useUserStateContext();
+  const { fetchUsers } = useUserContext();
   const { fetchSlate } = usePickContext();
   const { slate } = usePickState();
 
