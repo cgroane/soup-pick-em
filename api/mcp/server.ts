@@ -23,9 +23,17 @@ when you need a group id.`;
 
 const WRITE_INSTRUCTIONS = `
 
-set_slate replaces a group's slate for a week. It is the only tool here that
-writes. Confirm the exact games with the user before calling it: it discards any
-pick a member already made on a game you drop, and they cannot be recovered.`;
+Two tools write, and both act in a standing competition against real people, so
+confirm the specifics with the user before calling either.
+
+submit_picks records the user's own picks for a slate. Read get_slate first so
+you are picking real games at their stored spreads, and say which side you are
+taking in each before you send it. Picks merge, so partial submissions are fine;
+the response names the games still unpicked.
+
+set_slate replaces a group's slate for a week and is limited to that group's
+slate-picker. It discards any pick a member already made on a game you drop, and
+they cannot be recovered.`;
 
 export const buildMcpServer = (uid: string, scopes: McpScope[], baseUrl?: string) => {
   const server = new McpServer(

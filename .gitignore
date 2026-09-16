@@ -31,3 +31,9 @@ emulator-data
 firestore-debug.log
 Firestore-export.overall_export_metadata
 firebase-debug.log
+# agent-authored docs — kept on disk, not tracked
+CLAUDE.md
+docs/architecture-review.md
+docs/test-cases.md
+docs/mcp-server.md
+docs/railway-pr-envs.md
