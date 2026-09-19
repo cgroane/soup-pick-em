@@ -1,4 +1,4 @@
-import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from "react";
 import { UserCollectionData } from "../../model";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -11,8 +11,21 @@ import { initialUserState, UserState, UserStateContext } from "./user-state";
 
 export const userReducer = (state: UserState, action: UserActions): UserState => {
   switch (action.type) {
-    case "SET_USER":
-      return { ...state, user: action.payload };
+    case "SET_USER": {
+      if (!action.payload) return { ...state, user: null };
+      // pickHistory/record/trophyCase are owned by the membership load, not the
+      // `users` doc; keep them unless this is a different account.
+      const sameUser = state.user?.uid === action.payload.uid;
+      return {
+        ...state,
+        user: {
+          ...action.payload,
+          pickHistory: sameUser ? state.user?.pickHistory ?? [] : [],
+          record: sameUser ? state.user?.record ?? [] : [],
+          trophyCase: sameUser ? state.user?.trophyCase : undefined,
+        },
+      };
+    }
     case "PATCH_USER":
       return state.user ? { ...state, user: { ...state.user, ...action.payload } } : state;
     case "SET_MEMBERS":
@@ -66,6 +79,10 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
   }, [activeGroupId]);
 
   const navigate = useNavigate();
+  // useNavigate's identity changes on every location change; a ref keeps the
+  // auth subscription from tearing down and re-firing on each route change.
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     const unsubscribe = getAuth(FirebaseUsersClassInstance.app).onAuthStateChanged((currUser) => {
@@ -74,16 +91,18 @@ const Context: React.FC<PropsWithChildren> = ({ children }: React.PropsWithChild
           dispatch({ type: "SET_USER", payload: res ? { ...(res as UserCollectionData) } : null });
         })
       } else {
-        navigate('/');
+        navigateRef.current('/');
       }
     });
     return unsubscribe;
-  }, [navigate]);
+  }, []);
 
   // The user's per-group state (picks, record, trophyCase) now lives on their
   // membership doc — load it for the active group whenever either changes.
   useEffect(() => {
-    if (!uid || !activeGroupId) return;
+    if (!uid || !activeGroupId) {
+      return;
+    }
     Promise.all([
       FirebaseGroupsInstance.getMemberPicks(activeGroupId, uid),
       FirebaseGroupsInstance.getMember(activeGroupId, uid),
