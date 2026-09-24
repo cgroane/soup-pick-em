@@ -124,7 +124,10 @@ matchupsRouter.get("/matchups", async (req: express.Request<{}, {}, {}, {
     const teamIds = new Set<number>();
     _teams?.data?.forEach((team) => teamIds.add(team.id));
 
-    const rankPropAccessor = rankings?.data?.[0]?.polls?.[0]?.poll === "Playoff Committee Rankings" ? 'playoffRank' : 'apRank';
+    const polls = rankings?.data?.[0]?.polls;
+    const playoffPoll = polls?.find((p) => p.poll === "Playoff Committee Rankings");
+    const rankingPoll = playoffPoll ?? polls?.find((p) => p.poll === "AP Top 25");
+    const rankPropAccessor = playoffPoll ? 'playoffRank' : 'apRank';
     const dataArr = _games?.data?.filter((g) => teamIds.has(g.homeId) && teamIds.has(g.awayId)).map((game) => {
       const awayTeamData = _teams?.data?.find((team) => team.id === game.awayId);
       const homeTeamData = _teams?.data?.find((team) => team.id === game.homeId);
@@ -135,14 +138,14 @@ matchupsRouter.get("/matchups", async (req: express.Request<{}, {}, {}, {
           coachesRank: undefined,
           apRank: undefined,
           playoffRank: undefined,
-          [rankPropAccessor]: rankings?.data?.[0]?.polls?.[0]?.ranks?.find((r) => r.teamId === awayTeamData?.id)?.rank
+          [rankPropAccessor]: rankingPoll?.ranks?.find((r) => r.teamId === awayTeamData?.id)?.rank
         },
         homeTeamData: {
           ...homeTeamData,
           coachesRank: undefined,
           apRank: undefined,
           playoffRank: undefined,
-          [rankPropAccessor]: rankings?.data?.[0]?.polls?.[0]?.ranks?.find((r) => r.teamId === homeTeamData?.id)?.rank
+          [rankPropAccessor]: rankingPoll?.ranks?.find((r) => r.teamId === homeTeamData?.id)?.rank
         }
       }
     })
