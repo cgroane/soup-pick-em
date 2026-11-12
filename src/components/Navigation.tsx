@@ -34,6 +34,7 @@ const Navigation: React.FC = () => {
     }
     if (user?.roles?.includes(UserRoles.ADMIN)) {
       loggedInItems.push({ label: 'Choose Slate Maker', onClick: () => navigate('/choose-picker') });
+      loggedInItems.push({ label: 'Impersonate', onClick: () => navigate('/impersonate') });
       if (usePostSeason) {
         loggedInItems.push({ label: 'CFP Management', onClick: () => navigate('/admin-cfp') });
       }

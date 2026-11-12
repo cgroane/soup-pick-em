@@ -13,6 +13,7 @@ import MakePicks from "./pages/MakePicks";
 import CFPBracket from "./pages/CFPBracket";
 import AdminCFP from "./pages/AdminCFP";
 import Groups from "./pages/Groups";
+import Impersonate from "./pages/Impersonate";
 import { useAuthStateContext } from "context/auth/auth-state";
 
 /**
@@ -129,6 +130,16 @@ const Router = () => {
           <PrivateRoutes >
             <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean}>
               <AdminCFP />
+            </RoleGuardedRoutes>
+          </PrivateRoutes>
+        }
+      />
+      <Route
+        path="/impersonate"
+        element={
+          <PrivateRoutes >
+            <RoleGuardedRoutes hasPermission={user?.roles?.includes(UserRoles.ADMIN) as boolean}>
+              <Impersonate />
             </RoleGuardedRoutes>
           </PrivateRoutes>
         }

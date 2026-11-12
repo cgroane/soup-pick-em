@@ -64,7 +64,7 @@ export const registerWriteTools = (server: McpServer, uid: string, baseUrl?: str
     {
       title: "Set a group's slate",
       description:
-        `Choose the ${SLATE_SIZE} games that make up a group's slate for one week. Only the group's slate-picker (or a global admin) may do this, and only before the week's first game kicks off. Game ids come from get_games_with_lines. Replaces the slate entirely, so pass the full set of ${SLATE_SIZE} games you want, not just the ones you are changing. Any member pick on a game you drop is discarded and they will have to pick again.`,
+        `Choose the ${SLATE_SIZE} games that make up a group's slate for one week. Only the group's slate-picker (or a global admin) may do this, and only for games that have not kicked off: games already under way can be neither added nor dropped. Game ids come from get_games_with_lines. Replaces the slate entirely, so pass the full set of ${SLATE_SIZE} games you want, not just the ones you are changing. Any member pick on a game you drop is discarded and they will have to pick again.`,
       inputSchema: z.object({
         gid: z.string().optional().describe("Group id. Optional when you belong to exactly one group."),
         week: z.number().int().describe("Week number."),

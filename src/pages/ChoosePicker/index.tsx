@@ -13,6 +13,7 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
   const { activeGroupId, activeGroup, isGroupOwner } = useGroupStateContext();
   const [selectedUid, setSelectedUid] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetchUsers();
@@ -35,18 +36,22 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const uid = e.target.value;
       if (!activeGroupId) return;
+      const previous = selectedUid;
       setSelectedUid(uid);
       setSaving(true);
+      setError(undefined);
       try {
         await assignSlatePicker(activeGroupId, uid);
         await fetchUsers();
       } catch (err) {
         console.error(err);
+        setSelectedUid(previous);
+        setError('Could not assign the slate maker. Please try again.');
       } finally {
         setSaving(false);
       }
     },
-    [activeGroupId, fetchUsers]
+    [activeGroupId, fetchUsers, selectedUid]
   );
 
   if (!isGroupOwner) {
@@ -65,6 +70,7 @@ const ChoosePicker: React.FC<ChoosePickerProps> = () => {
       <p className="text-sm text-muted-foreground mb-4">
         For {activeGroup?.name ?? 'this group'}
       </p>
+      {error && <p className="text-sm text-destructive mb-3">{error}</p>}
       <div className="flex flex-col gap-3">
         {options?.map((option) => (
           <label

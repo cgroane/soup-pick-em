@@ -11,6 +11,9 @@ export const earliestKickoff = (games?: GamesAPIResult[]): number => {
   return times.length ? Math.min(...times) : Infinity;
 };
 
+export const hasKickedOff = (game?: GamesAPIResult): boolean =>
+  Date.now() >= earliestKickoff(game ? [game] : []);
+
 /**
  * Whether picks/slate edits are locked because the earliest game has kicked off.
  *

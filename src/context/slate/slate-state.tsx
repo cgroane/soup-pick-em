@@ -5,7 +5,6 @@ import { useUserStateContext } from "context/user/user-state";
 import { GamesAPIResult } from "model";
 import { createContext, useContext, useMemo } from "react";
 import { UserRoles } from "utils/constants";
-import { arePicksLocked } from "utils/pickLock";
 
 export type SlateState = {
   games: GamesAPIResult[];
@@ -43,9 +42,7 @@ export const useSlateStateContext = () => {
   const { isSlatePicker } = useGroupStateContext();
 
   const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
-  const canEdit = useMemo(() => {
-    return (isSlatePicker && !arePicksLocked(s.games, isAdmin)) || isAdmin;
-  }, [s.games, isAdmin, isSlatePicker]);
+  const canEdit = isSlatePicker || isAdmin;
   const filteredGames = useMemo(() => {
     const q = s.filterText.trim().toLowerCase();
     if (!q) return s.games;
@@ -60,6 +57,7 @@ export const useSlateStateContext = () => {
     ...s,
     filteredGames,
     deletions,
-    canEdit
+    canEdit,
+    isAdmin
   }
 }

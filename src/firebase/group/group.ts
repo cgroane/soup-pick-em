@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '..';
 import { Group, GroupMember, GroupMembership, Slate } from '../../model';
 import { PickHistory } from '../../pages/Picks/PicksTable';
@@ -17,6 +17,13 @@ class FirebaseGroups {
     const snap = await getDocs(collection(db, 'users', uid, 'memberships'));
     return snap.docs.map((d) => d.data() as GroupMembership);
   };
+
+  subscribeToMemberships = (uid: string, onChange: (memberships: GroupMembership[]) => void) =>
+    onSnapshot(
+      collection(db, 'users', uid, 'memberships'),
+      (snap) => onChange(snap.docs.map((d) => d.data() as GroupMembership)),
+      (err) => console.error('Error listening to memberships:', err)
+    );
 
   getGroup = async (gid: string): Promise<Group | undefined> => {
     const snap = await getDoc(doc(db, GROUPS, gid));

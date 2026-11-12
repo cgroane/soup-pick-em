@@ -1,6 +1,10 @@
 /** Manual mock — see src/firebase/user/__mocks__/user.ts for why. */
 const FirebaseGroupsInstance = {
-  getUserMemberships: jest.fn(async () => [] as unknown[]),
+  getUserMemberships: jest.fn(async (_uid: string) => [] as unknown[]),
+  subscribeToMemberships: (uid: string, onChange: (m: unknown[]) => void) => {
+    Promise.resolve(FirebaseGroupsInstance.getUserMemberships(uid)).then((m) => onChange(m ?? []));
+    return () => {};
+  },
   getGroup: jest.fn(async () => undefined),
   getMembers: jest.fn(async () => [] as unknown[]),
   getMember: jest.fn(async () => undefined),
