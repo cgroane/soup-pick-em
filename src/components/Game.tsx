@@ -11,9 +11,10 @@ interface GameProps {
   addedToSlate: boolean;
   hideCheckbox: boolean;
   canEdit: boolean;
+  locked?: boolean;
 }
 
-const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox, canEdit }: GameProps) => {
+const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox, canEdit, locked }: GameProps) => {
   const dispatch = useSlateDispatchContext();
   const { rankings, dateTime } = useGetTeamData(game);
   const final = useMemo(() => game?.completed, [game?.completed]);
@@ -79,10 +80,10 @@ const Game: React.FC<GameProps> = ({ game, addedToSlate, disable, hideCheckbox, 
             id={`game-${game.id}`}
             checked={addedToSlate}
             onCheckedChange={() => dispatch({ type: "ADD_REMOVE", payload: game })}
-            disabled={(disable && !addedToSlate) || !canEdit}
+            disabled={(disable && !addedToSlate) || !canEdit || locked}
           />
           <label htmlFor={`game-${game.id}`} className="text-sm text-foreground cursor-pointer">
-            {addedToSlate ? 'Added to slate' : 'Add to slate'}
+            {locked ? (addedToSlate ? 'On slate (kicked off)' : 'Kicked off') : addedToSlate ? 'Added to slate' : 'Add to slate'}
           </label>
         </div>
       )}

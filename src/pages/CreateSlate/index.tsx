@@ -18,10 +18,11 @@ import { useUIDispatchContext } from 'context/ui/ui-dispatch';
 import { useUIStateContext } from 'context/ui/ui-state';
 import { useSlateDispatchContext } from 'context/slate/slate-dispatch';
 import { useSlateStateContext } from 'context/slate/slate-state';
+import { hasKickedOff } from 'utils/pickLock';
 
 const CreateSlate: React.FC = () => {
 
-  const { selectedGames, filteredGames, filterText, canEdit, status: matchupStatus } =
+  const { selectedGames, filteredGames, filterText, canEdit, isAdmin, status: matchupStatus } =
     useSlateStateContext();
   const slateDispatch = useSlateDispatchContext();
   const { fetchMatchups, submitSlate } = useSlateContext();
@@ -135,6 +136,7 @@ const CreateSlate: React.FC = () => {
                     key={game.id}
                     game={game}
                     canEdit={canEdit}
+                    locked={!isAdmin && hasKickedOff(game)}
                   />
                 ))
               ) : (

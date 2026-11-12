@@ -64,8 +64,17 @@ const GroupContextProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   }, [uid]);
 
   useEffect(() => {
-    refreshMemberships();
-  }, [refreshMemberships]);
+    if (!uid) {
+      dispatch({ type: 'SET_MEMBERSHIPS', payload: { memberships: [] } });
+      return;
+    }
+    return FirebaseGroupsInstance.subscribeToMemberships(uid, (memberships) =>
+      dispatch({
+        type: 'SET_MEMBERSHIPS',
+        payload: { memberships, storedGroupId: localStorage.getItem(ACTIVE_GROUP_KEY) ?? undefined },
+      })
+    );
+  }, [uid]);
 
   useEffect(() => {
     if (!activeGroupId) {

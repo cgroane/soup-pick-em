@@ -23,8 +23,12 @@ import CreateSlateContext from '../context/slate';
 export * from './fixtures';
 
 /** The real provider tree from src/index.tsx, minus CFP (nothing under test uses it). */
-export const AllProviders: React.FC<React.PropsWithChildren> = ({ children }) => (
-  <MemoryRouter>
+export const providersAt = (path: string): React.FC<React.PropsWithChildren> => ({ children }) => (
+  <AllProviders initialEntries={[path]}>{children}</AllProviders>
+);
+
+export const AllProviders: React.FC<React.PropsWithChildren<{ initialEntries?: string[] }>> = ({ children, initialEntries }) => (
+  <MemoryRouter initialEntries={initialEntries}>
     <AuthContextProvider>
       <UIProvider>
         <GroupContextProvider>

@@ -39,6 +39,7 @@ export const getAuth = () => ({
 export class GoogleAuthProvider {}
 export const signInWithPopup = jest.fn();
 export const signInWithEmailAndPassword = jest.fn();
+export const signInWithCustomToken = jest.fn();
 export const createUserWithEmailAndPassword = jest.fn();
 export const signOut = jest.fn();
 export const connectAuthEmulator = jest.fn();

@@ -2,7 +2,7 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { GamesAPIResult, Picks } from "model";
 import { PickHistory } from "pages/Picks/PicksTable";
-import { arePicksLocked } from "utils/pickLock";
+import { hasKickedOff } from "utils/pickLock";
 import { normalizeGame } from "utils/normalizeGame";
 
 export const SLATE_SIZE = 10;
@@ -116,14 +116,6 @@ export const setSlate = async (args: SetSlateArgs): Promise<SetSlateResult> => {
     );
   }
 
-  if (arePicksLocked(weekGames, admin)) {
-    return fail(
-      409,
-      "slate_locked",
-      `Week ${week} is locked — its first game has already kicked off.`
-    );
-  }
-
   const slateId = seasonType === "postseason" ? `w${week}-${year}POST` : `w${week}-${year}`;
   const slateRef = db.collection("groups").doc(gid).collection("slates").doc(slateId);
   const existing = (await slateRef.get()).data() as { games?: GamesAPIResult[] } | undefined;
@@ -132,6 +124,22 @@ export const setSlate = async (args: SetSlateArgs): Promise<SetSlateResult> => {
   const nextIds = new Set(unique);
   const added = unique.filter((id) => !previousIds.has(id));
   const removed = [...previousIds].filter((id) => !nextIds.has(id));
+
+  if (!admin) {
+    const started = [
+      ...added.map((id) => byId.get(id)),
+      ...(existing?.games ?? []).filter((g) => removed.includes(g.id)),
+    ].filter((g): g is GamesAPIResult => !!g && hasKickedOff(g));
+    if (started.length) {
+      return fail(
+        409,
+        "slate_locked",
+        `Games that have kicked off can't be added to or removed from the slate: ${started
+          .map((g) => `${g.awayTeam} @ ${g.homeTeam}`)
+          .join(", ")}.`
+      );
+    }
+  }
 
   const games = unique.map((id) => normalizeGame(byId.get(id) as GamesAPIResult)) as GamesAPIResult[];
 
